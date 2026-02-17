@@ -1,0 +1,17 @@
+{
+  "name": "@anima/webserver",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "bun --watch src/index.ts"
+  },
+  "dependencies": {
+    "@elysiajs/node": "^1.4.4",
+    "elysia": "^1.4.25"
+  },
+  "devDependencies": {
+    "@anima/typescript-config": "workspace:*",
+    "@types/node": "^24.10.13"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "extends": "@anima/typescript-config/base.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src"]
+}

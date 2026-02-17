@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix"
+  },
+  "devDependencies": {
+    "oxfmt": "^0.33.0",
+    "oxlint": "^1.48.0"
+  },
+  "packageManager": "pnpm@10.29.3"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@anima/typescript-config",
+  "private": true,
+  "dependencies": {
+    "@vue/tsconfig": "^0.8.1"
+  }
+}
