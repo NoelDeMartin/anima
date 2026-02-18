@@ -1,7 +1,8 @@
 {
-  "name": "@anima/typescript-config",
+  "name": "@anima/config",
   "private": true,
   "dependencies": {
+    "@tsconfig/node24": "^24.0.4",
     "@vue/tsconfig": "^0.8.1"
   }
 }

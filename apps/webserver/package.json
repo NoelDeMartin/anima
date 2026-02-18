@@ -7,11 +7,12 @@
     "dev": "bun --watch src/index.ts"
   },
   "dependencies": {
+    "@elysiajs/cors": "^1.4.1",
     "@elysiajs/node": "^1.4.4",
     "elysia": "^1.4.25"
   },
   "devDependencies": {
-    "@anima/typescript-config": "workspace:*",
+    "@anima/config": "workspace:*",
     "@types/node": "^24.10.13"
   }
 }

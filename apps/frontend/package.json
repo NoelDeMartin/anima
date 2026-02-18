@@ -1,24 +1,20 @@
 {
-  "name": "@anima/native",
+  "name": "@anima/frontend",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "dev:tauri": "tauri dev",
     "type-check": "vue-tsc --build --noEmit"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-shell": "~2.3.5",
+    "@elysiajs/eden": "^1.4.8",
     "tailwindcss": "catalog:",
     "vue": "catalog:"
   },
   "devDependencies": {
     "@anima/config": "workspace:*",
     "@tailwindcss/vite": "catalog:",
-    "@tauri-apps/cli": "^2",
     "@vitejs/plugin-vue": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

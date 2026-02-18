@@ -1,3 +1,31 @@
 packages:
   - apps/**
   - packages/**
+
+catalog:
+  '@tailwindcss/vite': ^4.1.18
+  '@vitejs/plugin-vue': ^6.0.4
+  'tailwindcss': ^4.1.18
+  'typescript': ~5.9.3
+  'vite': beta
+  'vue': ^3.5.28
+  'vue-tsc': ^3.2.4
+
+overrides:
+  'vue': 'beta'
+  '@vue/compiler-core': 'beta'
+  '@vue/compiler-dom': 'beta'
+  '@vue/compiler-sfc': 'beta'
+  '@vue/compiler-ssr': 'beta'
+  '@vue/compiler-vapor': 'beta'
+  '@vue/reactivity': 'beta'
+  '@vue/runtime-core': 'beta'
+  '@vue/runtime-dom': 'beta'
+  '@vue/runtime-vapor': 'beta'
+  '@vue/server-renderer': 'beta'
+  '@vue/shared': 'beta'
+  '@vue/compat': 'beta'
+
+peerDependencyRules:
+  allowAny:
+    - 'vue'

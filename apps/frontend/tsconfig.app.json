@@ -1,0 +1,12 @@
+{
+  "extends": "@anima/config/typescript/vue.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    "paths": {
+      "@/*": ["./src/*"],
+      "@anima/webserver": ["../webserver/src"]
+    }
+  },
+  "include": ["src/**/*"]
+}
