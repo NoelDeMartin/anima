@@ -12,7 +12,7 @@
       "allow": [
         {
           "args": true,
-          "name": "binaries/webserver",
+          "name": "binaries/backend",
           "sidecar": true
         }
       ]

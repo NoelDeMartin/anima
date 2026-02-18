@@ -18,7 +18,7 @@ const errorMessage = ref<string | null>(null);
 const serverProcess = ref<Child | null>(null);
 
 async function startServer() {
-  serverProcess.value = await Command.sidecar('binaries/webserver').spawn();
+  serverProcess.value = await Command.sidecar('binaries/backend').spawn();
 }
 
 async function stopServer() {

@@ -1,5 +1,5 @@
 {
-  "name": "@anima/webserver",
+  "name": "@anima/backend",
   "private": true,
   "type": "module",
   "scripts": {
