@@ -1,6 +1,8 @@
+import AI from './AI';
 import Auth from './Auth';
 
 export const services = {
+  $ai: AI,
   $auth: Auth,
 };
 

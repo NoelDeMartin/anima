@@ -6,6 +6,7 @@ export default defineServiceState({
   persist: ['sessionId'],
   initialState: {
     user: null as SolidUserProfile | null,
+    model: null as string | null,
     sessionId: null as string | null,
     loading: false,
     error: null as string | null,

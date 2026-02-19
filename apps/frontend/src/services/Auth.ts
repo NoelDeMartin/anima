@@ -20,17 +20,15 @@ export class AuthService extends Service {
 
       this.sessionId = data?.sessionId ?? null;
 
-      if (data?.redirectUrl) {
-        window.location.href = data.redirectUrl;
-
-        await sleep(5000);
-
-        throw new Error('Failed redirecting to authentication server');
+      if (!data?.redirectUrl) {
+        throw new Error('Missing redirect URL');
       }
 
-      if (data?.user) {
-        this.user = data.user;
-      }
+      window.location.href = data.redirectUrl;
+
+      await sleep(5000);
+
+      throw new Error('Failed redirecting to authentication server');
     } catch (error) {
       this.error = error instanceof Error ? error.message : 'Login failed';
     } finally {
@@ -40,12 +38,13 @@ export class AuthService extends Service {
 
   public async logout(): Promise<void> {
     this.user = null;
+    this.model = null;
 
     if (!this.sessionId) {
       return;
     }
 
-    await api.oidc.logout.post({ sessionId: this.sessionId });
+    await api.oidc.logout.post();
 
     this.sessionId = null;
   }
@@ -55,10 +54,11 @@ export class AuthService extends Service {
       return;
     }
 
-    const { data } = await api.oidc.session({ id: this.sessionId }).get();
+    const { data } = await api.oidc.session.get();
 
-    if (data?.user) {
+    if (data) {
       this.user = data.user;
+      this.model = data.model;
     }
   }
 }
