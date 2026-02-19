@@ -1,0 +1,26 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index a730ea2195765f1c974379f10a8441cdc794c4bc..cc9f39f80b552d25ae3c46f73d196bc0e73c9c62 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -1569,15 +1569,18 @@ class Session {
+             clientAuthentication: clientAuth,
+             keepAlive: false,
+         });
++
++        // https://github.com/inrupt/solid-client-authn-js/pull/4201
++        // https://github.com/inrupt/solid-client-authn-js/pull/4208
+         if (isExpired ||
+             webId === undefined ||
+-            sessionTokenSet.idToken === undefined) {
++            sessionTokenSet.accessToken === undefined) {
+             return session;
+         }
+-        const fetch = buildAuthenticatedFetch(sessionTokenSet.idToken, {
++        const fetch = buildAuthenticatedFetch(sessionTokenSet.accessToken, {
+             dpopKey: sessionTokenSet.dpopKey,
+             expiresIn: sessionTokenSet.expiresAt
+-                ? sessionTokenSet.expiresAt - Date.now()
++                ? sessionTokenSet.expiresAt - Date.now() / 1000
+                 : undefined,
+             eventEmitter: session.events,
+         });

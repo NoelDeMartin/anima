@@ -1,0 +1,14 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index bd65f28ce83407b1036bed0dc8ec051c482abc0d..82a02a66e5728e8623182ec6415d7fe7f65ceca1 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -1222,7 +1222,8 @@ async function createDpopHeader(audience, method, dpopKey) {
+         .sign(dpopKey.privateKey, {});
+ }
+ async function generateDpopKeyPair() {
+-    const { privateKey, publicKey } = await generateKeyPair(PREFERRED_SIGNING_ALG[0]);
++    // https://github.com/inrupt/solid-client-authn-js/pull/4207
++    const { privateKey, publicKey } = await generateKeyPair(PREFERRED_SIGNING_ALG[0], { extractable: true });
+     const dpopKeyPair = {
+         privateKey,
+         publicKey: await exportJWK(publicKey),

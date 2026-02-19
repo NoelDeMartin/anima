@@ -5,6 +5,7 @@
     "correctness": "error"
   },
   "rules": {
-    "eslint/no-unused-vars": "error"
+    "eslint/no-unused-vars": "error",
+    "eslint/no-unused-expressions": "off"
   }
 }

@@ -8,15 +8,21 @@
     "type-check": "vue-tsc --build --noEmit"
   },
   "dependencies": {
+    "@aerogel/core": "^0.1.2",
     "@elysiajs/eden": "^1.4.8",
+    "@noeldemartin/solid-utils": "catalog:",
+    "@noeldemartin/utils": "catalog:",
     "tailwindcss": "catalog:",
-    "vue": "catalog:"
+    "vue": "catalog:",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@aerogel/vite": "^0.1.2",
     "@anima/config": "workspace:*",
-    "@tailwindcss/vite": "catalog:",
-    "@vitejs/plugin-vue": "catalog:",
+    "@iconify/json": "^2.2.440",
     "typescript": "catalog:",
+    "unplugin-icons": "^23.0.1",
+    "unplugin-vue-components": "^31.0.0",
     "vite": "catalog:",
     "vue-tsc": "catalog:"
   }

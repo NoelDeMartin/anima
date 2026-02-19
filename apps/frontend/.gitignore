@@ -37,3 +37,4 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+src/types/components.d.ts

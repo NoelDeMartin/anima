@@ -1,6 +1,7 @@
-import './styles/main.css';
+import { bootstrap } from '@aerogel/core';
 
-import { createApp } from 'vue';
+import './assets/css/main.css';
 import App from './App.vue';
+import { services } from './services';
 
-createApp(App).mount('#app');
+bootstrap(App, { services });

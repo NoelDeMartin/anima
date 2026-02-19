@@ -1,0 +1,12 @@
+{
+  "name": "@anima/e2e",
+  "private": true,
+  "scripts": {
+    "dev": "playwright test --ui",
+    "test": "playwright test --workers 1"
+  },
+  "devDependencies": {
+    "@anima/config": "workspace:*",
+    "@playwright/test": "^1.58.2"
+  }
+}

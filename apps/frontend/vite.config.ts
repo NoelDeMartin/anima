@@ -1,11 +1,26 @@
 import { fileURLToPath, URL } from 'node:url';
 
+import Aerogel, { AerogelResolver } from '@aerogel/vite';
+import Components from 'unplugin-vue-components/vite';
+import Icons from 'unplugin-icons/vite';
+import IconsResolver from 'unplugin-icons/resolver';
 import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite';
-import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
-  plugins: [vue(), tailwindcss()],
+  plugins: [
+    Aerogel(),
+    Components({
+      deep: true,
+      dts: 'src/types/components.d.ts',
+      dirs: ['src/components', 'src/pages'],
+      resolvers: [AerogelResolver(), IconsResolver()],
+    }),
+    Icons({
+      iconCustomizer(_, __, props) {
+        props['aria-hidden'] = 'true';
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

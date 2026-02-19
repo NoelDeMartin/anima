@@ -9,10 +9,12 @@
   "dependencies": {
     "@elysiajs/cors": "^1.4.1",
     "@elysiajs/node": "^1.4.4",
+    "@inrupt/solid-client-authn-node": "^3.1.1",
+    "@noeldemartin/solid-utils": "catalog:",
+    "@noeldemartin/utils": "catalog:",
     "elysia": "^1.4.25"
   },
   "devDependencies": {
-    "@anima/config": "workspace:*",
-    "@types/node": "^24.10.13"
+    "@anima/config": "workspace:*"
   }
 }
