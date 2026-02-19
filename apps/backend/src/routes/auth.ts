@@ -1,7 +1,7 @@
 import { Elysia, redirect, t } from 'elysia';
 
-import Auth from '../services/Auth';
 import { FRONTEND_URL, PORT } from '../lib/constants';
+import Auth from '../services/Auth';
 
 export default new Elysia()
   .get('clientid.jsonld', () => ({

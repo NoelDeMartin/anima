@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
+import { defineConfig } from 'vite';
 
 const host = process.env.TAURI_DEV_HOST;
 

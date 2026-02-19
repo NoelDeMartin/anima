@@ -1,8 +1,8 @@
-import Elysia, { t } from 'elysia';
 import { generateText } from 'ai';
+import Elysia, { t } from 'elysia';
 
-import Auth from '../services/Auth';
 import AI from '../services/AI';
+import Auth from '../services/Auth';
 
 export default new Elysia()
   .post(

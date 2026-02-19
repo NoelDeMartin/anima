@@ -1,5 +1,5 @@
-import { facade, sleep, urlRoot } from '@noeldemartin/utils';
 import { fetchLoginUserProfile } from '@noeldemartin/solid-utils';
+import { facade, sleep, urlRoot } from '@noeldemartin/utils';
 
 import api from '@/lib/api';
 

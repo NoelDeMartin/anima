@@ -1,10 +1,10 @@
-import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { node } from '@elysiajs/node';
+import { Elysia } from 'elysia';
 
-import auth from './routes/auth';
-import ai from './routes/ai';
 import { PORT } from './lib/constants';
+import ai from './routes/ai';
+import auth from './routes/auth';
 
 export const Api = new Elysia({ adapter: node() })
   .use(cors())

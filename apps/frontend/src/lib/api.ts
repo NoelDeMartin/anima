@@ -1,6 +1,6 @@
+import type { Api } from '@anima/backend';
 import { treaty } from '@elysiajs/eden';
 import { objectWithoutEmpty } from '@noeldemartin/utils';
-import type { Api } from '@anima/backend';
 
 import { env } from '@/lib/env';
 import { services } from '@/services';

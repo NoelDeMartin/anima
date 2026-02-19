@@ -1,7 +1,7 @@
 import { facade } from '@noeldemartin/utils';
-import { ollama } from 'ollama-ai-provider-v2';
-import { MockLanguageModelV3 } from 'ai/test';
 import type { LanguageModel } from 'ai';
+import { MockLanguageModelV3 } from 'ai/test';
+import { ollama } from 'ollama-ai-provider-v2';
 
 export const MODEL_AUTO = '__auto__' as const;
 export type AIModelName = Parameters<typeof ollama>[0];

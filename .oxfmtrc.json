@@ -4,5 +4,6 @@
   "printWidth": 120,
   "experimentalSortPackageJson": {
     "sortScripts": true
-  }
+  },
+  "experimentalSortImports": {}
 }

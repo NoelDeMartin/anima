@@ -1,7 +1,7 @@
-import { facade, PromisedValue } from '@noeldemartin/utils';
 import { EVENTS, Session } from '@inrupt/solid-client-authn-node';
-import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
 import type { AuthorizationRequestState, SessionTokenSet } from '@inrupt/solid-client-authn-node';
+import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
+import { facade, PromisedValue } from '@noeldemartin/utils';
 
 import { PORT } from '../lib/constants';
 import { MODEL_AUTO, type AIModelName } from './AI';
