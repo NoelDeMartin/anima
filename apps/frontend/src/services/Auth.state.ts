@@ -5,9 +5,9 @@ export default defineServiceState({
   name: 'auth',
   persist: ['sessionId'],
   initialState: {
-    user: null as SolidUserProfile | null,
-    model: null as string | null,
     sessionId: null as string | null,
+    user: null as SolidUserProfile | null,
+    model: null as { name: string; default: boolean } | null,
     loading: false,
     error: null as string | null,
   },

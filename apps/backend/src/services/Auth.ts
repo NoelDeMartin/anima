@@ -2,9 +2,13 @@ import { EVENTS, Session } from '@inrupt/solid-client-authn-node';
 import type { AuthorizationRequestState, SessionTokenSet } from '@inrupt/solid-client-authn-node';
 import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
 import { facade, PromisedValue } from '@noeldemartin/utils';
+import { status } from 'elysia';
 
 import { PORT } from '../lib/constants';
-import { MODEL_AUTO, type AIModelName } from './AI';
+import { MODEL_DEFAULT } from './AI';
+import type { ModelName } from './Ollama';
+
+const SESSION_HEADER = 'X-Anima-Session-Id';
 
 function isActiveSession(value: unknown): value is ActiveSession {
   return typeof value === 'object' && value !== null && 'tokenSet' in value;
@@ -14,11 +18,11 @@ function isAuthorizationRequestState(value: unknown): value is AuthorizationRequ
   return typeof value === 'object' && value !== null && 'state' in value;
 }
 
-type ActiveSession = { tokenSet: SessionTokenSet; model: AIModelName };
+type ActiveSession = { tokenSet: SessionTokenSet; model: ModelName };
 
 export interface AuthSession {
   sessionId: string;
-  model: AIModelName;
+  model: ModelName;
   user: SolidUserProfile | null;
 }
 
@@ -26,8 +30,17 @@ export class AuthService {
   private profiles: Record<string, SolidUserProfile | null> = {};
   private sessions: Record<string, AuthorizationRequestState | ActiveSession> = {};
 
+  public async assertLoggedIn(request: Request): Promise<void> {
+    const sessionId = request.headers.get(SESSION_HEADER);
+    const activeSession = sessionId && this.sessions[sessionId];
+
+    if (!sessionId || !isActiveSession(activeSession)) {
+      throw status(401, 'Unauthorized');
+    }
+  }
+
   public async session(request: Request): Promise<AuthSession | null> {
-    const sessionId = request.headers.get('X-Anima-Session-Id');
+    const sessionId = request.headers.get(SESSION_HEADER);
     const activeSession = sessionId && this.sessions[sessionId];
 
     if (!sessionId || !isActiveSession(activeSession)) {
@@ -45,14 +58,25 @@ export class AuthService {
     return { sessionId, user: profile, model: activeSession.model };
   }
 
-  public update(session: AuthSession, data: Partial<Pick<AuthSession, 'model'>>): void {
-    const activeSession = this.sessions[session.sessionId];
+  public async requireSession(request: Request): Promise<AuthSession> {
+    const session = await this.session(request);
 
-    if (!isActiveSession(activeSession)) {
-      throw new Error('Session not found');
+    if (!session) {
+      throw status(401, 'Unauthorized');
     }
 
-    this.sessions[session.sessionId] = { ...activeSession, ...data };
+    return session;
+  }
+
+  public async update(request: Request, data: { model: ModelName }): Promise<void> {
+    const sessionId = request.headers.get(SESSION_HEADER);
+    const activeSession = sessionId && this.sessions[sessionId];
+
+    if (!sessionId || !isActiveSession(activeSession)) {
+      throw status(401, 'Unauthorized');
+    }
+
+    this.sessions[sessionId] = { ...activeSession, ...data };
   }
 
   public async login(oidcIssuer: string): Promise<{ sessionId: string; redirectUrl: string }> {
@@ -116,14 +140,14 @@ export class AuthService {
     }
 
     session.events.on(EVENTS.NEW_TOKENS, (tokenSet) => {
-      this.sessions[sessionId] = { tokenSet, model: MODEL_AUTO };
+      this.sessions[sessionId] = { tokenSet, model: MODEL_DEFAULT };
     });
 
     await session.handleIncomingRedirect(request.url);
   }
 
   public async logout(request: Request): Promise<void> {
-    const sessionId = request.headers.get('X-Anima-Session-Id');
+    const sessionId = request.headers.get(SESSION_HEADER);
 
     if (!sessionId) {
       return;

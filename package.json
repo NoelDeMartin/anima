@@ -5,7 +5,7 @@
     "dev:e2e": "pnpm --filter @anima/e2e dev",
     "dev:serve-pod": "community-solid-server -c @css:config/file.json -f ./solid",
     "e2e": "pnpm --filter @anima/e2e test",
-    "e2e:serve": "concurrently \"pnpm e2e:serve-pod\" \"AUTO_MODEL_MOCK=true pnpm --filter @anima/backend dev\" \"pnpm --filter @anima/frontend dev\"",
+    "e2e:serve": "concurrently \"pnpm e2e:serve-pod\" \"E2E=true pnpm --filter @anima/backend dev\" \"pnpm --filter @anima/frontend dev\"",
     "e2e:serve-pod": "community-solid-server -l warn",
     "format": "oxfmt --check",
     "format:fix": "oxfmt",
@@ -20,5 +20,5 @@
     "oxfmt": "^0.33.0",
     "oxlint": "^1.48.0"
   },
-  "packageManager": "pnpm@10.30.0"
+  "packageManager": "pnpm@10.30.1"
 }

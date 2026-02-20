@@ -14,7 +14,7 @@
     "@noeldemartin/utils": "catalog:",
     "tailwindcss": "catalog:",
     "vue": "catalog:",
-    "zod": "^4.3.6"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@aerogel/vite": "^0.1.2",

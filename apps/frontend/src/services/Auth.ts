@@ -49,6 +49,12 @@ export class AuthService extends Service {
     this.sessionId = null;
   }
 
+  public async selectModel(model: string): Promise<void> {
+    await api.ai.models({ name: model }).patch({ selected: true });
+
+    this.model = { name: model, default: false };
+  }
+
   private async initializeSession(): Promise<void> {
     if (!this.sessionId) {
       return;
