@@ -8,7 +8,7 @@
     "type-check": "vue-tsc --build --noEmit"
   },
   "dependencies": {
-    "@aerogel/core": "^0.1.2",
+    "@aerogel/core": "next",
     "@elysiajs/eden": "^1.4.8",
     "@noeldemartin/solid-utils": "catalog:",
     "@noeldemartin/utils": "catalog:",
@@ -17,7 +17,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@aerogel/vite": "^0.1.2",
+    "@aerogel/vite": "next",
     "@anima/config": "workspace:*",
     "@iconify/json": "^2.2.440",
     "typescript": "catalog:",

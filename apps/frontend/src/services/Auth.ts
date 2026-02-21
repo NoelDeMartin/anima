@@ -6,8 +6,8 @@ import api from '@/lib/api';
 import Service from './Auth.state';
 
 export class AuthService extends Service {
-  protected async boot(): Promise<void> {
-    await this.initializeSession();
+  public get loggedIn(): boolean {
+    return !!this.user;
   }
 
   public async login(loginUrl: string): Promise<void> {
@@ -55,12 +55,17 @@ export class AuthService extends Service {
     this.model = { name: model, default: false };
   }
 
+  protected async boot(): Promise<void> {
+    super.boot;
+    await this.initializeSession();
+  }
+
   private async initializeSession(): Promise<void> {
     if (!this.sessionId) {
       return;
     }
 
-    const { data } = await api.oidc.session.get();
+    const { data } = await api.oidc.session.get({ headers: { 'X-Anima-Session-Id': this.sessionId } });
 
     if (data) {
       this.user = data.user;

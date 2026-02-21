@@ -8,7 +8,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
-    Aerogel(),
+    Aerogel({ name: 'Ànima' }),
     Components({
       deep: true,
       dts: 'src/types/components.d.ts',

@@ -13,7 +13,7 @@ export class AIService {
       model: await this.createModel(session.model),
       providerOptions: { ollama: { think: false } },
       prompt: `
-            You are a helpful assistant.
+            You are a helpful assistant called "Ànima" who is an expert in the Solid Protocol.
             You are talking to a user with the following profile information: ${JSON.stringify(session.user)}.
             Reply to the following message that the user sent you:
 

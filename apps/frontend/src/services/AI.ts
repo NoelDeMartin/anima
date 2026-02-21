@@ -14,12 +14,12 @@ export class AIService extends Service {
   }
 
   async sendMessage(message: string): Promise<void> {
-    this.messages.push({ author: 'You', content: message });
+    this.messages.push({ author: 'user', content: message });
 
     const { data } = await api.ai.prompt.post({ message });
 
     if (data) {
-      this.messages.push({ author: 'AI', content: data });
+      this.messages.push({ author: 'model', content: data });
     }
   }
 }

@@ -3,6 +3,6 @@ import { defineServiceState } from '@aerogel/core';
 export default defineServiceState({
   name: 'ai',
   initialState: {
-    messages: [] as { author: 'You' | 'AI'; content: string }[],
+    messages: [] as { author: 'user' | 'model'; content: string }[],
   },
 });
