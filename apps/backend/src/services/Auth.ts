@@ -1,11 +1,12 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 import { EVENTS, Session } from '@inrupt/solid-client-authn-node';
 import type { AuthorizationRequestState, SessionTokenSet } from '@inrupt/solid-client-authn-node';
 import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
 import { facade, PromisedValue } from '@noeldemartin/utils';
 import { status } from 'elysia';
 
-import { PORT } from '../lib/constants';
-import { MODEL_DEFAULT } from './AI';
+import { PORT, MODEL_DEFAULT } from '../lib/constants';
 import type { ModelName } from './Ollama';
 
 const SESSION_HEADER = 'X-Anima-Session-Id';
@@ -24,9 +25,11 @@ export interface AuthSession {
   sessionId: string;
   model: ModelName;
   user: SolidUserProfile | null;
+  fetch: Session['fetch'];
 }
 
 export class AuthService {
+  private context = new AsyncLocalStorage<AuthSession>();
   private profiles: Record<string, SolidUserProfile | null> = {};
   private sessions: Record<string, AuthorizationRequestState | ActiveSession> = {};
 
@@ -37,6 +40,20 @@ export class AuthService {
     if (!sessionId || !isActiveSession(activeSession)) {
       throw status(401, 'Unauthorized');
     }
+  }
+
+  public runWithSession<T>(session: AuthSession, callback: () => Promise<T>): Promise<T> {
+    return this.context.run(session, callback);
+  }
+
+  public requireContextSession(): AuthSession {
+    const session = this.context.getStore();
+
+    if (!session) {
+      throw status(401, 'Unauthorized');
+    }
+
+    return session;
   }
 
   public async session(request: Request): Promise<AuthSession | null> {
@@ -55,7 +72,7 @@ export class AuthService {
       return null;
     }
 
-    return { sessionId, user: profile, model: activeSession.model };
+    return { sessionId, user: profile, model: activeSession.model, fetch: session.fetch.bind(session) };
   }
 
   public async requireSession(request: Request): Promise<AuthSession> {

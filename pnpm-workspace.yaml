@@ -4,7 +4,7 @@ packages:
   - packages/**
 
 catalog:
-  '@noeldemartin/solid-utils': 0.6.1-next.f20b091ac2162137de880c7e3bf101f9be8f588d
+  '@noeldemartin/solid-utils': next
   '@noeldemartin/utils': next
   '@tailwindcss/vite': ^4.1.18
   '@vitejs/plugin-vue': ^6.0.4

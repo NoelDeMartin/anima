@@ -1,8 +1,8 @@
 import { Elysia, redirect } from 'elysia';
 import z from 'zod';
 
-import { FRONTEND_URL, PORT } from '../lib/constants';
-import AI, { MODEL_DEFAULT } from '../services/AI';
+import { FRONTEND_URL, MODEL_DEFAULT, PORT } from '../lib/constants';
+import AI from '../services/AI';
 import Auth from '../services/Auth';
 
 export default new Elysia()

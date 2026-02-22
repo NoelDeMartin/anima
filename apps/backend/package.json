@@ -16,6 +16,7 @@
     "elysia": "^1.4.25",
     "ollama": "^0.6.3",
     "ollama-ai-provider-v2": "^3.3.1",
+    "soukai-bis": "next",
     "zod": "catalog:"
   },
   "devDependencies": {
