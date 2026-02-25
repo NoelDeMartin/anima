@@ -1,8 +1,6 @@
 import { facade, sleep } from '@noeldemartin/utils';
-import type { LanguageModel } from 'ai';
-import { MockLanguageModelV3 } from 'ai/test';
 import client from 'ollama';
-import { ollama } from 'ollama-ai-provider-v2';
+import type { ollama } from 'ollama-ai-provider-v2';
 
 interface OngoingInstall {
   progress: number;
@@ -14,16 +12,15 @@ export type ModelName = Parameters<typeof ollama>[0];
 export class OllamaService {
   protected ongoingInstalls: Record<string, OngoingInstall> = {};
 
-  public createModel(name: ModelName): LanguageModel {
-    return ollama(name);
-  }
-
-  public async installModel(name: ModelName): Promise<void> {
+  public async installModel(
+    name: ModelName,
+    options: { onProgress?: (progress: number) => void; onCompleted?: () => void },
+  ): Promise<void> {
     if (name in this.ongoingInstalls || (await this.getInstalledModels()).includes(name)) {
       return;
     }
 
-    this.backgroundInstall(name);
+    this.backgroundInstall(name, options);
   }
 
   public cancelInstallation(name: ModelName): void {
@@ -42,7 +39,10 @@ export class OllamaService {
     return response.models.map((model) => model.name);
   }
 
-  protected async backgroundInstall(name: ModelName): Promise<void> {
+  protected async backgroundInstall(
+    name: ModelName,
+    options: { onProgress?: (progress: number) => void; onCompleted?: () => void },
+  ): Promise<void> {
     try {
       const install: OngoingInstall = (this.ongoingInstalls[name] = { progress: 0 });
       const stream = await client.pull({ model: name, stream: true });
@@ -55,7 +55,11 @@ export class OllamaService {
         }
 
         install.progress = Math.round((part.completed / part.total) * 100);
+
+        options.onProgress?.(install.progress);
       }
+
+      options.onCompleted?.();
     } finally {
       delete this.ongoingInstalls[name];
     }
@@ -65,36 +69,14 @@ export class OllamaService {
 export class OllamaServiceMock extends OllamaService {
   private installedModels = ['qwen3:1.7b'];
 
-  public createModel(name: ModelName): LanguageModel {
-    return new MockLanguageModelV3({
-      async doGenerate() {
-        return {
-          content: [{ type: 'text', text: `mock response for model '${name}'` }],
-          finishReason: { unified: 'stop', raw: undefined },
-          usage: {
-            inputTokens: {
-              total: 10,
-              noCache: 10,
-              cacheRead: undefined,
-              cacheWrite: undefined,
-            },
-            outputTokens: {
-              total: 20,
-              text: 20,
-              reasoning: undefined,
-            },
-          },
-          warnings: [],
-        };
-      },
-    });
-  }
-
   public async getInstalledModels(): Promise<string[]> {
     return this.installedModels;
   }
 
-  protected async backgroundInstall(name: ModelName): Promise<void> {
+  protected async backgroundInstall(
+    name: ModelName,
+    options: { onProgress?: (progress: number) => void; onCompleted?: () => void },
+  ): Promise<void> {
     let aborted = false;
     const install: OngoingInstall = (this.ongoingInstalls[name] = {
       progress: 0,
@@ -109,6 +91,12 @@ export class OllamaServiceMock extends OllamaService {
       if (aborted) {
         return;
       }
+
+      options.onProgress?.(install.progress);
+    }
+
+    if (!aborted) {
+      options.onCompleted?.();
     }
 
     this.installedModels.push(name);

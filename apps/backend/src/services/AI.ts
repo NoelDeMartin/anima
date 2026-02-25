@@ -1,20 +1,145 @@
-import { facade, fail, objectEntries, objectFromEntries } from '@noeldemartin/utils';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { facade, objectFromEntries } from '@noeldemartin/utils';
 import { generateText, stepCountIs, type LanguageModel } from 'ai';
+import { MockLanguageModelV3 } from 'ai/test';
+import { status } from 'elysia';
+import { ollama } from 'ollama-ai-provider-v2';
+import z from 'zod';
 
-import { MODEL_DEFAULT } from '../lib/constants';
 import getTypesIndex from '../tools/getTypesIndex';
 import listContainerFiles from '../tools/listContainerFiles';
 import readFileContents from '../tools/readFileContents';
 import type { AuthSession } from './Auth';
 import Auth from './Auth';
-import type { ModelName } from './Ollama';
 import Ollama from './Ollama';
+import type { ModelName } from './Ollama';
+
+const BaseModelSchema = z.object({
+  name: z.string(),
+  enabled: z.boolean(),
+  alias: z.string().nullable().optional(),
+});
+
+const OllamaModelSchema = BaseModelSchema.extend({ provider: z.literal('ollama') });
+const ExternalModelSchema = BaseModelSchema.extend({ provider: z.enum(['google']), apiKey: z.string() });
+
+export const MODEL_PROVIDERS = ['ollama', 'google'] as const;
+
+export const ModelSchema = z.union([
+  OllamaModelSchema.extend({ status: z.literal('installed') }),
+  OllamaModelSchema.extend({ status: z.literal('installing'), progress: z.number() }),
+  ExternalModelSchema.extend({ status: z.literal('installed') }),
+]);
+
+export const CreateModelSchema = z.object({
+  provider: z.enum(MODEL_PROVIDERS),
+  name: z.string(),
+  alias: z.string().nullable(),
+  apiKey: z.string().nullable(),
+});
+
+export const UpdateModelSchema = z.object({
+  alias: z.string().nullable().optional(),
+  apiKey: z.string().nullable().optional(),
+  enabled: z.boolean().optional(),
+});
+
+export type Model = z.infer<typeof ModelSchema>;
+export type CreateModelPayload = z.infer<typeof CreateModelSchema>;
+export type UpdateModelPayload = z.infer<typeof UpdateModelSchema>;
 
 export class AIService {
-  public async prompt(session: AuthSession, message: string): Promise<string> {
+  private models: Record<string, Model> = {};
+
+  public async loadModels(): Promise<void> {
+    const names = await Ollama.getInstalledModels();
+
+    this.models = objectFromEntries(
+      names.map((name) => [name, { name, enabled: true, provider: 'ollama', status: 'installed' }]),
+    );
+  }
+
+  public getModels(): Model[] {
+    return Object.values(this.models);
+  }
+
+  public async createModel(definition: CreateModelPayload): Promise<Model> {
+    if (definition.name in this.models) {
+      throw status(400, 'Model already exists');
+    }
+
+    if (definition.provider === 'ollama') {
+      await Ollama.installModel(definition.name, {
+        onProgress: (progress) => {
+          const model = this.models[definition.name];
+
+          if (!model || model.status !== 'installing') {
+            return;
+          }
+
+          model.progress = progress;
+        },
+        onCompleted: () => {
+          const model = this.models[definition.name];
+
+          if (!model || model.status !== 'installing') {
+            return;
+          }
+
+          const updatedDefinition = { ...model } as Record<string, unknown>;
+
+          updatedDefinition.status = 'installed';
+          delete updatedDefinition.progress;
+
+          this.models[definition.name] = ModelSchema.parse(updatedDefinition);
+        },
+      });
+
+      return (this.models[definition.name] = ModelSchema.parse({
+        ...definition,
+        enabled: true,
+        status: 'installing',
+        progress: 0,
+      }));
+    }
+
+    return (this.models[definition.name] = ModelSchema.parse({
+      ...definition,
+      enabled: true,
+      status: 'installed',
+    }));
+  }
+
+  public updateModel(name: ModelName, updates: UpdateModelPayload): void {
+    if (!this.models[name]) {
+      throw status(404, 'Not found');
+    }
+
+    this.models[name] = ModelSchema.parse({ ...this.models[name], ...updates });
+  }
+
+  public deleteModel(name: ModelName): void {
+    if (!this.models[name]) {
+      throw status(404, 'Not found');
+    }
+
+    delete this.models[name];
+  }
+
+  public cancelModelInstallation(name: ModelName): void {
+    if (this.models[name]?.provider !== 'ollama' || this.models[name]?.status !== 'installing') {
+      return;
+    }
+
+    Ollama.cancelInstallation(name);
+
+    delete this.models[name];
+  }
+
+  public async prompt(session: AuthSession, model: string, message: string): Promise<string> {
     return Auth.runWithSession(session, async () => {
       const { text } = await generateText({
-        model: await this.createModel(session.model),
+        model: await this.createLanguageModel(model),
         providerOptions: { ollama: { think: false } },
         tools: { getTypesIndex, listContainerFiles, readFileContents },
         system: `
@@ -39,39 +164,47 @@ export class AIService {
     });
   }
 
-  public async installModel(name: ModelName): Promise<void> {
-    await Ollama.installModel(name);
-  }
+  protected async createLanguageModel(name: string): Promise<LanguageModel> {
+    const model = this.models[name];
 
-  public cancelInstallation(name: ModelName): void {
-    Ollama.cancelInstallation(name);
-  }
-
-  public getOngoingInstalls(): Record<string, { progress: number }> {
-    return objectFromEntries(
-      objectEntries(Ollama.getOngoingInstalls()).map(([name, install]) => [name, { progress: install.progress }]),
-    );
-  }
-
-  public async getInstalledModels(): Promise<string[]> {
-    return Ollama.getInstalledModels();
-  }
-
-  public async getDefaultModelName(): Promise<string> {
-    const models = await this.getInstalledModels();
-
-    if (models.includes('qwen3:1.7b')) {
-      return 'qwen3:1.7b';
+    if (!model) {
+      throw status(404, `Model '${name}' not found`);
     }
 
-    return models[0] ?? fail('No models available');
-  }
-
-  private async createModel(model: ModelName): Promise<LanguageModel> {
-    const modelName = model === MODEL_DEFAULT ? await this.getDefaultModelName() : model;
-
-    return Ollama.createModel(modelName);
+    switch (model.provider) {
+      case 'ollama':
+        return ollama(model.name);
+      case 'google':
+        return createGoogleGenerativeAI({ apiKey: model.apiKey })(model.name);
+    }
   }
 }
 
-export default facade(AIService);
+class AIServiceMock extends AIService {
+  protected async createLanguageModel(name: string): Promise<LanguageModel> {
+    return new MockLanguageModelV3({
+      async doGenerate() {
+        return {
+          content: [{ type: 'text', text: `mock response for model '${name}'` }],
+          finishReason: { unified: 'stop', raw: undefined },
+          usage: {
+            inputTokens: {
+              total: 10,
+              noCache: 10,
+              cacheRead: undefined,
+              cacheWrite: undefined,
+            },
+            outputTokens: {
+              total: 20,
+              text: 20,
+              reasoning: undefined,
+            },
+          },
+          warnings: [],
+        };
+      },
+    });
+  }
+}
+
+export default facade(process.env.E2E ? AIServiceMock : AIService);

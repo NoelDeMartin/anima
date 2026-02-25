@@ -1,8 +1,7 @@
 import { Elysia, redirect } from 'elysia';
 import z from 'zod';
 
-import { FRONTEND_URL, MODEL_DEFAULT, PORT } from '../lib/constants';
-import AI from '../services/AI';
+import { FRONTEND_URL, PORT } from '../lib/constants';
 import Auth from '../services/Auth';
 
 export default new Elysia()
@@ -28,19 +27,10 @@ export default new Elysia()
         return null;
       }
 
-      const isDefault = session.model === MODEL_DEFAULT;
-      const model = isDefault ? await AI.getDefaultModelName() : session.model;
-
-      return { user: session.user, model: { name: model, default: isDefault } };
+      return { user: session.user };
     },
     {
-      response: z.union([
-        z.object({
-          user: z.any(),
-          model: z.object({ name: z.string(), default: z.boolean() }),
-        }),
-        z.null(),
-      ]),
+      response: z.union([z.object({ user: z.any() }), z.null()]),
     },
   )
   .post('/oidc/login', ({ body: { oidcIssuer } }) => Auth.login(oidcIssuer), {

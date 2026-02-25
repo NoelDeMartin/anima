@@ -38,7 +38,6 @@ export class AuthService extends Service {
 
   public async logout(): Promise<void> {
     this.user = null;
-    this.model = null;
 
     if (!this.sessionId) {
       return;
@@ -49,14 +48,7 @@ export class AuthService extends Service {
     this.sessionId = null;
   }
 
-  public async selectModel(model: string): Promise<void> {
-    await api.ai.models({ name: model }).patch({ selected: true });
-
-    this.model = { name: model, default: false };
-  }
-
   protected async boot(): Promise<void> {
-    super.boot;
     await this.initializeSession();
   }
 
@@ -69,7 +61,6 @@ export class AuthService extends Service {
 
     if (data) {
       this.user = data.user;
-      this.model = data.model;
     }
   }
 }

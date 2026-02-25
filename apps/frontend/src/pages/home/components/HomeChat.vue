@@ -25,9 +25,18 @@
           @keydown.enter.prevent="form.submit()"
           input-class="resize-none w-full h-[150px]"
         />
-        <Button submit :disabled="!form.message || form.message.trim().length === 0" class="absolute bottom-2 right-2">
-          Send
-        </Button>
+        <div class="absolute bottom-2.5 right-2 flex gap-2 items-center">
+          <Select
+            label="Model"
+            name="model"
+            class="w-full [&>button]:mt-0"
+            label-class="sr-only"
+            v-model="form.model"
+            :options="$ai.models.filter((model) => model.enabled)"
+            :render-option="(model) => model.alias || model.name"
+          />
+          <Button submit :disabled="!form.message || form.message.trim().length === 0" class="h-9"> Send </Button>
+        </div>
       </Form>
     </div>
   </main>
@@ -35,12 +44,15 @@
 
 <script setup lang="ts">
 import AI from '@/services/AI';
-import { stringInput } from '@aerogel/core';
+import { requiredObjectInput, stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import { nextTick, useTemplateRef, watch } from 'vue';
 
 const $scroll = useTemplateRef('$scroll');
-const form = useForm({ message: stringInput('') });
+const form = useForm({
+  model: requiredObjectInput(AI.models.find((model) => model.enabled)),
+  message: stringInput(''),
+});
 
 async function submit() {
   const message = form.message;
@@ -51,7 +63,7 @@ async function submit() {
     return;
   }
 
-  await AI.sendMessage(message);
+  await AI.sendMessage(form.model.name, message);
 }
 
 watch(AI.messages, async () => {

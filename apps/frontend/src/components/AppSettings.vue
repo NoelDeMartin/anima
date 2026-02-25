@@ -6,5 +6,5 @@
 </template>
 
 <script setup lang="ts">
-import SettingsModal from '@/components/modals/SettingsModal.vue';
+import SettingsModal from '@/components/modals/SettingsModal/SettingsModal.vue';
 </script>

@@ -6,8 +6,7 @@ import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/soli
 import { facade, PromisedValue } from '@noeldemartin/utils';
 import { status } from 'elysia';
 
-import { PORT, MODEL_DEFAULT } from '../lib/constants';
-import type { ModelName } from './Ollama';
+import { PORT } from '../lib/constants';
 
 const SESSION_HEADER = 'X-Anima-Session-Id';
 
@@ -19,11 +18,10 @@ function isAuthorizationRequestState(value: unknown): value is AuthorizationRequ
   return typeof value === 'object' && value !== null && 'state' in value;
 }
 
-type ActiveSession = { tokenSet: SessionTokenSet; model: ModelName };
+type ActiveSession = { tokenSet: SessionTokenSet };
 
 export interface AuthSession {
   sessionId: string;
-  model: ModelName;
   user: SolidUserProfile | null;
   fetch: Session['fetch'];
 }
@@ -72,7 +70,7 @@ export class AuthService {
       return null;
     }
 
-    return { sessionId, user: profile, model: activeSession.model, fetch: session.fetch.bind(session) };
+    return { sessionId, user: profile, fetch: session.fetch.bind(session) };
   }
 
   public async requireSession(request: Request): Promise<AuthSession> {
@@ -83,17 +81,6 @@ export class AuthService {
     }
 
     return session;
-  }
-
-  public async update(request: Request, data: { model: ModelName }): Promise<void> {
-    const sessionId = request.headers.get(SESSION_HEADER);
-    const activeSession = sessionId && this.sessions[sessionId];
-
-    if (!sessionId || !isActiveSession(activeSession)) {
-      throw status(401, 'Unauthorized');
-    }
-
-    this.sessions[sessionId] = { ...activeSession, ...data };
   }
 
   public async login(oidcIssuer: string): Promise<{ sessionId: string; redirectUrl: string }> {
@@ -157,7 +144,7 @@ export class AuthService {
     }
 
     session.events.on(EVENTS.NEW_TOKENS, (tokenSet) => {
-      this.sessions[sessionId] = { tokenSet, model: MODEL_DEFAULT };
+      this.sessions[sessionId] = { tokenSet };
     });
 
     await session.handleIncomingRedirect(request.url);
