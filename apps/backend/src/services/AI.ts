@@ -1,6 +1,13 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { facade, objectFromEntries } from '@noeldemartin/utils';
-import { generateText, stepCountIs, type LanguageModel } from 'ai';
+import {
+  streamText,
+  stepCountIs,
+  type LanguageModel,
+  convertToModelMessages,
+  simulateReadableStream,
+  type UIMessage,
+} from 'ai';
 import { MockLanguageModelV3 } from 'ai/test';
 import { status } from 'elysia';
 import { ollama } from 'ollama-ai-provider-v2';
@@ -22,6 +29,12 @@ const BaseModelSchema = z.object({
 
 const OllamaModelSchema = BaseModelSchema.extend({ provider: z.literal('ollama') });
 const ExternalModelSchema = BaseModelSchema.extend({ provider: z.enum(['google']), apiKey: z.string() });
+
+const tools = {
+  getTypesIndex,
+  listContainerFiles,
+  readFileContents,
+};
 
 export const MODEL_PROVIDERS = ['ollama', 'google'] as const;
 
@@ -47,6 +60,7 @@ export const UpdateModelSchema = z.object({
 export type Model = z.infer<typeof ModelSchema>;
 export type CreateModelPayload = z.infer<typeof CreateModelSchema>;
 export type UpdateModelPayload = z.infer<typeof UpdateModelSchema>;
+export type Tools = typeof tools;
 
 export class AIService {
   private models: Record<string, Model> = {};
@@ -136,12 +150,13 @@ export class AIService {
     delete this.models[name];
   }
 
-  public async prompt(session: AuthSession, model: string, message: string): Promise<string> {
+  public async prompt(session: AuthSession, model: string, messages: UIMessage[]): Promise<Response> {
     return Auth.runWithSession(session, async () => {
-      const { text } = await generateText({
+      const result = streamText({
+        messages: await convertToModelMessages(messages),
         model: await this.createLanguageModel(model),
         providerOptions: { ollama: { think: false } },
-        tools: { getTypesIndex, listContainerFiles, readFileContents },
+        tools,
         system: `
             You are a privacy-first personal assistant called Ànima.
 
@@ -157,10 +172,9 @@ export class AIService {
             4. FOLLOW LINKS: If you read a file and find a URL pointing to another resource, use the 'getDocument' tool to fetch it if you need that context to answer the user's question.
         `,
         stopWhen: stepCountIs(10),
-        prompt: `${message} (System Note: If this requires personal context, do not refuse. Use the tools to search my private data.)`,
       });
 
-      return text;
+      return result.toUIMessageStreamResponse();
     });
   }
 
@@ -183,24 +197,34 @@ export class AIService {
 class AIServiceMock extends AIService {
   protected async createLanguageModel(name: string): Promise<LanguageModel> {
     return new MockLanguageModelV3({
-      async doGenerate() {
+      async doStream() {
         return {
-          content: [{ type: 'text', text: `mock response for model '${name}'` }],
-          finishReason: { unified: 'stop', raw: undefined },
-          usage: {
-            inputTokens: {
-              total: 10,
-              noCache: 10,
-              cacheRead: undefined,
-              cacheWrite: undefined,
-            },
-            outputTokens: {
-              total: 20,
-              text: 20,
-              reasoning: undefined,
-            },
-          },
-          warnings: [],
+          stream: simulateReadableStream({
+            chunks: [
+              { type: 'text-start', id: 'text-1' },
+              { type: 'text-delta', id: 'text-1', delta: 'mock response for model ' },
+              { type: 'text-delta', id: 'text-1', delta: `'${name}'` },
+              { type: 'text-end', id: 'text-1' },
+              {
+                type: 'finish',
+                finishReason: { unified: 'stop', raw: undefined },
+                logprobs: undefined,
+                usage: {
+                  inputTokens: {
+                    total: 3,
+                    noCache: 3,
+                    cacheRead: undefined,
+                    cacheWrite: undefined,
+                  },
+                  outputTokens: {
+                    total: 10,
+                    text: 10,
+                    reasoning: undefined,
+                  },
+                },
+              },
+            ],
+          }),
         };
       },
     });

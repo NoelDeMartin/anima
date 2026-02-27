@@ -3,8 +3,12 @@ import type { Model } from '@anima/backend';
 
 export default defineServiceState({
   name: 'ai',
+  persist: ['selectedModel'],
   initialState: {
-    models: [] as Model[],
-    messages: [] as { author: 'user' | 'model'; content: string }[],
+    selectedModel: null as string | null,
+    models: {} as Record<string, Model>,
+  },
+  computed: {
+    modelsList: ({ models }) => Object.values(models),
   },
 });

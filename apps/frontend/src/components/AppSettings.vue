@@ -1,5 +1,11 @@
 <template>
-  <Button @click="$ui.modal(SettingsModal)" variant="ghost" size="icon" title="Settings" class="fixed top-4 right-4">
+  <Button
+    @click="$ui.modal(SettingsModal)"
+    variant="ghost"
+    size="icon"
+    title="Settings"
+    class="fixed z-10 top-4 right-4"
+  >
     <i-heroicons-cog-6-tooth class="size-6" />
     <span class="sr-only">Settings</span>
   </Button>

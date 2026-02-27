@@ -9,11 +9,10 @@
   "dependencies": {
     "@ai-sdk/google": "^3.0.30",
     "@elysiajs/cors": "^1.4.1",
-    "@elysiajs/node": "^1.4.4",
     "@inrupt/solid-client-authn-node": "^3.1.1",
     "@noeldemartin/solid-utils": "catalog:",
     "@noeldemartin/utils": "catalog:",
-    "ai": "^6.0.92",
+    "ai": "catalog:",
     "elysia": "^1.4.25",
     "ollama": "^0.6.3",
     "ollama-ai-provider-v2": "^3.3.1",

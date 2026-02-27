@@ -1,5 +1,5 @@
 import type { CreateModelPayload, UpdateModelPayload, Model } from '@anima/backend';
-import { facade } from '@noeldemartin/utils';
+import { facade, objectFromEntries } from '@noeldemartin/utils';
 
 import api from '@/lib/api';
 import Auth from '@/services/Auth';
@@ -10,50 +10,48 @@ export class AIService extends Service {
   async createModel(model: CreateModelPayload): Promise<void> {
     const { data } = await api['ai'].models.post(model);
 
-    data && this.models.push(data);
+    if (data) {
+      this.models[data.name] = data;
+    }
   }
 
   async refreshModels(): Promise<void> {
     const { data } = await api['ai'].models.get();
 
-    this.models = data ?? [];
+    this.models = objectFromEntries(data?.map((model) => [model.name, model]) ?? []);
   }
 
   async updateModel(name: string, updates: UpdateModelPayload): Promise<void> {
-    const index = this.models.findIndex((model) => model.name === name);
-
-    if (index === -1) {
+    if (!(name in this.models)) {
       return;
     }
 
-    const originalModel = this.models[index] as Model;
+    const originalModel = this.models[name] as Model;
 
     try {
-      this.models[index] = { ...this.models[index], ...updates } as Model;
+      this.models[name] = { ...this.models[name], ...updates } as Model;
 
       await api['ai'].models({ name }).patch(updates);
     } catch (error) {
-      this.models[index] = originalModel;
+      this.models[name] = originalModel;
 
       throw error;
     }
   }
 
   async deleteModel(name: string): Promise<void> {
-    const index = this.models.findIndex((model) => model.name === name);
-
-    if (index === -1) {
+    if (!(name in this.models)) {
       return;
     }
 
-    const originalModel = this.models[index] as Model;
+    const originalModel = this.models[name] as Model;
 
     try {
-      this.models.splice(index, 1);
+      delete this.models[name];
 
       await api['ai'].models({ name }).delete();
     } catch (error) {
-      this.models.splice(index, 0, originalModel);
+      this.models[name] = originalModel;
 
       throw error;
     }
@@ -63,22 +61,16 @@ export class AIService extends Service {
     await api.ai.models({ name })['cancel-installation'].post();
   }
 
-  async sendMessage(model: string, message: string): Promise<void> {
-    this.messages.push({ author: 'user', content: message });
-
-    const { data } = await api.ai.chat.post({ model, message });
-
-    if (data) {
-      this.messages.push({ author: 'model', content: data });
-    }
-  }
-
   protected async boot(): Promise<void> {
     await Auth.booted;
 
     const { data } = await api.ai.models.get({ headers: { 'X-Anima-Session-Id': Auth.sessionId } });
 
-    this.models = data ?? [];
+    this.models = objectFromEntries(data?.map((model) => [model.name, model]) ?? []);
+
+    if (!this.selectedModel || !(this.selectedModel in this.models)) {
+      this.selectedModel = Object.keys(this.models)[0] ?? this.selectedModel;
+    }
   }
 }
 

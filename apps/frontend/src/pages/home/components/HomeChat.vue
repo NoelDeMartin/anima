@@ -7,13 +7,29 @@
           <Markdown>Hello {{ $auth.user?.name ?? $auth.user?.webId }}, how can I help you today?</Markdown>
         </li>
         <li
-          v-for="(message, index) in $ai.messages"
-          :key="index"
-          :class="{ 'self-end bg-gray-100 rounded-lg px-4 py-2': message.author === 'user' }"
+          v-for="message in chat.messages"
+          :key="message.id"
+          :class="{ 'self-end bg-gray-100 rounded-lg px-4 py-2': message.role === 'user' }"
         >
-          <Markdown>{{ message.content }}</Markdown>
+          <template v-for="part in message.parts">
+            <Markdown v-if="part.type === 'text'" :text="part.text" />
+            <HomeToolCall v-else-if="part.type === 'tool-getTypesIndex'" label="Read type index" :data="part.output" />
+            <HomeToolCall
+              v-else-if="part.type === 'tool-listContainerFiles'"
+              :label="`Listed files from ${(part as UIToolInvocation<Tools['listContainerFiles']>).input?.url}`"
+              :data="part.output"
+            />
+            <HomeToolCall
+              v-else-if="part.type === 'tool-readFileContents'"
+              :label="`Read ${(part as UIToolInvocation<Tools['readFileContents']>).input?.url}`"
+              :data="part.output"
+            />
+            <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
+          </template>
         </li>
+        <li v-if="chat.error" class="text-red-500">{{ chat.error.message }}</li>
       </ul>
+      <i-svg-spinners-3-dots-bounce v-if="chat.status !== 'ready' && chat.status !== 'error'" class="size-6 shrink-0" />
     </div>
 
     <div class="px-8 w-full">
@@ -28,12 +44,13 @@
         <div class="absolute bottom-2.5 right-2 flex gap-2 items-center">
           <Select
             label="Model"
-            name="model"
             class="w-full [&>button]:mt-0"
             label-class="sr-only"
-            v-model="form.model"
-            :options="$ai.models.filter((model) => model.enabled)"
-            :render-option="(model) => model.alias || model.name"
+            v-model="$ai.selectedModel"
+            :options="$ai.modelsList.filter((model) => model.enabled).map((model) => model.name)"
+            :render-option="
+              (model) => (model && (AI.models[model]?.alias || AI.models[model]?.name)) || model || 'Unknown'
+            "
           />
           <Button submit :disabled="!form.message || form.message.trim().length === 0" class="h-9"> Send </Button>
         </div>
@@ -44,14 +61,26 @@
 
 <script setup lang="ts">
 import AI from '@/services/AI';
-import { requiredObjectInput, stringInput } from '@aerogel/core';
+import Auth from '@/services/Auth';
+import { env } from '@/lib/env';
+import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
-import { nextTick, useTemplateRef, watch } from 'vue';
+import { nextTick, useTemplateRef, watchEffect } from 'vue';
+import { Chat } from '@ai-sdk/vue';
+import { DefaultChatTransport, type UIToolInvocation } from 'ai';
+import { required } from '@noeldemartin/utils';
+import type { Tools } from '@anima/backend';
 
 const $scroll = useTemplateRef('$scroll');
 const form = useForm({
-  model: requiredObjectInput(AI.models.find((model) => model.enabled)),
   message: stringInput(''),
+});
+
+const chat = new Chat({
+  transport: new DefaultChatTransport({
+    api: `http://${env('VITE_API_DOMAIN')}/ai/chat`,
+    headers: { 'X-Anima-Session-Id': required(Auth.sessionId) },
+  }),
 });
 
 async function submit() {
@@ -63,10 +92,16 @@ async function submit() {
     return;
   }
 
-  await AI.sendMessage(form.model.name, message);
+  await chat.sendMessage({ text: message }, { body: { model: AI.selectedModel } });
 }
 
-watch(AI.messages, async () => {
+function deepRead(value: unknown): void {
+  JSON.stringify(value);
+}
+
+watchEffect(async () => {
+  deepRead(chat.lastMessage);
+
   await nextTick();
 
   $scroll.value?.scrollTo({ top: $scroll.value?.scrollHeight, behavior: 'smooth' });

@@ -35,7 +35,7 @@ const form = useForm({
   apiKey: stringInput(('apiKey' in model && model.apiKey) || ''),
 });
 const installingModel = computed(() => {
-  const updatedModel = AI.models.find((_model) => _model.name === model.name);
+  const updatedModel = AI.models[model.name];
 
   if (!updatedModel || updatedModel.status !== 'installing') {
     return null;

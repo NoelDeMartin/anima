@@ -1,7 +1,7 @@
 <template>
   <Modal title="Available models" class="p-0">
-    <ul v-if="$ai.models?.length" class="border-t border-gray-200">
-      <SettingsModalModel v-for="model in $ai.models" :key="model.name" :model="model" />
+    <ul v-if="$ai.modelsList?.length" class="border-t border-gray-200">
+      <SettingsModalModel v-for="model in $ai.modelsList" :key="model.name" :model="model" />
     </ul>
     <div class="p-4">
       <Button variant="secondary" class="w-full" @click="$ui.modal(CreateModelModal)">Install model</Button>
@@ -17,7 +17,7 @@ import { onUnmounted, watchEffect } from 'vue';
 let pollingIntervalId: NodeJS.Timeout | null = null;
 
 watchEffect(() => {
-  const hasModelsInstalling = !!AI.models.some((model) => model.status === 'installing');
+  const hasModelsInstalling = !!AI.modelsList.some((model) => model.status === 'installing');
 
   if (pollingIntervalId) {
     if (hasModelsInstalling) {
