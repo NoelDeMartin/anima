@@ -6,6 +6,7 @@
   >
     <i-simple-icons-ollama v-if="model.provider === 'ollama'" class="size-4" />
     <i-simple-icons-google v-else-if="model.provider === 'google'" class="size-4" />
+    <span v-else class="uppercase">{{ model.provider[0] }}</span>
 
     <div class="flex items-center whitespace-nowrap overflow-hidden">
       <Button variant="link" @click="$ui.modal(EditModelModal, { model })" class="truncate">{{ model.name }}</Button>
@@ -20,18 +21,17 @@
     <Switch
       v-else
       :modelValue="model.enabled"
-      @update:modelValue="run(AI.updateModel(model.name, { enabled: $event }))"
+      @update:modelValue="run(AI.updateModel(model.provider, model.name, { enabled: $event }))"
     />
   </li>
 </template>
 
 <script setup lang="ts">
 import AI from '@/services/AI';
-import type { Model } from '@anima/backend';
+import type { AIModel } from '@anima/core';
 import { useLoading } from '@/utils/loading';
 import EditModelModal from '@/components/modals/EditModelModal.vue';
-import { computed } from 'vue';
 
-const { model } = defineProps<{ model: Model }>();
+const { model } = defineProps<{ model: AIModel }>();
 const { loading, run } = useLoading();
 </script>

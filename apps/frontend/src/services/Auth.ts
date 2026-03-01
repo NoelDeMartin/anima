@@ -1,13 +1,27 @@
-import { fetchLoginUserProfile } from '@noeldemartin/solid-utils';
+import { Solid } from '@aerogel/plugin-solid';
+import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
 import { facade, sleep, urlRoot } from '@noeldemartin/utils';
 
 import api from '@/lib/api';
+import { env } from '@/lib/env';
 
 import Service from './Auth.state';
 
 export class AuthService extends Service {
-  public get loggedIn(): boolean {
+  public isLoggedIn(): boolean {
+    if (env('VITE_SPA_MODE')) {
+      return Solid.isLoggedIn();
+    }
+
     return !!this.user;
+  }
+
+  getUser(): SolidUserProfile | null {
+    if (env('VITE_SPA_MODE')) {
+      return Solid.user;
+    }
+
+    return this.user;
   }
 
   public async login(loginUrl: string): Promise<void> {
@@ -37,6 +51,10 @@ export class AuthService extends Service {
   }
 
   public async logout(): Promise<void> {
+    if (env('VITE_SPA_MODE')) {
+      return Solid.logout();
+    }
+
     this.user = null;
 
     if (!this.sessionId) {
@@ -49,6 +67,10 @@ export class AuthService extends Service {
   }
 
   protected async boot(): Promise<void> {
+    if (env('VITE_SPA_MODE')) {
+      return;
+    }
+
     await this.initializeSession();
   }
 

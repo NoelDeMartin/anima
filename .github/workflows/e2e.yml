@@ -22,3 +22,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @anima/e2e exec playwright install --with-deps
       - run: pnpm e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && failure() }}
+        with:
+          name: test-results
+          path: e2e/test-results/
+          retention-days: 30

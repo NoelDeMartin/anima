@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <template v-if="$auth.loggedIn">
+    <template v-if="$auth.isLoggedIn()">
       <AppSettings />
       <Home />
     </template>

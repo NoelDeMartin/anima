@@ -1,75 +1,88 @@
-import type { CreateModelPayload, UpdateModelPayload, Model } from '@anima/backend';
-import { facade, objectFromEntries } from '@noeldemartin/utils';
+import type { Chat } from '@ai-sdk/vue';
+import type { AIModel, UIMessage, ModelData, ModelName, ProviderName } from '@anima/core';
+import { facade, objectFromEntries, objectKeys } from '@noeldemartin/utils';
 
-import api from '@/lib/api';
+import { env } from '@/lib/env';
+import { LocalRuntime } from '@/lib/runtimes/LocalRuntime';
+import { RemoteRuntime } from '@/lib/runtimes/RemoteRuntime';
+import type Runtime from '@/lib/runtimes/Runtime';
 import Auth from '@/services/Auth';
 
 import Service from './AI.state';
 
 export class AIService extends Service {
-  async createModel(model: CreateModelPayload): Promise<void> {
-    const { data } = await api['ai'].models.post(model);
+  public runtime: Runtime = env('VITE_SPA_MODE') ? new LocalRuntime() : new RemoteRuntime();
 
-    if (data) {
-      this.models[data.name] = data;
-    }
+  public newChat(): Chat<UIMessage> {
+    return this.runtime.createChat();
+  }
+
+  public sendMessage(chat: Chat<UIMessage>, message: string): Promise<void> {
+    return this.runtime.sendMessage(chat, message);
+  }
+
+  async installModel(provider: ProviderName, name: ModelName, data: ModelData): Promise<void> {
+    this.models[`${provider}-${name}`] = await this.runtime.installModel(provider, name, data);
   }
 
   async refreshModels(): Promise<void> {
-    const { data } = await api['ai'].models.get();
+    const models = await this.runtime.getModels();
 
-    this.models = objectFromEntries(data?.map((model) => [model.name, model]) ?? []);
+    this.models = objectFromEntries(models.map((model) => [`${model.provider}-${model.name}`, model]));
   }
 
-  async updateModel(name: string, updates: UpdateModelPayload): Promise<void> {
-    if (!(name in this.models)) {
+  async updateModel(provider: ProviderName, name: ModelName, updates: Partial<ModelData>): Promise<void> {
+    const key = `${provider}-${name}` as const;
+    const originalModel = this.models[key];
+
+    if (!originalModel) {
       return;
     }
 
-    const originalModel = this.models[name] as Model;
-
     try {
-      this.models[name] = { ...this.models[name], ...updates } as Model;
+      this.models[key] = { ...originalModel, ...updates } as AIModel;
 
-      await api['ai'].models({ name }).patch(updates);
+      await this.runtime.updateModel(provider, name, updates);
     } catch (error) {
-      this.models[name] = originalModel;
+      this.models[key] = originalModel;
 
       throw error;
     }
   }
 
-  async deleteModel(name: string): Promise<void> {
-    if (!(name in this.models)) {
+  async deleteModel(provider: ProviderName, name: ModelName): Promise<void> {
+    const key = `${provider}-${name}` as const;
+    const originalModel = this.models[key];
+
+    if (!originalModel) {
       return;
     }
 
-    const originalModel = this.models[name] as Model;
-
     try {
-      delete this.models[name];
+      delete this.models[key];
 
-      await api['ai'].models({ name }).delete();
+      await this.runtime.deleteModel(provider, name);
     } catch (error) {
-      this.models[name] = originalModel;
+      this.models[key] = originalModel;
 
       throw error;
     }
   }
 
-  async cancelInstallation(name: string): Promise<void> {
-    await api.ai.models({ name })['cancel-installation'].post();
+  async cancelInstallation(provider: ProviderName, name: ModelName): Promise<void> {
+    await this.runtime.cancelModelInstallation(provider, name);
   }
 
   protected async boot(): Promise<void> {
     await Auth.booted;
 
-    const { data } = await api.ai.models.get({ headers: { 'X-Anima-Session-Id': Auth.sessionId } });
+    const { models, providers } = await this.runtime.initialize();
 
-    this.models = objectFromEntries(data?.map((model) => [model.name, model]) ?? []);
+    this.models = objectFromEntries(models.map((model) => [`${model.provider}-${model.name}`, model]));
+    this.providers = providers;
 
-    if (!this.selectedModel || !(this.selectedModel in this.models)) {
-      this.selectedModel = Object.keys(this.models)[0] ?? this.selectedModel;
+    if (!this.selectedModelKey || !(this.selectedModelKey in this.models)) {
+      this.selectedModelKey = objectKeys(this.models)[0] ?? this.selectedModelKey;
     }
   }
 }

@@ -4,7 +4,7 @@
       <div class="grow" />
       <ul class="flex flex-col gap-4">
         <li>
-          <Markdown>Hello {{ $auth.user?.name ?? $auth.user?.webId }}, how can I help you today?</Markdown>
+          <Markdown>Hello {{ $auth.getUser()?.name ?? $auth.getUser()?.webId }}, how can I help you today?</Markdown>
         </li>
         <li
           v-for="message in chat.messages"
@@ -46,11 +46,9 @@
             label="Model"
             class="w-full [&>button]:mt-0"
             label-class="sr-only"
-            v-model="$ai.selectedModel"
-            :options="$ai.modelsList.filter((model) => model.enabled).map((model) => model.name)"
-            :render-option="
-              (model) => (model && (AI.models[model]?.alias || AI.models[model]?.name)) || model || 'Unknown'
-            "
+            v-model="$ai.selectedModelKey"
+            :options="models"
+            :render-option="renderModel"
           />
           <Button submit :disabled="!form.message || form.message.trim().length === 0" class="h-9"> Send </Button>
         </div>
@@ -61,27 +59,27 @@
 
 <script setup lang="ts">
 import AI from '@/services/AI';
-import Auth from '@/services/Auth';
-import { env } from '@/lib/env';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
-import { nextTick, useTemplateRef, watchEffect } from 'vue';
-import { Chat } from '@ai-sdk/vue';
-import { DefaultChatTransport, type UIToolInvocation } from 'ai';
-import { required } from '@noeldemartin/utils';
 import type { Tools } from '@anima/backend';
+import type { ModelName, ProviderName } from '@anima/core';
+import type { UIToolInvocation } from 'ai';
+import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
 
+const chat = AI.newChat();
 const $scroll = useTemplateRef('$scroll');
-const form = useForm({
-  message: stringInput(''),
-});
+const form = useForm({ message: stringInput('') });
+const models = computed(() =>
+  AI.modelsList.filter((model) => model.enabled).map((model) => `${model.provider}-${model.name}` as const),
+);
 
-const chat = new Chat({
-  transport: new DefaultChatTransport({
-    api: `http://${env('VITE_API_DOMAIN')}/ai/chat`,
-    headers: { 'X-Anima-Session-Id': required(Auth.sessionId) },
-  }),
-});
+function renderModel(model: `${ProviderName}-${ModelName}` | null) {
+  if (!model) {
+    return 'Unknown';
+  }
+
+  return AI.models[model]?.alias || AI.models[model]?.name || model?.split('-')[1] || 'Unknown';
+}
 
 async function submit() {
   const message = form.message;
@@ -92,7 +90,7 @@ async function submit() {
     return;
   }
 
-  await chat.sendMessage({ text: message }, { body: { model: AI.selectedModel } });
+  await AI.sendMessage(chat, message);
 }
 
 function deepRead(value: unknown): void {

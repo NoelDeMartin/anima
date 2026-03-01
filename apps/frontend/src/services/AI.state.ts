@@ -1,14 +1,16 @@
 import { defineServiceState } from '@aerogel/core';
-import type { Model } from '@anima/backend';
+import type { AIModel, ModelName, ProviderName } from '@anima/core';
 
 export default defineServiceState({
   name: 'ai',
-  persist: ['selectedModel'],
+  persist: ['selectedModelKey'],
   initialState: {
-    selectedModel: null as string | null,
-    models: {} as Record<string, Model>,
+    providers: [] as ProviderName[],
+    models: {} as Record<`${ProviderName}-${ModelName}`, AIModel>,
+    selectedModelKey: null as `${ProviderName}-${ModelName}` | null,
   },
   computed: {
     modelsList: ({ models }) => Object.values(models),
+    selectedModel: ({ models, selectedModelKey }) => (selectedModelKey && models[selectedModelKey]) ?? null,
   },
 });

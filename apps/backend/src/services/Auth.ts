@@ -22,7 +22,7 @@ type ActiveSession = { tokenSet: SessionTokenSet };
 
 export interface AuthSession {
   sessionId: string;
-  user: SolidUserProfile | null;
+  user: SolidUserProfile;
   fetch: Session['fetch'];
 }
 

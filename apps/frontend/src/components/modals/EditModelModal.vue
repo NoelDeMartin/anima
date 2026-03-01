@@ -2,7 +2,7 @@
   <Modal :title="model.name">
     <div v-if="installingModel">
       <ProgressBar :progress="installingModel.progress / 100" class="w-full" />
-      <Button class="w-full mt-2" @click="($ai.cancelInstallation(model.name), close())">Cancel</Button>
+      <Button class="w-full mt-2" @click="($ai.cancelInstallation(model.provider, model.name), close())">Cancel</Button>
     </div>
     <Form v-else :form @submit="submit" class="flex flex-col gap-2">
       <Input label="Alias" name="alias" class="w-full" />
@@ -25,17 +25,17 @@ import AI from '@/services/AI';
 import { Form, UI, useModal } from '@aerogel/core';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
-import type { Model } from '@anima/backend';
+import type { AIModel } from '@anima/core';
 import { computed } from 'vue';
 
-const { model } = defineProps<{ model: Model }>();
+const { model } = defineProps<{ model: AIModel }>();
 const { close } = useModal();
 const form = useForm({
   alias: stringInput(model.alias ?? ''),
   apiKey: stringInput(('apiKey' in model && model.apiKey) || ''),
 });
 const installingModel = computed(() => {
-  const updatedModel = AI.models[model.name];
+  const updatedModel = AI.models[`${model.provider}-${model.name}`];
 
   if (!updatedModel || updatedModel.status !== 'installing') {
     return null;
@@ -54,13 +54,16 @@ async function deleteModel() {
     return;
   }
 
-  await AI.deleteModel(model.name);
+  await AI.deleteModel(model.provider, model.name);
 
   close();
 }
 
 async function submit() {
-  await AI.updateModel(model.name, { alias: form.alias?.trim() || null, apiKey: form.apiKey?.trim() || null });
+  await AI.updateModel(model.provider, model.name, {
+    alias: form.alias?.trim() || null,
+    apiKey: form.apiKey?.trim() || null,
+  });
 
   close();
 }

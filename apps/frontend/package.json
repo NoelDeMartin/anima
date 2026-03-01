@@ -5,15 +5,19 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
+    "dev:spa": "VITE_SPA_MODE=true vite",
     "type-check": "vue-tsc --build --noEmit"
   },
   "dependencies": {
     "@aerogel/core": "next",
+    "@aerogel/plugin-solid": "next",
     "@ai-sdk/vue": "^3.0.100",
+    "@anima/core": "workspace:*",
     "@elysiajs/eden": "^1.4.8",
     "@noeldemartin/solid-utils": "catalog:",
     "@noeldemartin/utils": "catalog:",
     "ai": "catalog:",
+    "soukai-bis": "next",
     "tailwindcss": "catalog:",
     "vue": "catalog:",
     "zod": "catalog:"

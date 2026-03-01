@@ -5,7 +5,7 @@
         label="Provider"
         name="provider"
         class="w-full"
-        :options="['ollama', 'google']"
+        :options="AI.providers"
         :render-option="(option) => stringToStudlyCase(option)"
       />
       <Input label="Name" name="name" class="w-full" />
@@ -25,20 +25,20 @@ import AI from '@/services/AI';
 import { Form, requiredEnumInput, requiredStringInput, useModal } from '@aerogel/core';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
+import type { ModelName, ProviderName } from '@anima/core';
 import { stringToStudlyCase } from '@noeldemartin/utils';
 
 const { close } = useModal();
 const form = useForm({
-  provider: requiredEnumInput(['ollama', 'google'], 'ollama'),
+  provider: requiredEnumInput(AI.providers, AI.providers[0]),
   name: requiredStringInput(''),
   alias: stringInput(''),
   apiKey: stringInput(''),
 });
 
 async function submit() {
-  await AI.createModel({
-    provider: form.provider,
-    name: form.name,
+  await AI.installModel(form.provider as ProviderName, form.name as ModelName, {
+    enabled: true,
     alias: form.alias?.trim() || null,
     apiKey: form.apiKey?.trim() || null,
   });

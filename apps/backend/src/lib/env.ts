@@ -2,13 +2,12 @@ import { parseBoolean } from '@noeldemartin/utils';
 import z from 'zod';
 
 const EnvSchema = z.object({
-  VITE_API_DOMAIN: z.string(),
-  VITE_SPA_MODE: z.string().optional().transform(parseBoolean),
+  E2E: z.string().optional().transform(parseBoolean),
 });
 
 type Env = z.infer<typeof EnvSchema>;
 
-const parsedEnv = EnvSchema.parse(import.meta.env);
+const parsedEnv = EnvSchema.parse(process.env);
 
 export function env<T extends keyof Env>(key: T): Env[T] {
   return parsedEnv[key];

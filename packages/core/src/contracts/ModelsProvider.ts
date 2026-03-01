@@ -1,0 +1,25 @@
+import type { ModelData, ModelName } from '@anima/core';
+import type { streamText, LanguageModel } from 'ai';
+import z from 'zod';
+
+export type ProviderOptions = NonNullable<Parameters<typeof streamText>[0]['providerOptions']>;
+
+export const BaseProviderModelSchema = z.object({
+  name: z.string().brand('ModelName'),
+});
+
+export const ProviderModelSchema = z.union([
+  BaseProviderModelSchema.extend({ status: z.literal('installed') }),
+  BaseProviderModelSchema.extend({ status: z.literal('installing'), progress: z.number() }),
+]);
+
+export type ProviderModel = z.infer<typeof ProviderModelSchema>;
+
+export default interface ModelsProvider {
+  getModels(): Promise<ProviderModel[]>;
+  installModel(name: ModelName): Promise<ProviderModel>;
+  deleteModel(name: ModelName): Promise<void>;
+  cancelModelInstallation(name: ModelName): Promise<void>;
+  createLanguageModel(name: ModelName, data?: ModelData): Promise<LanguageModel>;
+  getProviderOptions?(model: ModelName): ProviderOptions;
+}
