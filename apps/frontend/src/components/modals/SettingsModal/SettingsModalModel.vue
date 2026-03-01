@@ -6,6 +6,11 @@
   >
     <i-simple-icons-ollama v-if="model.provider === 'ollama'" class="size-4" />
     <i-simple-icons-google v-else-if="model.provider === 'google'" class="size-4" />
+    <i-simple-icons-googlechrome
+      v-else-if="model.provider === 'browser' && $browser.name === 'chrome'"
+      class="size-4"
+    />
+    <i-simple-icons-microsoftedge v-else-if="model.provider === 'browser' && $browser.name === 'edge'" class="size-4" />
     <span v-else class="uppercase">{{ model.provider[0] }}</span>
 
     <div class="flex items-center whitespace-nowrap overflow-hidden">

@@ -13,13 +13,21 @@ import {
 import { fail } from '@noeldemartin/utils';
 import { DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
 
+import BrowserModelsProvider from '@/lib/providers/BrowserModelsProvider';
 import AI from '@/services/AI';
+import Browser from '@/services/Browser';
 
 import type Runtime from './Runtime';
 
-export class LocalRuntime implements Runtime {
+export default class LocalRuntime implements Runtime {
   async initialize(): Promise<{ models: AIModel[]; providers: ProviderName[] }> {
-    ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider());
+    await Browser.booted;
+
+    await Promise.all([
+      ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
+      Browser.promptAPIAvailable &&
+        ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider()),
+    ]);
 
     return { models: await this.getModels(), providers: await this.getProviders() };
   }

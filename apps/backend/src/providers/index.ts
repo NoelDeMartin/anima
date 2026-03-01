@@ -3,13 +3,15 @@ import { GoogleModelsProvider, ModelsManager, type ProviderName, TestingModelsPr
 import { env } from '../lib/env';
 import { OllamaModelsProvider } from './OllamaModelsProvider';
 
-export function registerProviders() {
+export async function registerProviders() {
   if (env('E2E')) {
-    ModelsManager.registerProvider('testing' as ProviderName, new TestingModelsProvider());
+    await ModelsManager.registerProvider('testing' as ProviderName, new TestingModelsProvider());
 
     return;
   }
 
-  ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider());
-  ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider());
+  await Promise.all([
+    ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
+    ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider()),
+  ]);
 }

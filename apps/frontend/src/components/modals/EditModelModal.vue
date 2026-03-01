@@ -8,7 +8,7 @@
       <Input label="Alias" name="alias" class="w-full" />
       <Input v-if="model.provider === 'google'" label="API Key" name="apiKey" type="password" class="w-full" />
       <div class="flex gap-2 mt-2">
-        <Button variant="ghost" @click="deleteModel()" title="Delete">
+        <Button v-if="model.provider !== 'browser'" variant="ghost" @click="deleteModel()" title="Delete">
           <i-heroicons-trash class="size-4" />
           <span class="sr-only">Delete</span>
         </Button>

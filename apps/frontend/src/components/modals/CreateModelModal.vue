@@ -5,7 +5,7 @@
         label="Provider"
         name="provider"
         class="w-full"
-        :options="AI.providers"
+        :options="providers"
         :render-option="(option) => stringToStudlyCase(option)"
       />
       <Input label="Name" name="name" class="w-full" />
@@ -29,8 +29,9 @@ import type { ModelName, ProviderName } from '@anima/core';
 import { stringToStudlyCase } from '@noeldemartin/utils';
 
 const { close } = useModal();
+const providers = AI.providers.filter((provider) => provider !== 'browser');
 const form = useForm({
-  provider: requiredEnumInput(AI.providers, AI.providers[0]),
+  provider: requiredEnumInput(providers, providers[0]),
   name: requiredStringInput(''),
   alias: stringInput(''),
   apiKey: stringInput(''),

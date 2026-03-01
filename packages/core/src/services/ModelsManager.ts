@@ -23,8 +23,10 @@ export class ModelsManagerService {
   private providers: Record<ProviderName, ModelsProvider> = {};
   private modelsData: Map<`${ProviderName}-${ModelName}`, ModelData> = new Map();
 
-  registerProvider(name: ProviderName, provider: ModelsProvider): void {
+  async registerProvider(name: ProviderName, provider: ModelsProvider): Promise<void> {
     this.providers[name] = provider;
+
+    await provider.initialize?.();
   }
 
   getProviders(): ProviderName[] {

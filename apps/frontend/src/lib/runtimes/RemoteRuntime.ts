@@ -10,7 +10,7 @@ import Auth from '@/services/Auth';
 
 import type Runtime from './Runtime';
 
-export class RemoteRuntime implements Runtime {
+export default class RemoteRuntime implements Runtime {
   async initialize(): Promise<{ models: AIModel[]; providers: ProviderName[] }> {
     if (!Auth.sessionId) {
       return { models: [], providers: [] };
