@@ -16,6 +16,7 @@
     "@noeldemartin/solid-utils": "catalog:",
     "@noeldemartin/utils": "catalog:",
     "ai": "catalog:",
+    "soukai-bis": "catalog:",
     "typescript": "catalog:",
     "zod": "catalog:"
   },

@@ -45,14 +45,13 @@ export class ModelsManagerService {
     return models.flat();
   }
 
-  async createLanguageModel(provider: ProviderName, name: ModelName): Promise<LanguageModel> {
+  async createLanguageModel(
+    provider: ProviderName,
+    name: ModelName,
+  ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }> {
     const data = this.modelsData.get(`${provider}-${name}`);
 
     return this.requireProvider(provider).createLanguageModel(name, data);
-  }
-
-  getProviderOptions(provider: ProviderName, model: ModelName): ProviderOptions {
-    return this.requireProvider(provider).getProviderOptions?.(model) ?? {};
   }
 
   async installModel(provider: ProviderName, model: ModelName, data: ModelData): Promise<AIModel> {

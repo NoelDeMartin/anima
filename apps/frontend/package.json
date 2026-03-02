@@ -18,7 +18,7 @@
     "@noeldemartin/solid-utils": "catalog:",
     "@noeldemartin/utils": "catalog:",
     "ai": "catalog:",
-    "soukai-bis": "next",
+    "soukai-bis": "catalog:",
     "tailwindcss": "catalog:",
     "vue": "catalog:",
     "zod": "catalog:"

@@ -1,4 +1,4 @@
-import type { ModelData, ModelName, ModelsProvider, ProviderModel } from '@anima/core';
+import type { ModelData, ModelName, ModelsProvider, ProviderModel, ProviderOptions } from '@anima/core';
 import type { LanguageModel } from 'ai';
 
 export default abstract class APIModelsProvider implements ModelsProvider {
@@ -22,5 +22,8 @@ export default abstract class APIModelsProvider implements ModelsProvider {
     // Nothing to do here, API models are installed instantly.
   }
 
-  abstract createLanguageModel(name: ModelName, data?: ModelData): Promise<LanguageModel>;
+  abstract createLanguageModel(
+    name: ModelName,
+    data?: ModelData,
+  ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
 }

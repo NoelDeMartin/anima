@@ -1,9 +1,8 @@
+import { auth } from '@anima/core';
 import { isTruthy } from '@noeldemartin/utils';
 import { tool } from 'ai';
 import { runWithEngine, SolidEngine, TypeIndex } from 'soukai-bis';
 import z from 'zod';
-
-import Auth from '../services/Auth';
 
 const TypesIndexSchema = z.array(
   z.object({
@@ -18,13 +17,13 @@ export default tool({
   outputSchema: TypesIndexSchema,
   strict: true,
   async execute() {
-    const session = Auth.requireContextSession();
+    const user = auth().getUser();
 
-    return runWithEngine(new SolidEngine(session.fetch), async () => {
+    return runWithEngine(new SolidEngine(auth().fetch), async () => {
       const typeIndexes = await Promise.all(
         [
-          session.user?.publicTypeIndexUrl && TypeIndex.find(session.user?.publicTypeIndexUrl),
-          session.user?.privateTypeIndexUrl && TypeIndex.find(session.user?.privateTypeIndexUrl),
+          user.publicTypeIndexUrl && TypeIndex.find(user.publicTypeIndexUrl),
+          user.privateTypeIndexUrl && TypeIndex.find(user.privateTypeIndexUrl),
         ].filter(isTruthy),
       );
 

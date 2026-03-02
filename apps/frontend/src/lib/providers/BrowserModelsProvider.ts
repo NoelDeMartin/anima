@@ -62,10 +62,13 @@ export default class BrowserModelsProvider implements ModelsProvider {
     this.installListener = null;
   }
 
-  async createLanguageModel(): Promise<LanguageModel> {
+  async createLanguageModel(): Promise<{ model: LanguageModel; supportsTools: boolean }> {
     const { browserAI } = await import('@browser-ai/core');
 
-    return browserAI();
+    return {
+      supportsTools: false,
+      model: browserAI(),
+    };
   }
 
   private async watchInstallProgress(): Promise<void> {

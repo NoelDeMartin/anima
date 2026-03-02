@@ -1,33 +1,29 @@
-import { ModelsManager, systemPrompt } from '@anima/core';
+import { tools, ModelsManager, systemPrompt } from '@anima/core';
+import { objectKeys } from '@noeldemartin/utils';
 import { convertToModelMessages, stepCountIs, streamText } from 'ai';
 import Elysia from 'elysia';
 import z from 'zod';
 
 import Auth from '../../services/Auth';
-import getTypesIndex from '../../tools/getTypesIndex';
-import listContainerFiles from '../../tools/listContainerFiles';
-import readFileContents from '../../tools/readFileContents';
-
-const tools = {
-  getTypesIndex,
-  listContainerFiles,
-  readFileContents,
-};
-
-export type Tools = typeof tools;
 
 export default new Elysia().group('chat', (app) =>
   app.post(
     '/',
     async ({ request, body: { provider, model, messages } }) => {
       const session = await Auth.requireSession(request);
+      const {
+        model: languageModel,
+        supportsTools,
+        providerOptions,
+      } = await ModelsManager.createLanguageModel(provider, model);
 
       return Auth.runWithSession(session, async () => {
         const result = streamText({
           tools,
+          providerOptions,
+          model: languageModel,
+          activeTools: supportsTools ? objectKeys(tools) : [],
           messages: await convertToModelMessages(messages),
-          model: await ModelsManager.createLanguageModel(provider, model),
-          providerOptions: ModelsManager.getProviderOptions(provider, model),
           system: systemPrompt(session.user),
           stopWhen: stepCountIs(10),
         });

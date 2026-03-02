@@ -13,15 +13,15 @@
         >
           <template v-for="part in message.parts">
             <Markdown v-if="part.type === 'text'" :text="part.text" />
-            <HomeToolCall v-else-if="part.type === 'tool-getTypesIndex'" label="Read type index" :data="part.output" />
+            <HomeToolCall v-else-if="part.type === 'tool-readTypesIndex'" label="Read type index" :data="part.output" />
             <HomeToolCall
               v-else-if="part.type === 'tool-listContainerFiles'"
-              :label="`Listed files from ${(part as UIToolInvocation<Tools['listContainerFiles']>).input?.url}`"
+              :label="`Listed files from ${(part as UIToolInvocation<AnimaTools['listContainerFiles']>).input?.url}`"
               :data="part.output"
             />
             <HomeToolCall
               v-else-if="part.type === 'tool-readFileContents'"
-              :label="`Read ${(part as UIToolInvocation<Tools['readFileContents']>).input?.url}`"
+              :label="`Read ${(part as UIToolInvocation<AnimaTools['readFileContents']>).input?.url}`"
               :data="part.output"
             />
             <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
@@ -61,8 +61,7 @@
 import AI from '@/services/AI';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
-import type { Tools } from '@anima/backend';
-import type { ModelName, ProviderName } from '@anima/core';
+import type { AnimaTools, ModelName, ProviderName } from '@anima/core';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
 

@@ -48,14 +48,16 @@ export class OllamaModelsProvider implements ModelsProvider {
     delete this.ongoingInstalls[name];
   }
 
-  public async createLanguageModel(name: ModelName): Promise<LanguageModel> {
+  public async createLanguageModel(
+    name: ModelName,
+  ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions: ProviderOptions }> {
     const { ollama } = await import('ollama-ai-provider-v2');
 
-    return ollama(name);
-  }
-
-  getProviderOptions(): ProviderOptions {
-    return { ollama: { think: false } };
+    return {
+      supportsTools: false,
+      model: ollama(name),
+      providerOptions: { ollama: { think: false } },
+    };
   }
 
   private async getClient(): Promise<Ollama> {

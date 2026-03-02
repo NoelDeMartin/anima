@@ -21,6 +21,8 @@ export default interface ModelsProvider {
   installModel(name: ModelName): Promise<ProviderModel>;
   deleteModel(name: ModelName): Promise<void>;
   cancelModelInstallation(name: ModelName): Promise<void>;
-  createLanguageModel(name: ModelName, data?: ModelData): Promise<LanguageModel>;
-  getProviderOptions?(model: ModelName): ProviderOptions;
+  createLanguageModel(
+    name: ModelName,
+    data?: ModelData,
+  ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
 }

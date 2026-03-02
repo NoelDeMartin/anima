@@ -3,14 +3,16 @@ import { Chat } from '@ai-sdk/vue';
 import {
   GoogleModelsProvider,
   ModelsManager,
+  setAuthProvider,
   systemPrompt,
+  tools,
   type AIModel,
   type ModelData,
   type ModelName,
   type ProviderName,
   type UIMessage,
 } from '@anima/core';
-import { fail } from '@noeldemartin/utils';
+import { fail, objectKeys } from '@noeldemartin/utils';
 import { DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
 
 import BrowserModelsProvider from '@/lib/providers/BrowserModelsProvider';
@@ -29,11 +31,17 @@ export default class LocalRuntime implements Runtime {
         ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider()),
     ]);
 
+    setAuthProvider({
+      getUser: () => Solid.requireUser(),
+      fetch: (input: string, init?: RequestInit) => Solid.fetch(input, init),
+    });
+
     return { models: await this.getModels(), providers: await this.getProviders() };
   }
 
   createChat(): Chat<UIMessage> {
     const agent = new ToolLoopAgent<never, Record<string, Tool>, never>({
+      tools,
       model: {
         specificationVersion: 'v3',
         provider: 'noop',
@@ -48,10 +56,16 @@ export default class LocalRuntime implements Runtime {
           throw new Error('No selected model');
         }
 
+        const { model, supportsTools, providerOptions } = await ModelsManager.createLanguageModel(
+          AI.selectedModel.provider,
+          AI.selectedModel.name,
+        );
+
         return {
+          model,
+          providerOptions,
+          activeTools: supportsTools ? objectKeys(tools) : [],
           system: systemPrompt(Solid.requireUser()),
-          model: await ModelsManager.createLanguageModel(AI.selectedModel.provider, AI.selectedModel.name),
-          providerOptions: ModelsManager.getProviderOptions(AI.selectedModel.provider, AI.selectedModel.name),
         };
       },
     });
