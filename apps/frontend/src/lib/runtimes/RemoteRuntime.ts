@@ -1,3 +1,4 @@
+import { Solid } from '@aerogel/plugin-solid';
 import { Chat } from '@ai-sdk/vue';
 import type { UIMessage, AIModel, ModelData, ProviderName, ModelName } from '@anima/core';
 import { required } from '@noeldemartin/utils';
@@ -6,17 +7,16 @@ import { DefaultChatTransport } from 'ai';
 import api from '@/lib/api';
 import { env } from '@/lib/env';
 import AI from '@/services/AI';
-import Auth from '@/services/Auth';
 
 import type Runtime from './Runtime';
 
 export default class RemoteRuntime implements Runtime {
   async initialize(): Promise<{ models: AIModel[]; providers: ProviderName[] }> {
-    if (!Auth.sessionId) {
+    if (!Solid.user?.animaSessionId) {
       return { models: [], providers: [] };
     }
 
-    const headers = { 'X-Anima-Session-Id': Auth.sessionId };
+    const headers = { 'X-Anima-Session-Id': Solid.user?.animaSessionId };
     const { data: models } = await api['ai'].models.get({ headers });
     const { data: providers } = await api['ai'].models.providers.get({ headers });
 
@@ -27,7 +27,7 @@ export default class RemoteRuntime implements Runtime {
     return new Chat<UIMessage>({
       transport: new DefaultChatTransport({
         api: `http://${env('VITE_API_DOMAIN')}/ai/chat`,
-        headers: { 'X-Anima-Session-Id': required(Auth.sessionId) },
+        headers: { 'X-Anima-Session-Id': required(Solid.user?.animaSessionId) },
       }),
     });
   }

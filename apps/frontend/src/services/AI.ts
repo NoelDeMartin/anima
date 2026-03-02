@@ -1,10 +1,10 @@
+import { Solid } from '@aerogel/plugin-solid';
 import type { Chat } from '@ai-sdk/vue';
 import type { AIModel, UIMessage, ModelData, ModelName, ProviderName } from '@anima/core';
 import { facade, fail, objectFromEntries, objectKeys } from '@noeldemartin/utils';
 
 import { env } from '@/lib/env';
 import type Runtime from '@/lib/runtimes/Runtime';
-import Auth from '@/services/Auth';
 
 import Service from './AI.state';
 
@@ -72,7 +72,7 @@ export class AIService extends Service {
   }
 
   protected async boot(): Promise<void> {
-    await Auth.booted;
+    await Solid.booted;
 
     const { models, providers } = await this.initializeRuntime();
 

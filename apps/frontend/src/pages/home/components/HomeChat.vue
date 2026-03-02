@@ -4,7 +4,7 @@
       <div class="grow" />
       <ul class="flex flex-col gap-4">
         <li>
-          <Markdown>Hello {{ $auth.getUser()?.name ?? $auth.getUser()?.webId }}, how can I help you today?</Markdown>
+          <Markdown>Hello {{ $solid.user?.name ?? $solid.user?.webId }}, how can I help you today?</Markdown>
         </li>
         <li
           v-for="message in chat.messages"

@@ -1,3 +1,4 @@
+import type { SolidUserProfile } from '@noeldemartin/solid-utils';
 import { Elysia, redirect } from 'elysia';
 import z from 'zod';
 
@@ -30,7 +31,7 @@ export default new Elysia()
       return { user: session.user };
     },
     {
-      response: z.union([z.object({ user: z.any() }), z.null()]),
+      response: z.union([z.object({ user: z.any().transform((value) => value as SolidUserProfile) }), z.null()]),
     },
   )
   .post('/oidc/login', ({ body: { oidcIssuer } }) => Auth.login(oidcIssuer), {
@@ -42,4 +43,13 @@ export default new Elysia()
     await Auth.handleRedirect(request);
 
     return redirect(FRONTEND_URL);
-  });
+  })
+  .post(
+    '/solid-proxy',
+    async ({ request, body: { input, init } }) => {
+      const session = await Auth.requireSession(request);
+
+      return session.fetch(input, init);
+    },
+    { body: z.object({ input: z.any(), init: z.any() }) },
+  );
