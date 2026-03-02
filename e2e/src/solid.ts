@@ -1,3 +1,4 @@
+import { sleep } from '@noeldemartin/utils';
 import type { Page } from '@playwright/test';
 
 export async function signUp(page: Page) {
@@ -6,6 +7,8 @@ export async function signUp(page: Page) {
   await page.getByRole('textbox', { name: 'Password:', exact: true }).fill('secret');
   await page.getByRole('textbox', { name: 'Confirm password:' }).fill('secret');
   await page.getByRole('button', { name: 'Register' }).click();
+  await sleep(500);
+
   await page.getByRole('link', { name: 'Create pod' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('alice');
   await page.getByRole('button', { name: 'Create pod' }).click();
