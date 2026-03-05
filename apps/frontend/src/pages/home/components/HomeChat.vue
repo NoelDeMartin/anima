@@ -7,10 +7,16 @@
           <Markdown>Hello {{ $solid.user?.name ?? $solid.user?.webId }}, how can I help you today?</Markdown>
         </li>
         <li
-          v-for="message in chat.messages"
+          v-for="message in messages"
           :key="message.id"
           :class="{ 'self-end bg-gray-100 rounded-lg px-4 py-2': message.role === 'user' }"
         >
+          <div class="text-xs text-gray-400 mb-1" :class="{ 'text-right': message.role === 'user' }">
+            <span v-if="message.metadata?.createdAt">{{ new Date(message.metadata.createdAt).toLocaleString() }}</span>
+            <span v-if="message.metadata?.model && message.metadata?.provider">
+              &middot; {{ message.metadata.provider }} / {{ message.metadata.model }}
+            </span>
+          </div>
           <template v-for="part in message.parts">
             <Markdown v-if="part.type === 'text'" :text="part.text" />
             <HomeToolCall v-else-if="part.type === 'tool-readTypesIndex'" label="Read type index" :data="part.output" />
@@ -62,23 +68,31 @@ import AI from '@/services/AI';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import type { Chat } from '@ai-sdk/vue';
-import type { AnimaTools, ModelName, ProviderName, UIMessage } from '@anima/core';
+import type { AnimaTools, ModelName, ProviderName, AnimaUIMessage } from '@anima/core';
+import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
 
-const { chat } = defineProps<{ chat: Chat<UIMessage> }>();
+const { chat } = defineProps<{ chat: Chat<AnimaUIMessage> }>();
 const $scroll = useTemplateRef('$scroll');
 const form = useForm({ message: stringInput('') });
 const models = computed(() =>
   AI.modelsList.filter((model) => model.enabled).map((model) => `${model.provider}-${model.name}` as const),
 );
+const messages = computed(() => arraySorted(chat.messages, 'metadata.createdAt'));
 
 function renderModel(model: `${ProviderName}-${ModelName}` | null) {
   if (!model) {
     return 'Unknown';
   }
 
-  return AI.models[model]?.alias || AI.models[model]?.name || model?.split('-')[1] || 'Unknown';
+  const instance = AI.models[model];
+
+  if (!instance) {
+    return model?.split('-')[1] || 'Unknown';
+  }
+
+  return instance.alias || `${instance.provider} / ${instance.name}`;
 }
 
 async function submit() {

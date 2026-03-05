@@ -3,13 +3,13 @@ import {
   AnimaChatSchema,
   tools,
   ModelsManager,
-  type UIMessage,
+  type AnimaUIMessage,
   systemPrompt,
   AnimaChatEditableFieldsSchema,
   type AnimaChat,
 } from '@anima/core';
 import { objectKeys } from '@noeldemartin/utils';
-import { convertToModelMessages, stepCountIs, streamText } from 'ai';
+import { convertToModelMessages, createIdGenerator, stepCountIs, streamText } from 'ai';
 import Elysia, { status } from 'elysia';
 import z from 'zod';
 
@@ -66,7 +66,23 @@ export default new Elysia().group('chats', (app) =>
       },
       {
         params: z.object({ id: z.string().brand('AnimaChatId') }),
-        body: AnimaChatEditableFieldsSchema,
+        body: AnimaChatEditableFieldsSchema.partial(),
+      },
+    )
+    .get(
+      '/:id/messages',
+      async ({ params: { id } }) => {
+        const chat = await storage().getChat(id);
+
+        if (!chat) {
+          throw status(404, 'Chat not found');
+        }
+
+        return storage().getChatMessages(chat);
+      },
+      {
+        params: z.object({ id: z.string().brand('AnimaChatId') }),
+        response: z.array(z.any()),
       },
     )
     .post(
@@ -78,6 +94,12 @@ export default new Elysia().group('chats', (app) =>
         if (!chat) {
           throw status(404, 'Chat not found');
         }
+
+        if (message.metadata?.createdAt) {
+          message.metadata.createdAt = new Date(message.metadata.createdAt);
+        }
+
+        await storage().storeChatMessage(chat, message);
 
         const {
           model: languageModel,
@@ -100,8 +122,21 @@ export default new Elysia().group('chats', (app) =>
 
           return result.toUIMessageStreamResponse({
             originalMessages: messages,
-            onFinish: async ({ messages }) => {
+            generateMessageId: createIdGenerator(),
+            messageMetadata({ part }) {
+              if (part.type !== 'start') {
+                return;
+              }
+
+              return {
+                model,
+                provider,
+                createdAt: new Date(),
+              };
+            },
+            async onFinish({ messages }) {
               await Promise.all(messages.map((message) => storage().storeChatMessage(chat, message)));
+              await storage().updateChat(chat.id, {});
             },
           });
         });
@@ -111,7 +146,7 @@ export default new Elysia().group('chats', (app) =>
         body: z.object({
           provider: z.string().brand('ProviderName'),
           model: z.string().brand('ModelName'),
-          message: z.any().transform((value) => value as UIMessage),
+          message: z.any().transform((value) => value as AnimaUIMessage),
         }),
       },
     ),

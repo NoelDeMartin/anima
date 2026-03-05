@@ -1,7 +1,7 @@
 import { fail } from '@noeldemartin/utils';
 import z from 'zod';
 
-import type { UIMessage } from '../contracts';
+import type { AnimaUIMessage } from './chat';
 
 let storageProvider: StorageProvider | null = null;
 
@@ -34,12 +34,12 @@ export type ModelName = ModelMetadata['name'];
 export interface StorageProvider {
   getChat(id: AnimaChat['id']): Promise<AnimaChat | null>;
   getChats(): Promise<AnimaChat[]>;
-  getChatMessages(chat: AnimaChat): Promise<UIMessage[]>;
+  getChatMessages(chat: AnimaChat): Promise<AnimaUIMessage[]>;
   getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null>;
   getModelsMetadata(): Promise<ModelMetadata[]>;
   createChat(data: AnimaChatEditableFields): Promise<AnimaChat>;
-  updateChat(id: AnimaChat['id'], updates: AnimaChatEditableFields): Promise<void>;
-  storeChatMessage(chat: AnimaChat, message: UIMessage): Promise<void>;
+  updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
+  storeChatMessage(chat: AnimaChat, message: AnimaUIMessage): Promise<void>;
   storeModelMetadata(metadata: ModelMetadata): Promise<void>;
   deleteModelMetadata(provider: ProviderName, name: ModelName): Promise<void>;
 }

@@ -13,13 +13,16 @@ export default class TestingModelsProvider extends APIModelsProvider {
     return {
       supportsTools: false,
       model: new MockLanguageModelV3({
-        async doStream() {
+        async doStream({ prompt }) {
+          const message = String((prompt as any)[prompt.length - 1]?.content[0]?.text);
+
           return {
             stream: simulateReadableStream({
               chunks: [
                 { type: 'text-start', id: 'text-1' },
                 { type: 'text-delta', id: 'text-1', delta: 'mock response for model ' },
                 { type: 'text-delta', id: 'text-1', delta: `'${name}'` },
+                { type: 'text-delta', id: 'text-1', delta: ` to '${message}'` },
                 { type: 'text-end', id: 'text-1' },
                 {
                   type: 'finish',

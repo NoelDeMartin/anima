@@ -2,7 +2,7 @@ import { Solid } from '@aerogel/plugin-solid';
 import { Chat } from '@ai-sdk/vue';
 import type { ApiAnimaChat } from '@anima/backend';
 import {
-  type UIMessage,
+  type AnimaUIMessage,
   type AIModel,
   type AnimaChat,
   type ProviderName,
@@ -70,9 +70,16 @@ export default class RemoteRuntime implements Runtime {
     return mapChat(data);
   }
 
-  async restoreChat(chat: AnimaChat): Promise<Chat<UIMessage>> {
-    return new Chat<UIMessage>({
+  async restoreChat(chat: AnimaChat): Promise<Chat<AnimaUIMessage>> {
+    const { data: messages, error } = await api['ai'].chats({ id: chat.id }).messages.get();
+
+    if (!messages) {
+      throw error ?? new Error('Failed to get chat messages');
+    }
+
+    return new Chat<AnimaUIMessage>({
       id: chat.id,
+      messages,
       transport: new DefaultChatTransport({
         api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${chat.id}/messages`,
         headers: { 'X-Anima-Session-Id': required(Solid.user?.animaSessionId) },
@@ -83,7 +90,7 @@ export default class RemoteRuntime implements Runtime {
     });
   }
 
-  async updateChat(id: AnimaChat['id'], updates: AnimaChatEditableFields): Promise<void> {
+  async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const { error } = await api['ai'].chats({ id }).patch(updates);
 
     if (error) {
@@ -91,13 +98,13 @@ export default class RemoteRuntime implements Runtime {
     }
   }
 
-  sendMessage(chat: Chat<UIMessage>, message: string): Promise<void> {
+  sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {
     if (!AI.selectedModel) {
       throw new Error('No selected model');
     }
 
     return chat.sendMessage(
-      { text: message },
+      { text: message, metadata: { createdAt: new Date() } },
       { body: { provider: AI.selectedModel?.provider, model: AI.selectedModel?.name } },
     );
   }

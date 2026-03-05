@@ -16,7 +16,7 @@ export const ProviderModelSchema = z.union([
 
 export type ProviderModel = z.infer<typeof ProviderModelSchema>;
 
-export default interface ModelsProvider {
+export interface ModelsProvider {
   initialize?(): Promise<void>;
   getModels(): Promise<ProviderModel[]>;
   installModel(name: ModelName): Promise<ProviderModel>;

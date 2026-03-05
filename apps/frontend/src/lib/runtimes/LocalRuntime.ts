@@ -14,10 +14,10 @@ import {
   type ModelMetadataEditableFields,
   type ModelName,
   type ProviderName,
-  type UIMessage,
+  type AnimaUIMessage,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
-import { DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
+import { createIdGenerator, DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
 import { toRaw } from 'vue';
 
 import BrowserModelsProvider from '@/lib/providers/BrowserModelsProvider';
@@ -66,7 +66,7 @@ export default class LocalRuntime implements Runtime {
     return chat;
   }
 
-  async restoreChat(chat: AnimaChat): Promise<Chat<UIMessage>> {
+  async restoreChat(chat: AnimaChat): Promise<Chat<AnimaUIMessage>> {
     const messages = await storage().getChatMessages(chat);
     const messagesMap = new Map(messages.map((message) => [message.id, message]));
     const agent = new ToolLoopAgent<never, Record<string, Tool>, never>({
@@ -99,11 +99,26 @@ export default class LocalRuntime implements Runtime {
       },
     });
 
-    return new Chat<UIMessage>({
+    return new Chat<AnimaUIMessage>({
       id: chat.id,
       messages,
-      transport: new DirectChatTransport({ agent }),
-      onFinish: async ({ messages: allMessages }) => {
+      transport: new DirectChatTransport({
+        agent,
+        originalMessages: messages,
+        generateMessageId: createIdGenerator(),
+        messageMetadata({ part }) {
+          if (part.type !== 'start') {
+            return;
+          }
+
+          return {
+            model: AI.selectedModel?.name,
+            provider: AI.selectedModel?.provider,
+            createdAt: new Date(),
+          };
+        },
+      }),
+      async onFinish({ messages: allMessages }) {
         const newMessages = allMessages.filter((message) => !messagesMap.has(message.id));
 
         await Promise.all(
@@ -113,16 +128,18 @@ export default class LocalRuntime implements Runtime {
             messagesMap.set(message.id, message);
           }),
         );
+
+        await storage().updateChat(chat.id, {});
       },
     });
   }
 
-  updateChat(id: AnimaChat['id'], updates: AnimaChatEditableFields): Promise<void> {
+  updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     return storage().updateChat(id, updates);
   }
 
-  sendMessage(chat: Chat<UIMessage>, message: string): Promise<void> {
-    return chat.sendMessage({ text: message });
+  sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {
+    return chat.sendMessage({ text: message, metadata: { createdAt: new Date() } });
   }
 
   async installModel(

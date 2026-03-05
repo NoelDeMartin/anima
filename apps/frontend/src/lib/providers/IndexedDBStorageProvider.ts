@@ -5,7 +5,7 @@ import type {
   ModelName,
   ProviderName,
   StorageProvider,
-  UIMessage,
+  AnimaUIMessage,
 } from '@anima/core';
 import { generateId } from 'ai';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
@@ -17,7 +17,7 @@ interface Database extends DBSchema {
   };
   messages: {
     key: string;
-    value: UIMessage & { chatId: string };
+    value: AnimaUIMessage & { chatId: string };
     indexes: {
       'by-chat': string;
     };
@@ -68,11 +68,11 @@ export default class IndexedDBStorageProvider implements StorageProvider {
     return db.getAll('chats');
   }
 
-  async getChatMessages(chat: AnimaChat): Promise<UIMessage[]> {
+  async getChatMessages(chat: AnimaChat): Promise<AnimaUIMessage[]> {
     const db = await this.dbPromise;
     const messagesWithChatId = await db.getAllFromIndex('messages', 'by-chat', chat.id);
 
-    return messagesWithChatId.map(({ chatId: _chatId, ...message }) => message as UIMessage);
+    return messagesWithChatId.map(({ chatId: _chatId, ...message }) => message as AnimaUIMessage);
   }
 
   async getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null> {
@@ -102,7 +102,7 @@ export default class IndexedDBStorageProvider implements StorageProvider {
     return chat;
   }
 
-  async updateChat(id: AnimaChat['id'], updates: AnimaChatEditableFields): Promise<void> {
+  async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const db = await this.dbPromise;
 
     const transaction = db.transaction('chats', 'readwrite');
@@ -116,7 +116,7 @@ export default class IndexedDBStorageProvider implements StorageProvider {
     await transaction.done;
   }
 
-  async storeChatMessage(chat: AnimaChat, message: UIMessage): Promise<void> {
+  async storeChatMessage(chat: AnimaChat, message: AnimaUIMessage): Promise<void> {
     const db = await this.dbPromise;
 
     await db.put('messages', { ...message, chatId: chat.id });

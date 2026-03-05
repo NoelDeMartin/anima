@@ -5,13 +5,13 @@ import type {
   ModelName,
   ProviderName,
   StorageProvider,
-  UIMessage,
+  AnimaUIMessage,
 } from '@anima/core';
 import { generateId } from 'ai';
 
 export default class InMemoryStorageProvider implements StorageProvider {
   private chats: Map<AnimaChat['id'], AnimaChat> = new Map();
-  private messages: Map<string, UIMessage[]> = new Map();
+  private messages: Map<string, AnimaUIMessage[]> = new Map();
   private modelsMetadata: ModelMetadata[] = [];
 
   async getChat(id: AnimaChat['id']): Promise<AnimaChat | null> {
@@ -22,7 +22,7 @@ export default class InMemoryStorageProvider implements StorageProvider {
     return Array.from(this.chats.values());
   }
 
-  async getChatMessages(chat: AnimaChat): Promise<UIMessage[]> {
+  async getChatMessages(chat: AnimaChat): Promise<AnimaUIMessage[]> {
     return this.messages.get(chat.id) ?? [];
   }
 
@@ -48,7 +48,7 @@ export default class InMemoryStorageProvider implements StorageProvider {
     return chat;
   }
 
-  async updateChat(id: AnimaChat['id'], updates: AnimaChatEditableFields): Promise<void> {
+  async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const chat = this.chats.get(id);
 
     if (!chat) {
@@ -58,7 +58,7 @@ export default class InMemoryStorageProvider implements StorageProvider {
     Object.assign(chat, { ...updates, updatedAt: new Date() });
   }
 
-  async storeChatMessage(chat: AnimaChat, message: UIMessage): Promise<void> {
+  async storeChatMessage(chat: AnimaChat, message: AnimaUIMessage): Promise<void> {
     const chatMessages = this.messages.get(chat.id) ?? [];
 
     const existingIndex = chatMessages.findIndex((m) => m.id === message.id);

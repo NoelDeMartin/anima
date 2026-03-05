@@ -1,12 +1,12 @@
 import { defineServiceState } from '@aerogel/core';
 import type { Chat } from '@ai-sdk/vue';
-import type { AIModel, AnimaChat, ModelName, ProviderName, UIMessage } from '@anima/core';
+import type { AIModel, AnimaChat, ModelName, ProviderName, AnimaUIMessage } from '@anima/core';
 
 export default defineServiceState({
   name: 'ai',
   persist: ['selectedModelKey'],
   initialState: {
-    chat: null as Chat<UIMessage> | null,
+    chat: null as Chat<AnimaUIMessage> | null,
     providers: [] as ProviderName[],
     chats: {} as Record<AnimaChat['id'], AnimaChat>,
     models: {} as Record<`${ProviderName}-${ModelName}`, AIModel>,

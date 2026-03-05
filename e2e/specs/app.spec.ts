@@ -14,12 +14,20 @@ test('login', async ({ page }) => {
   await expect(page.getByText('how can I help you today?')).toBeVisible();
 });
 
-test('chat', async ({ page }) => {
+test('chats', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Message' }).fill('Hello, world!');
   await page.getByRole('button', { name: 'Send' }).click();
 
-  await expect(page.getByText('Hello, world!')).toBeVisible();
-  await expect(page.getByText("mock response for model 'qwen3:1.7b'")).toBeVisible();
+  await expect(page.getByText("mock response for model 'qwen3:1.7b' to 'Hello, world!'")).toBeVisible();
+
+  await page.getByRole('button', { name: 'New Chat' }).click();
+  await page.getByRole('textbox', { name: 'Message' }).fill('Second chat');
+  await page.getByRole('button', { name: 'Send' }).click();
+  await expect(page.getByText('Hello, world!')).toHaveCount(0);
+  await expect(page.getByText("mock response for model 'qwen3:1.7b' to 'Second chat'")).toBeVisible();
+
+  await page.getByRole('list', { name: 'Recent Chats' }).getByRole('listitem').last().getByRole('button').click();
+  await expect(page.getByText("mock response for model 'qwen3:1.7b' to 'Hello, world!'")).toBeVisible();
 });
 
 test('install models', async ({ page }) => {

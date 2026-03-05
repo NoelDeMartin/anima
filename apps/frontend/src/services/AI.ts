@@ -2,7 +2,7 @@ import { Solid } from '@aerogel/plugin-solid';
 import type { Chat } from '@ai-sdk/vue';
 import type {
   AIModel,
-  UIMessage,
+  AnimaUIMessage,
   ModelName,
   ProviderName,
   AnimaChat,
@@ -26,7 +26,7 @@ export class AIService extends Service {
     this.selectedChatId = null;
   }
 
-  public async selectChat(chatId: AnimaChat['id']): Promise<Chat<UIMessage>> {
+  public async selectChat(chatId: AnimaChat['id']): Promise<Chat<AnimaUIMessage>> {
     if (this.chat?.id === chatId) {
       return this.chat;
     }
@@ -47,7 +47,7 @@ export class AIService extends Service {
     return aiChat;
   }
 
-  public async updateChat(id: AnimaChat['id'], updates: AnimaChatEditableFields): Promise<void> {
+  public async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const originalChat = this.chats[id];
 
     if (!originalChat) {
@@ -65,8 +65,12 @@ export class AIService extends Service {
     }
   }
 
-  public async sendMessage(chat: Chat<UIMessage>, message: string): Promise<void> {
-    return this.requiredRuntime().sendMessage(await this.resolveChat(chat), message);
+  public async sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {
+    const resolvedChat = await this.resolveChat(chat);
+
+    this.chats = { [resolvedChat.id]: { ...resolvedChat, updatedAt: new Date() }, ...this.chats };
+
+    await this.requiredRuntime().sendMessage(resolvedChat, message);
   }
 
   async installModel(
@@ -160,7 +164,7 @@ export class AIService extends Service {
   protected async watchSelectedChat(): Promise<void> {
     watchEffect(async () => {
       if (!this.selectedChatId) {
-        this.chat = markRaw({ id: NEW_CHAT_ID, messages: [] } as unknown as Chat<UIMessage>);
+        this.chat = markRaw({ id: NEW_CHAT_ID, status: 'ready', messages: [] } as unknown as Chat<AnimaUIMessage>);
 
         return;
       }
@@ -169,7 +173,7 @@ export class AIService extends Service {
     });
   }
 
-  protected async resolveChat(chat: Chat<UIMessage>): Promise<Chat<UIMessage>> {
+  protected async resolveChat(chat: Chat<AnimaUIMessage>): Promise<Chat<AnimaUIMessage>> {
     if (chat.id !== NEW_CHAT_ID) {
       return chat;
     }
