@@ -1,4 +1,5 @@
-import type { ModelData, ModelName, ModelsProvider, ProviderModel, ProviderOptions } from '@anima/core';
+import type { ModelMetadata, ModelName, ModelsProvider, ProviderModel, ProviderOptions } from '@anima/core';
+import type { Nullable } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
 
 export default abstract class APIModelsProvider implements ModelsProvider {
@@ -24,6 +25,6 @@ export default abstract class APIModelsProvider implements ModelsProvider {
 
   abstract createLanguageModel(
     name: ModelName,
-    data?: ModelData,
+    data: Nullable<ModelMetadata>,
   ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
 }

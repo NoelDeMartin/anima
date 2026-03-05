@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-screen flex-row">
     <HomeSideBar />
-    <HomeChat />
+    <HomeChat v-if="$ai.chat" :chat="$ai.chat" />
   </div>
 </template>

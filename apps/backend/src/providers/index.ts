@@ -3,14 +3,19 @@ import {
   ModelsManager,
   type ProviderName,
   setAuthProvider,
+  setStorageProvider,
   TestingModelsProvider,
 } from '@anima/core';
 
 import { env } from '../lib/env';
-import Auth from '../services/Auth';
+import InMemoryStorageProvider from './InMemoryStorageProvider';
 import { OllamaModelsProvider } from './OllamaModelsProvider';
+import SessionAuthProvider from './SessionAuthProvider';
 
 export async function registerProviders() {
+  setAuthProvider(new SessionAuthProvider());
+  setStorageProvider(new InMemoryStorageProvider());
+
   if (env('E2E')) {
     await ModelsManager.registerProvider('testing' as ProviderName, new TestingModelsProvider());
 
@@ -21,9 +26,4 @@ export async function registerProviders() {
     ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
     ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider()),
   ]);
-
-  setAuthProvider({
-    getUser: () => Auth.requireContextSession().user,
-    fetch: (input: string, init?: RequestInit) => Auth.requireContextSession().fetch(input, init),
-  });
 }

@@ -12,12 +12,6 @@ catalogs:
     '@noeldemartin/utils':
       specifier: next
       version: 0.7.3-next.b915cae60b89aff07e176fd3de0a25a77e50324d
-    '@tailwindcss/vite':
-      specifier: ^4.1.18
-      version: 4.1.18
-    '@vitejs/plugin-vue':
-      specifier: ^6.0.4
-      version: 6.0.4
     ai:
       specifier: ^6.0.100
       version: 6.0.105
@@ -26,7 +20,7 @@ catalogs:
       version: 0.0.0-next.923dcde2819306591c6c75b4789821811ec62a77
     tailwindcss:
       specifier: ^4.1.18
-      version: 4.1.18
+      version: 4.2.1
     typescript:
       specifier: ~5.9.3
       version: 5.9.3
@@ -35,7 +29,7 @@ catalogs:
       version: 8.0.0-beta.16
     vue-tsc:
       specifier: ^3.2.4
-      version: 3.2.4
+      version: 3.2.5
     zod:
       specifier: ^4.3.6
       version: 4.3.6
@@ -155,6 +149,9 @@ importers:
       ai:
         specifier: 'catalog:'
         version: 6.0.105(zod@4.3.6)
+      idb:
+        specifier: ^8.0.3
+        version: 8.0.3
       soukai-bis:
         specifier: 'catalog:'
         version: 0.0.0-next.923dcde2819306591c6c75b4789821811ec62a77(web-streams-polyfill@3.3.3)(zod@4.3.6)

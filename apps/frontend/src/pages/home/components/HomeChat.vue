@@ -61,11 +61,12 @@
 import AI from '@/services/AI';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
-import type { AnimaTools, ModelName, ProviderName } from '@anima/core';
+import type { Chat } from '@ai-sdk/vue';
+import type { AnimaTools, ModelName, ProviderName, UIMessage } from '@anima/core';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
 
-const chat = AI.newChat();
+const { chat } = defineProps<{ chat: Chat<UIMessage> }>();
 const $scroll = useTemplateRef('$scroll');
 const form = useForm({ message: stringInput('') });
 const models = computed(() =>

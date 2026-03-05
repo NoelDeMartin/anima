@@ -18,8 +18,8 @@ Dependencies are managed using `pnpm`, with the following scripts can be used to
 - `pnpm format` and `pnpm format:fix`: Checks and fixes formatting with Oxfmt.
 - `pnpm type-check`: Runs type checks.
 - `pnpm dev`: Launches the backend, frontend, and a local Solid POD server for development. The application can be used in `http://localhost:5173`.
-- `pnpm dev:e2e`: Launches the services to be used in the E2E environment (mocks some dependencies like AI models).
-- `pnpm e2e`: Runs Playwright tests, launching `dev:e2e` if necessary, but reusing the process if it's running.
+- `pnpm e2e:serve`: Launches the services to be used in the E2E environment (mocks some dependencies like AI models).
+- `pnpm e2e`: Runs Playwright tests, launching `e2e:serve` if necessary, but reusing the process if it's running (prepend `HEADLESS=true` to the command to use a headless browser outside of CI).
 
 ## Instructions
 

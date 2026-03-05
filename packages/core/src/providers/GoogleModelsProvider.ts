@@ -1,4 +1,5 @@
-import type { ModelData, ModelName } from '@anima/core';
+import type { ModelMetadata, ModelName } from '@anima/core';
+import type { Nullable } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
 
 import APIModelsProvider from './APIModelsProvider';
@@ -6,7 +7,7 @@ import APIModelsProvider from './APIModelsProvider';
 export default class GoogleModelsProvider extends APIModelsProvider {
   async createLanguageModel(
     name: ModelName,
-    data?: ModelData,
+    data: Nullable<ModelMetadata>,
   ): Promise<{ model: LanguageModel; supportsTools: boolean }> {
     if (!data?.apiKey) {
       throw new Error('API key is required for Google models');

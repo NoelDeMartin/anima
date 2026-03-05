@@ -1,4 +1,5 @@
-import type { ModelData, ModelName } from '@anima/core';
+import type { ModelMetadata, ModelName } from '@anima/core';
+import type { Nullable } from '@noeldemartin/utils';
 import type { streamText, LanguageModel } from 'ai';
 import z from 'zod';
 
@@ -23,6 +24,6 @@ export default interface ModelsProvider {
   cancelModelInstallation(name: ModelName): Promise<void>;
   createLanguageModel(
     name: ModelName,
-    data?: ModelData,
+    data: Nullable<ModelMetadata>,
   ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
 }

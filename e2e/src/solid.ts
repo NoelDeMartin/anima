@@ -12,7 +12,11 @@ export async function signUp(page: Page) {
   await page.getByRole('link', { name: 'Create pod' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('alice');
   await page.getByRole('button', { name: 'Create pod' }).click();
+  await sleep(500);
+
   await page.getByRole('button', { name: 'Back' }).click();
+  await sleep(500);
+
   await page.getByRole('button', { name: 'Continue authentication' }).click();
 }
 

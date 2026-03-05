@@ -8,6 +8,8 @@ import ai from './routes/ai';
 import auth from './routes/auth';
 import e2e from './routes/e2e';
 
+export type { ApiAnimaChat } from './routes/ai/chats';
+
 export const Api = new Elysia({ serve: { idleTimeout: 255 } })
   .use(cors())
   .use(auth)

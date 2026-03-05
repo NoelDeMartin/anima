@@ -1,6 +1,16 @@
 import { Solid } from '@aerogel/plugin-solid';
 import { Chat } from '@ai-sdk/vue';
-import type { UIMessage, AIModel, ModelData, ProviderName, ModelName } from '@anima/core';
+import type { ApiAnimaChat } from '@anima/backend';
+import {
+  type UIMessage,
+  type AIModel,
+  type AnimaChat,
+  type ProviderName,
+  type ModelMetadataEditableFields,
+  type ModelName,
+  type AnimaChatEditableFields,
+} from '@anima/core';
+import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
 import { DefaultChatTransport } from 'ai';
 
@@ -10,26 +20,75 @@ import AI from '@/services/AI';
 
 import type Runtime from './Runtime';
 
+function mapChat(chat: ApiAnimaChat): AnimaChat {
+  return {
+    ...chat,
+    createdAt: new Date(chat.createdAt),
+    updatedAt: new Date(chat.updatedAt),
+  };
+}
+
 export default class RemoteRuntime implements Runtime {
-  async initialize(): Promise<{ models: AIModel[]; providers: ProviderName[] }> {
+  async initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: ProviderName[] }> {
     if (!Solid.user?.animaSessionId) {
-      return { models: [], providers: [] };
+      return { chats: [], models: [], providers: [] };
     }
 
     const headers = { 'X-Anima-Session-Id': Solid.user?.animaSessionId };
+    const { data: chats } = await api['ai'].chats.get({ headers });
     const { data: models } = await api['ai'].models.get({ headers });
     const { data: providers } = await api['ai'].models.providers.get({ headers });
 
-    return { models: models ?? [], providers: providers ?? [] };
+    return {
+      chats: chats?.map(mapChat) ?? [],
+      models: models ?? [],
+      providers: providers ?? [],
+    };
   }
 
-  createChat(): Chat<UIMessage> {
+  async getChats(): Promise<AnimaChat[]> {
+    const chats = await this.treatyResponse(api['ai'].chats.get(), []);
+
+    return chats.map(mapChat);
+  }
+
+  async getModels(): Promise<AIModel[]> {
+    return this.treatyResponse(api['ai'].models.get(), []);
+  }
+
+  async getProviders(): Promise<ProviderName[]> {
+    return this.treatyResponse(api['ai'].models.providers.get(), []);
+  }
+
+  async createChat(chat: AnimaChatEditableFields): Promise<AnimaChat> {
+    const { data, error } = await api['ai'].chats.post(chat);
+
+    if (!data) {
+      throw error ?? new Error('Failed to create chat');
+    }
+
+    return mapChat(data);
+  }
+
+  async restoreChat(chat: AnimaChat): Promise<Chat<UIMessage>> {
     return new Chat<UIMessage>({
+      id: chat.id,
       transport: new DefaultChatTransport({
-        api: `http://${env('VITE_API_DOMAIN')}/ai/chat`,
+        api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${chat.id}/messages`,
         headers: { 'X-Anima-Session-Id': required(Solid.user?.animaSessionId) },
+        prepareSendMessagesRequest({ messages, body }) {
+          return { body: { message: messages[messages.length - 1], ...body } };
+        },
       }),
     });
+  }
+
+  async updateChat(id: AnimaChat['id'], updates: AnimaChatEditableFields): Promise<void> {
+    const { error } = await api['ai'].chats({ id }).patch(updates);
+
+    if (error) {
+      throw error;
+    }
   }
 
   sendMessage(chat: Chat<UIMessage>, message: string): Promise<void> {
@@ -43,35 +102,11 @@ export default class RemoteRuntime implements Runtime {
     );
   }
 
-  async getModels(): Promise<AIModel[]> {
-    const { data, error, response } = await api['ai'].models.get();
-
-    if (error) {
-      if (response.status === 401) {
-        return [];
-      }
-
-      throw error;
-    }
-
-    return required(data);
-  }
-
-  async getProviders(): Promise<ProviderName[]> {
-    const { data, error, response } = await api.ai.models.providers.get();
-
-    if (error) {
-      if (response.status === 401) {
-        return [];
-      }
-
-      throw error;
-    }
-
-    return required(data);
-  }
-
-  async installModel(provider: ProviderName, name: ModelName, data: ModelData = { enabled: true }): Promise<AIModel> {
+  async installModel(
+    provider: ProviderName,
+    name: ModelName,
+    data: ModelMetadataEditableFields = { enabled: true },
+  ): Promise<AIModel> {
     const { data: responseData } = await api['ai'].models.post({
       name,
       provider,
@@ -81,8 +116,16 @@ export default class RemoteRuntime implements Runtime {
     return required(responseData);
   }
 
-  async updateModel(provider: ProviderName, name: ModelName, updates: Partial<ModelData>): Promise<void> {
-    await api['ai'].models({ name }).patch({ provider, ...updates });
+  async updateModel(
+    provider: ProviderName,
+    name: ModelName,
+    updates: Partial<ModelMetadataEditableFields>,
+  ): Promise<void> {
+    const { error } = await api['ai'].models({ name }).patch({ provider, ...updates });
+
+    if (error) {
+      throw error;
+    }
   }
 
   async deleteModel(provider: ProviderName, name: ModelName): Promise<void> {
@@ -91,5 +134,22 @@ export default class RemoteRuntime implements Runtime {
 
   async cancelModelInstallation(provider: ProviderName, name: ModelName): Promise<void> {
     await api['ai'].models({ name })['cancel-installation'].post({ provider });
+  }
+
+  private async treatyResponse<T extends Record<number, unknown>, TResponse extends Treaty.TreatyResponse<T>>(
+    apiCall: Promise<TResponse>,
+    defaultValue: NonNullable<TResponse['data']>,
+  ): Promise<NonNullable<TResponse['data']>> {
+    const { data, error, response } = await apiCall;
+
+    if (error) {
+      if (response.status === 401) {
+        return defaultValue;
+      }
+
+      throw error;
+    }
+
+    return required(data);
   }
 }

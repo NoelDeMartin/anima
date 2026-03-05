@@ -1,27 +1,24 @@
-import { ProviderModelSchema, type ModelsProvider, type ProviderModel, type ProviderOptions } from '@anima/core';
+import {
+  ModelMetadataSchema,
+  ProviderModelSchema,
+  storage,
+  type ModelMetadataEditableFields,
+  type ModelName,
+  type ModelsProvider,
+  type ProviderModel,
+  type ProviderName,
+  type ProviderOptions,
+} from '@anima/core';
 import { facade, objectEntries, objectKeys } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
-import type { $brand } from 'zod';
-import z from 'zod';
+import type z from 'zod';
 
-export const ModelDataSchema = z.object({
-  enabled: z.boolean(),
-  alias: z.string().nullable().optional(),
-  apiKey: z.string().nullable().optional(),
-});
-
-export const AIModelSchema = ModelDataSchema.extend({ provider: z.string().brand('ProviderName') }).and(
-  ProviderModelSchema,
-);
+export const AIModelSchema = ModelMetadataSchema.and(ProviderModelSchema);
 
 export type AIModel = z.infer<typeof AIModelSchema>;
-export type ModelData = z.infer<typeof ModelDataSchema>;
-export type ProviderName = string & $brand<'ProviderName'>;
-export type ModelName = string & $brand<'ModelName'>;
 
 export class ModelsManagerService {
   private providers: Record<ProviderName, ModelsProvider> = {};
-  private modelsData: Map<`${ProviderName}-${ModelName}`, ModelData> = new Map();
 
   async registerProvider(name: ProviderName, provider: ModelsProvider): Promise<void> {
     this.providers[name] = provider;
@@ -38,7 +35,7 @@ export class ModelsManagerService {
       objectEntries(this.providers).map(async ([providerName, providerInstance]) => {
         const providerModels = await providerInstance.getModels();
 
-        return providerModels.map((model) => this.toAIModel(providerName, model));
+        return await Promise.all(providerModels.map((model) => this.toAIModel(providerName, model)));
       }),
     );
 
@@ -49,36 +46,41 @@ export class ModelsManagerService {
     provider: ProviderName,
     name: ModelName,
   ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }> {
-    const data = this.modelsData.get(`${provider}-${name}`);
+    const data = await storage().getModelMetadata(provider, name);
 
     return this.requireProvider(provider).createLanguageModel(name, data);
   }
 
-  async installModel(provider: ProviderName, model: ModelName, data: ModelData): Promise<AIModel> {
+  async installModel(provider: ProviderName, model: ModelName, data: ModelMetadataEditableFields): Promise<AIModel> {
     const providerModel = await this.requireProvider(provider).installModel(model);
 
-    this.modelsData.set(`${provider}-${model}`, ModelDataSchema.parse(data));
+    await storage().storeModelMetadata({ provider, name: model, ...data });
 
     return this.toAIModel(provider, providerModel);
   }
 
-  async updateModel(provider: ProviderName, model: ModelName, updates: Partial<ModelData>): Promise<void> {
-    this.modelsData.set(
-      `${provider}-${model}`,
-      ModelDataSchema.parse({ ...this.modelsData.get(`${provider}-${model}`), ...updates }),
-    );
+  async updateModel(
+    provider: ProviderName,
+    model: ModelName,
+    updates: Partial<ModelMetadataEditableFields>,
+  ): Promise<void> {
+    const metadata = await storage().getModelMetadata(provider, model);
+
+    if (!metadata) {
+      throw new Error(`Model '${model}' not found for provider '${provider}'`);
+    }
+
+    await storage().storeModelMetadata({ ...metadata, ...updates });
   }
 
   async deleteModel(provider: ProviderName, model: ModelName): Promise<void> {
     await this.requireProvider(provider).deleteModel(model);
-
-    this.modelsData.delete(`${provider}-${model}`);
+    await storage().deleteModelMetadata(provider, model);
   }
 
   async cancelModelInstallation(provider: ProviderName, model: ModelName): Promise<void> {
     await this.requireProvider(provider).cancelModelInstallation(model);
-
-    this.modelsData.delete(`${provider}-${model}`);
+    await storage().deleteModelMetadata(provider, model);
   }
 
   private requireProvider(name: ProviderName): ModelsProvider {
@@ -91,12 +93,12 @@ export class ModelsManagerService {
     return provider;
   }
 
-  private toAIModel(provider: ProviderName, model: ProviderModel): AIModel {
+  private async toAIModel(provider: ProviderName, model: ProviderModel): Promise<AIModel> {
     return AIModelSchema.parse({
       provider,
       enabled: true,
       ...model,
-      ...this.modelsData.get(`${provider}-${model.name}`),
+      ...(await storage().getModelMetadata(provider, model.name)),
     });
   }
 }

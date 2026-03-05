@@ -1,4 +1,4 @@
-import { AIModelSchema, ModelDataSchema, ModelsManager } from '@anima/core';
+import { AIModelSchema, ModelMetadataEditableFieldsSchema, ModelsManager } from '@anima/core';
 import Elysia from 'elysia';
 import z from 'zod';
 
@@ -7,7 +7,10 @@ export default new Elysia().group('models', (app) =>
     .get('/', () => ModelsManager.getModels(), { response: z.array(AIModelSchema) })
     .get('/providers/', () => ModelsManager.getProviders(), { response: z.array(z.string().brand('ProviderName')) })
     .post('/', ({ body: { provider, name, ...data } }) => ModelsManager.installModel(provider, name, data), {
-      body: ModelDataSchema.extend({ provider: z.string().brand('ProviderName'), name: z.string().brand('ModelName') }),
+      body: ModelMetadataEditableFieldsSchema.extend({
+        provider: z.string().brand('ProviderName'),
+        name: z.string().brand('ModelName'),
+      }),
       response: AIModelSchema,
     })
     .patch(
@@ -15,7 +18,7 @@ export default new Elysia().group('models', (app) =>
       ({ params: { name }, body: { provider, ...updates } }) => ModelsManager.updateModel(provider, name, updates),
       {
         params: z.object({ name: z.string().brand('ModelName') }),
-        body: ModelDataSchema.partial().extend({ provider: z.string().brand('ProviderName') }),
+        body: ModelMetadataEditableFieldsSchema.partial().extend({ provider: z.string().brand('ProviderName') }),
       },
     )
     .delete('/:name', ({ params: { name }, body: { provider } }) => ModelsManager.deleteModel(provider, name), {
