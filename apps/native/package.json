@@ -3,22 +3,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "dev:tauri": "tauri dev",
-    "type-check": "vue-tsc --build --noEmit"
+    "build": "vite build && electrobun build --env=canary",
+    "dev": "concurrently \"electrobun dev --watch\" \"vite\"",
+    "type-check": "vue-tsc --project tsconfig.app.json --noEmit"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2",
-    "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-shell": "~2.3.5",
-    "tailwindcss": "catalog:",
+    "@noeldemartin/utils": "catalog:",
+    "electrobun": "1.15.1",
     "vue": "catalog:"
   },
   "devDependencies": {
     "@anima/config": "workspace:*",
-    "@tailwindcss/vite": "catalog:",
-    "@tauri-apps/cli": "^2",
+    "@types/three": "^0.183.1",
     "@vitejs/plugin-vue": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
