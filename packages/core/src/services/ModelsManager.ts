@@ -59,18 +59,17 @@ export class ModelsManagerService {
     return this.toAIModel(provider, providerModel);
   }
 
-  async updateModel(
+  async upsertModel(
     provider: ProviderName,
     model: ModelName,
     updates: Partial<ModelMetadataEditableFields>,
   ): Promise<void> {
-    const metadata = await storage().getModelMetadata(provider, model);
+    const metadata = (await storage().getModelMetadata(provider, model)) ?? { provider, name: model, enabled: true };
 
-    if (!metadata) {
-      throw new Error(`Model '${model}' not found for provider '${provider}'`);
-    }
-
-    await storage().storeModelMetadata({ ...metadata, ...updates });
+    await storage().storeModelMetadata({
+      ...metadata,
+      ...updates,
+    });
   }
 
   async deleteModel(provider: ProviderName, model: ModelName): Promise<void> {

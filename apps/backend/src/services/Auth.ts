@@ -3,7 +3,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { EVENTS, Session } from '@inrupt/solid-client-authn-node';
 import type { AuthorizationRequestState, SessionTokenSet } from '@inrupt/solid-client-authn-node';
 import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
-import { facade, PromisedValue } from '@noeldemartin/utils';
+import { facade, isDevelopment, PromisedValue } from '@noeldemartin/utils';
 import { status } from 'elysia';
 
 import { PORT } from '../lib/constants';
@@ -40,7 +40,9 @@ export class AuthService {
     }
   }
 
-  public runWithSession<T>(session: AuthSession, callback: () => Promise<T>): Promise<T> {
+  public async runForRequest<T>(request: Request, callback: () => T | Promise<T>): Promise<T> {
+    const session = await this.requireSession(request);
+
     return this.context.run(session, callback);
   }
 
@@ -140,6 +142,10 @@ export class AuthService {
       (await Session.fromAuthorizationRequestState(authorizationRequestState, sessionId));
 
     if (!session) {
+      if (isDevelopment()) {
+        console.error('Failed to handle redirect', { sessionId, authorizationRequestState });
+      }
+
       return;
     }
 

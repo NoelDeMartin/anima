@@ -155,7 +155,7 @@ export default class LocalRuntime implements Runtime {
     model: ModelName,
     updates: Partial<ModelMetadataEditableFields>,
   ): Promise<void> {
-    await ModelsManager.updateModel(provider, model, updates);
+    await ModelsManager.upsertModel(provider, model, updates);
   }
 
   async deleteModel(provider: ProviderName, model: ModelName): Promise<void> {

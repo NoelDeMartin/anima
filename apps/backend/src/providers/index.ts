@@ -8,19 +8,23 @@ import {
 } from '@anima/core';
 
 import { env } from '../lib/env';
+import FilesystemStorageProvider from './FilesystemStorageProvider';
 import InMemoryStorageProvider from './InMemoryStorageProvider';
-import { OllamaModelsProvider } from './OllamaModelsProvider';
+import OllamaModelsProvider from './OllamaModelsProvider';
 import SessionAuthProvider from './SessionAuthProvider';
 
 export async function registerProviders() {
   setAuthProvider(new SessionAuthProvider());
-  setStorageProvider(new InMemoryStorageProvider());
 
   if (env('E2E')) {
+    setStorageProvider(new InMemoryStorageProvider());
+
     await ModelsManager.registerProvider('testing' as ProviderName, new TestingModelsProvider());
 
     return;
   }
+
+  setStorageProvider(new FilesystemStorageProvider());
 
   await Promise.all([
     ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),

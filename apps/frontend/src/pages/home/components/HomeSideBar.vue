@@ -21,7 +21,7 @@
       <div v-if="$ai.chatsList.length === 0" class="text-sm text-gray-400 italic">No chats yet</div>
       <ul v-else aria-labelledby="recent-chats">
         <li
-          v-for="chat in chats"
+          v-for="chat in $ai.chatsList"
           :key="chat.id"
           class="group flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-gray-200 transition-colors"
           :class="{ 'bg-gray-200 font-semibold': $ai.selectedChatId === chat.id }"
@@ -45,9 +45,4 @@
 
 <script setup lang="ts">
 import EditChatModal from '@/components/modals/EditChatModal.vue';
-import AI from '@/services/AI';
-import { arraySorted } from '@noeldemartin/utils';
-import { computed } from 'vue';
-
-const chats = computed(() => arraySorted(AI.chatsList, 'updatedAt', 'desc'));
 </script>

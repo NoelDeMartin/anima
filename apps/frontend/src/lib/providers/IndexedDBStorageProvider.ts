@@ -7,6 +7,7 @@ import type {
   StorageProvider,
   AnimaUIMessage,
 } from '@anima/core';
+import { arraySorted } from '@noeldemartin/utils';
 import { generateId } from 'ai';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 
@@ -72,7 +73,10 @@ export default class IndexedDBStorageProvider implements StorageProvider {
     const db = await this.dbPromise;
     const messagesWithChatId = await db.getAllFromIndex('messages', 'by-chat', chat.id);
 
-    return messagesWithChatId.map(({ chatId: _chatId, ...message }) => message as AnimaUIMessage);
+    return arraySorted(
+      messagesWithChatId.map(({ chatId: _chatId, ...message }) => message as AnimaUIMessage),
+      'metadata.createdAt',
+    );
   }
 
   async getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null> {

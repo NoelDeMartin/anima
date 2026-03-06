@@ -157,7 +157,7 @@ export class AIService extends Service {
     }
 
     if (!this.selectedChatId || !(this.selectedChatId in this.chats)) {
-      this.selectedChatId = chats[0]?.id ?? null;
+      this.selectedChatId = this.chatsList[0]?.id ?? null;
     }
   }
 

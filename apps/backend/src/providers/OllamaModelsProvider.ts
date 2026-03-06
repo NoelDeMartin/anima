@@ -8,7 +8,7 @@ interface OngoingInstall {
   stream?: { abort: () => void };
 }
 
-export class OllamaModelsProvider implements ModelsProvider {
+export default class OllamaModelsProvider implements ModelsProvider {
   private ongoingInstalls: Record<ModelName, OngoingInstall> = {};
 
   public async getModels(): Promise<ProviderModel[]> {
@@ -36,7 +36,7 @@ export class OllamaModelsProvider implements ModelsProvider {
     return { name, status: 'installing', progress: 0 };
   }
 
-  async deleteModel(name: ModelName): Promise<void> {
+  public async deleteModel(name: ModelName): Promise<void> {
     const client = await this.getClient();
 
     await client.delete({ model: name });
