@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "bun build ./src/index.ts --compile --outfile ../native/bin/backend",
     "dev": "bun --watch src/index.ts",
     "type-check": "tsc --noEmit"
   },
