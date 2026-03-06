@@ -13,9 +13,3 @@ export type AppAuthenticators = typeof authenticators;
 declare module '@aerogel/plugin-solid' {
   interface Authenticators extends AppAuthenticators {}
 }
-
-declare module '@noeldemartin/solid-utils' {
-  interface SolidUserProfile {
-    animaSessionId?: string;
-  }
-}

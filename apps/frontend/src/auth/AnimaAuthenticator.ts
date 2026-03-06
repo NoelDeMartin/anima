@@ -1,11 +1,10 @@
 import { Authenticator, type AuthSession } from '@aerogel/plugin-solid';
 import type { SolidUserProfile } from '@noeldemartin/solid-utils';
-import { sleep, Storage, urlRoot } from '@noeldemartin/utils';
+import { sleep, urlRoot } from '@noeldemartin/utils';
 
+import { getSessionId, removeSessionId, setSessionId } from '@/auth/session';
 import api from '@/lib/api';
 import { env } from '@/lib/env';
-
-const STORAGE_KEY = 'anima:sessionId';
 
 export default class AnimaAuthenticator extends Authenticator {
   async login(loginUrl: string, user?: SolidUserProfile | null): Promise<AuthSession> {
@@ -13,7 +12,7 @@ export default class AnimaAuthenticator extends Authenticator {
     const { data } = await api.oidc.login.post({ oidcIssuer });
 
     if (data?.sessionId) {
-      Storage.set<string>(STORAGE_KEY, data.sessionId);
+      setSessionId(data.sessionId);
     }
 
     if (!data?.redirectUrl) {
@@ -28,14 +27,14 @@ export default class AnimaAuthenticator extends Authenticator {
   }
 
   async logout(): Promise<void> {
-    Storage.remove(STORAGE_KEY);
+    removeSessionId();
 
     await api.oidc.logout.post();
     await this.endSession();
   }
 
   protected async restoreSession(): Promise<void> {
-    const sessionId = Storage.get<string>(STORAGE_KEY);
+    const sessionId = getSessionId();
 
     if (!sessionId) {
       return;
@@ -61,7 +60,7 @@ export default class AnimaAuthenticator extends Authenticator {
     );
 
     try {
-      await this.startSession({ user: { ...user, animaSessionId: sessionId }, loginUrl: user.webId });
+      await this.startSession({ user, loginUrl: user.webId });
     } catch (error) {
       await this.failSession(user.webId, error);
     }

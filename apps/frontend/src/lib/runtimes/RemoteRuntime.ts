@@ -1,4 +1,3 @@
-import { Solid } from '@aerogel/plugin-solid';
 import { Chat } from '@ai-sdk/vue';
 import type { ApiAnimaChat } from '@anima/backend';
 import {
@@ -14,6 +13,7 @@ import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
 import { DefaultChatTransport } from 'ai';
 
+import { getSessionId } from '@/auth/session';
 import api from '@/lib/api';
 import { env } from '@/lib/env';
 import AI from '@/services/AI';
@@ -30,11 +30,13 @@ function mapChat(chat: ApiAnimaChat): AnimaChat {
 
 export default class RemoteRuntime implements Runtime {
   async initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: ProviderName[] }> {
-    if (!Solid.user?.animaSessionId) {
+    const sessionId = getSessionId();
+
+    if (!sessionId) {
       return { chats: [], models: [], providers: [] };
     }
 
-    const headers = { 'X-Anima-Session-Id': Solid.user?.animaSessionId };
+    const headers = { 'X-Anima-Session-Id': sessionId };
     const { data: chats } = await api['ai'].chats.get({ headers });
     const { data: models } = await api['ai'].models.get({ headers });
     const { data: providers } = await api['ai'].models.providers.get({ headers });
@@ -82,7 +84,7 @@ export default class RemoteRuntime implements Runtime {
       messages,
       transport: new DefaultChatTransport({
         api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${chat.id}/messages`,
-        headers: { 'X-Anima-Session-Id': required(Solid.user?.animaSessionId) },
+        headers: { 'X-Anima-Session-Id': required(getSessionId()) },
         prepareSendMessagesRequest({ messages, body }) {
           return { body: { message: messages[messages.length - 1], ...body } };
         },
