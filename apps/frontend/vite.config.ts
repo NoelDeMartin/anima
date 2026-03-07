@@ -1,6 +1,7 @@
 import { fileURLToPath, URL } from 'node:url';
 
 import Aerogel, { AerogelResolver } from '@aerogel/vite';
+import I18n from '@intlify/unplugin-vue-i18n/vite';
 import IconsResolver from 'unplugin-icons/resolver';
 import Icons from 'unplugin-icons/vite';
 import Components from 'unplugin-vue-components/vite';
@@ -15,6 +16,7 @@ export default defineConfig({
       dirs: ['src/components', 'src/pages'],
       resolvers: [AerogelResolver(), IconsResolver()],
     }),
+    I18n({ include: fileURLToPath(new URL('./src/lang/**/*.yaml', import.meta.url)) }),
     Icons({
       iconCustomizer(_, __, props) {
         props['aria-hidden'] = 'true';

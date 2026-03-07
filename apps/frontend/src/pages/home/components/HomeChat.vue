@@ -4,7 +4,7 @@
       <div class="grow" />
       <ul class="flex flex-col gap-4">
         <li>
-          <Markdown>Hello {{ $solid.user?.name ?? $solid.user?.webId }}, how can I help you today?</Markdown>
+          <Markdown>{{ $t('chat.greeting', { name: $solid.user?.name ?? $solid.user?.webId }) }}</Markdown>
         </li>
         <li
           v-for="message in messages"
@@ -19,15 +19,27 @@
           </div>
           <template v-for="part in message.parts">
             <Markdown v-if="part.type === 'text'" :text="part.text" />
-            <HomeToolCall v-else-if="part.type === 'tool-readTypesIndex'" label="Read type index" :data="part.output" />
+            <HomeToolCall
+              v-else-if="part.type === 'tool-readTypesIndex'"
+              :label="$t('chat.tools.readTypeIndex')"
+              :data="part.output"
+            />
             <HomeToolCall
               v-else-if="part.type === 'tool-listContainerFiles'"
-              :label="`Listed files from ${(part as UIToolInvocation<AnimaTools['listContainerFiles']>).input?.url}`"
+              :label="
+                $t('chat.tools.listContainerFiles', {
+                  url: (part as UIToolInvocation<AnimaTools['listContainerFiles']>).input?.url,
+                })
+              "
               :data="part.output"
             />
             <HomeToolCall
               v-else-if="part.type === 'tool-readFileContents'"
-              :label="`Read ${(part as UIToolInvocation<AnimaTools['readFileContents']>).input?.url}`"
+              :label="
+                $t('chat.tools.readFileContents', {
+                  url: (part as UIToolInvocation<AnimaTools['readFileContents']>).input?.url,
+                })
+              "
               :data="part.output"
             />
             <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
@@ -41,7 +53,7 @@
     <div class="px-8 w-full">
       <Form :form @submit="submit()" class="relative mb-16 w-full">
         <TextArea
-          label="Message"
+          :label="$t('chat.message')"
           label-class="sr-only"
           name="message"
           @keydown.enter.prevent="form.submit()"
@@ -49,14 +61,16 @@
         />
         <div class="absolute bottom-2.5 right-2 flex gap-2 items-center">
           <Select
-            label="Model"
+            :label="$t('chat.model')"
             class="w-full [&>button]:mt-0"
             label-class="sr-only"
             v-model="$ai.selectedModelKey"
             :options="models"
             :render-option="renderModel"
           />
-          <Button submit :disabled="!form.message || form.message.trim().length === 0" class="h-9"> Send </Button>
+          <Button submit :disabled="!form.message || form.message.trim().length === 0" class="h-9">
+            {{ $t('chat.send') }}
+          </Button>
         </div>
       </Form>
     </div>
@@ -65,7 +79,7 @@
 
 <script setup lang="ts">
 import AI from '@/services/AI';
-import { stringInput } from '@aerogel/core';
+import { stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import type { Chat } from '@ai-sdk/vue';
 import type { AnimaTools, ModelName, ProviderName, AnimaUIMessage } from '@anima/core';
@@ -83,13 +97,13 @@ const messages = computed(() => arraySorted(chat.messages, 'metadata.createdAt')
 
 function renderModel(model: `${ProviderName}-${ModelName}` | null) {
   if (!model) {
-    return 'Unknown';
+    return translate('chat.unknownModel');
   }
 
   const instance = AI.models[model];
 
   if (!instance) {
-    return model?.split('-')[1] || 'Unknown';
+    return model?.split('-')[1] || translate('chat.unknownModel');
   }
 
   return instance.alias || `${instance.provider} / ${instance.name}`;

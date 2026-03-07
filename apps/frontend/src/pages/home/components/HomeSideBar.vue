@@ -2,23 +2,25 @@
   <aside v-if="$solid.isLoggedIn()" class="flex flex-col gap-2 border-r border-gray-200 bg-gray-50 p-4 w-64">
     <div class="flex items-center gap-2">
       <SolidAvatar class="size-12" />
-      {{ $solid.user?.name ?? 'Anonymous' }}
-      <Button variant="ghost" @click="$solid.logout()" class="hover:bg-gray-100" title="Logout">
+      {{ $solid.user?.name ?? $t('sidebar.anonymous') }}
+      <Button variant="ghost" @click="$solid.logout()" class="hover:bg-gray-100" :title="$t('sidebar.logout')">
         <i-material-symbols-logout class="size-6" />
-        <span class="sr-only">Logout</span>
+        <span class="sr-only">{{ $t('sidebar.logout') }}</span>
       </Button>
     </div>
 
     <div class="mt-4 flex flex-col gap-2 flex-1 overflow-y-auto">
       <div class="flex items-center justify-between mb-2">
-        <h2 id="recent-chats" class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Recent Chats</h2>
-        <Button class="p-1 h-auto" variant="ghost" @click="$ai.startChat()" title="New Chat">
+        <h2 id="recent-chats" class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+          {{ $t('sidebar.recentChats') }}
+        </h2>
+        <Button class="p-1 h-auto" variant="ghost" @click="$ai.startChat()" :title="$t('sidebar.newChat')">
           <i-material-symbols-add class="size-5" />
 
-          <span class="sr-only">New Chat</span>
+          <span class="sr-only">{{ $t('sidebar.newChat') }}</span>
         </Button>
       </div>
-      <div v-if="$ai.chatsList.length === 0" class="text-sm text-gray-400 italic">No chats yet</div>
+      <div v-if="$ai.chatsList.length === 0" class="text-sm text-gray-400 italic">{{ $t('sidebar.noChats') }}</div>
       <ul v-else aria-labelledby="recent-chats">
         <li
           v-for="chat in $ai.chatsList"
@@ -33,7 +35,7 @@
             class="hidden group-hover:flex shrink-0 p-1 h-auto text-gray-500 hover:text-gray-900"
             variant="ghost"
             @click="$ui.modal(EditChatModal, { chat })"
-            title="Edit"
+            :title="$t('sidebar.edit')"
           >
             <i-material-symbols-edit class="size-4" />
           </Button>

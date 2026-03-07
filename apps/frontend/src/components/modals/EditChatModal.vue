@@ -1,11 +1,11 @@
 <template>
-  <Modal title="Edit Chat">
+  <Modal :title="$t('chats.edit')">
     <Form :form @submit="submit" class="flex flex-col gap-2">
-      <Input label="Title" name="title" class="w-full" />
+      <Input :label="$t('chats.title')" name="title" class="w-full" />
       <div class="flex gap-2 mt-4">
         <div class="grow" />
-        <Button variant="secondary" @click="close()">Cancel</Button>
-        <Button submit>Update</Button>
+        <Button variant="secondary" @click="close()">{{ $t('chats.cancel') }}</Button>
+        <Button submit>{{ $t('chats.update') }}</Button>
       </div>
     </Form>
   </Modal>

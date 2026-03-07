@@ -1,0 +1,49 @@
+landing:
+  title: Welcome to Ànima
+
+chat:
+  greeting: Hello {name}, how can I help you today?
+  message: Message
+  model: Model
+  unknownModel: Unknown
+  send: Send
+  tools:
+    readTypeIndex: Read type index
+    listContainerFiles: Listed files from {url}
+    readFileContents: Read {url}
+
+sidebar:
+  anonymous: Anonymous
+  logout: Logout
+  recentChats: Recent Chats
+  newChat: New Chat
+  noChats: No chats yet
+  edit: Edit
+
+models:
+  create: Create model
+  edit: Edit model
+  provider: Provider
+  name: Name
+  alias: Alias
+  apiKey: API Key
+  cancel: Cancel
+  install: Install
+  update: Update
+  delete: Delete
+  deleteConfirm:
+    title: Delete `{name}`
+    message: Are you sure you want to delete this model?
+
+chats:
+  edit: Edit Chat
+  title: Title
+  cancel: Cancel
+  update: Update
+
+settings:
+  models:
+    title: AI models
+    description: Configure the AI models you want to use.
+    installBuiltIn: Install built-in model
+    install: Install model

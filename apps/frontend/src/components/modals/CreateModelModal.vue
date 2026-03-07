@@ -1,20 +1,27 @@
 <template>
-  <Modal title="Create model">
+  <Modal :title="$t('models.create')">
     <Form :form @submit="submit" class="flex flex-col gap-2">
       <Select
-        label="Provider"
+        :label="$t('models.provider')"
         name="provider"
         class="w-full"
         :options="providers"
         :render-option="(option) => stringToStudlyCase(option)"
       />
-      <Input label="Name" name="name" class="w-full" />
-      <Input label="Alias" name="alias" class="w-full" />
-      <Input v-if="form.provider === 'google'" label="API Key" name="apiKey" type="password" class="w-full" required />
+      <Input :label="$t('models.name')" name="name" class="w-full" />
+      <Input :label="$t('models.alias')" name="alias" class="w-full" />
+      <Input
+        v-if="form.provider === 'google'"
+        :label="$t('models.apiKey')"
+        name="apiKey"
+        type="password"
+        class="w-full"
+        required
+      />
       <div class="flex gap-2 mt-2">
         <div class="grow" />
-        <Button variant="secondary" @click="close()">Cancel</Button>
-        <Button submit>Install</Button>
+        <Button variant="secondary" @click="close()">{{ $t('models.cancel') }}</Button>
+        <Button submit>{{ $t('models.install') }}</Button>
       </div>
     </Form>
   </Modal>

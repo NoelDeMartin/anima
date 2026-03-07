@@ -1,20 +1,22 @@
 <template>
-  <Modal title="Available models" class="p-0">
-    <ul v-if="$ai.modelsList?.length" class="border-t border-gray-200">
-      <SettingsModalModel v-for="model in $ai.modelsList" :key="model.name" :model="model" />
+  <Setting :title="$t('settings.models.title')" :description="$t('settings.models.description')" layout="vertical">
+    <ul v-if="$ai.modelsList?.length" class="border-t border-gray-200 -mx-4 mt-4">
+      <LanguageModelsModel v-for="model in $ai.modelsList" :key="model.name" :model="model" />
     </ul>
-    <div class="p-4 flex flex-col gap-2">
+    <div class="flex flex-col gap-2 mt-2">
       <Button
         v-if="showBrowserInstall"
         variant="secondary"
         class="w-full"
         @click="$ai.installModel('browser' as ProviderName, $browser.getModelName())"
       >
-        Install built-in model
+        {{ $t('settings.models.installBuiltIn') }}
       </Button>
-      <Button variant="secondary" class="w-full" @click="$ui.modal(CreateModelModal)">Install model</Button>
+      <Button variant="secondary" class="w-full" @click="$ui.modal(CreateModelModal)">
+        {{ $t('settings.models.install') }}
+      </Button>
     </div>
-  </Modal>
+  </Setting>
 </template>
 
 <script setup lang="ts">
