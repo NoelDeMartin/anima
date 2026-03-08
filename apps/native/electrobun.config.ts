@@ -7,8 +7,7 @@ export default {
   },
   build: {
     copy: {
-      'dist/index.html': 'views/mainview/index.html',
-      'dist/assets': 'views/mainview/assets',
+      'src/assets': 'views/assets',
       'bin/backend': 'bin/backend',
     },
     watchIgnore: ['dist/**'],

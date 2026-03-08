@@ -3,21 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build && electrobun build --env=canary",
-    "dev": "concurrently \"electrobun dev --watch\" \"vite\"",
-    "type-check": "vue-tsc --project tsconfig.app.json --noEmit"
+    "build": "electrobun build --env=canary",
+    "dev": "electrobun dev --watch",
+    "type-check": "tsc --project tsconfig.app.json --noEmit"
   },
   "dependencies": {
     "@noeldemartin/utils": "catalog:",
-    "electrobun": "1.15.1",
-    "vue": "catalog:"
+    "electrobun": "1.15.1"
   },
   "devDependencies": {
     "@anima/config": "workspace:*",
     "@types/three": "^0.183.1",
-    "@vitejs/plugin-vue": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:",
-    "vue-tsc": "catalog:"
+    "typescript": "catalog:"
   }
 }
