@@ -43,7 +43,7 @@ export default class IndexedDBStorageProvider implements StorageProvider {
         }
 
         if (!db.objectStoreNames.contains('modelsMetadata')) {
-          db.createObjectStore('modelsMetadata', { keyPath: ['provider', 'model'] });
+          db.createObjectStore('modelsMetadata', { keyPath: ['provider', 'name'] });
         }
 
         const messageStore = db.objectStoreNames.contains('messages')

@@ -1,7 +1,8 @@
 import type { ModelName, ModelsProvider, ProviderModel, ProviderOptions } from '@anima/core';
-import { objectEntries } from '@noeldemartin/utils';
+import { isDevelopment, objectEntries } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
-import type { Ollama } from 'ollama';
+import type { Ollama as OllamaServer } from 'ollama';
+import type { Ollama as OllamaBrowser } from 'ollama/browser';
 
 interface OngoingInstall {
   progress: number;
@@ -10,20 +11,37 @@ interface OngoingInstall {
 
 export default class OllamaModelsProvider implements ModelsProvider {
   private ongoingInstalls: Record<ModelName, OngoingInstall> = {};
+  private runtime: 'browser' | 'server';
+
+  constructor(runtime: 'browser' | 'server') {
+    this.runtime = runtime;
+  }
+
+  public async isSupported(): Promise<boolean> {
+    try {
+      const response = await fetch('http://127.0.0.1:11434/api/version');
+      const data = await response.json();
+
+      return typeof data === 'object' && data !== null && 'version' in data;
+    } catch (error) {
+      if (isDevelopment()) {
+        console.error(error);
+      }
+
+      return false;
+    }
+  }
 
   public async getModels(): Promise<ProviderModel[]> {
-    const client = await this.getClient();
-    const { models: installedModels } = await client.list();
+    const installedModels = await this.getInstalledModels();
 
-    return ([] as ProviderModel[])
-      .concat(installedModels.map((model) => ({ name: model.name as ModelName, status: 'installed' })))
-      .concat(
-        objectEntries(this.ongoingInstalls).map(([name, install]) => ({
-          name,
-          status: 'installing',
-          progress: install.progress,
-        })),
-      );
+    return ([] as ProviderModel[]).concat(installedModels.map((name) => ({ name, status: 'installed' }))).concat(
+      objectEntries(this.ongoingInstalls).map(([name, install]) => ({
+        name,
+        status: 'installing',
+        progress: install.progress,
+      })),
+    );
   }
 
   public async installModel(name: ModelName): Promise<ProviderModel> {
@@ -54,14 +72,14 @@ export default class OllamaModelsProvider implements ModelsProvider {
     const { ollama } = await import('ollama-ai-provider-v2');
 
     return {
-      supportsTools: false,
+      supportsTools: true,
       model: ollama(name),
       providerOptions: { ollama: { think: false } },
     };
   }
 
-  private async getClient(): Promise<Ollama> {
-    const { default: client } = await import('ollama');
+  private async getClient(): Promise<OllamaServer | OllamaBrowser> {
+    const { default: client } = this.runtime === 'browser' ? await import('ollama/browser') : await import('ollama');
 
     return client;
   }

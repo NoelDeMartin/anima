@@ -21,6 +21,12 @@ export class ModelsManagerService {
   private providers: Record<ProviderName, ModelsProvider> = {};
 
   async registerProvider(name: ProviderName, provider: ModelsProvider): Promise<void> {
+    const supported = provider.isSupported ? await provider.isSupported() : true;
+
+    if (!supported) {
+      return;
+    }
+
     this.providers[name] = provider;
 
     await provider.initialize?.();

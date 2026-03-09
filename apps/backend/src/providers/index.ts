@@ -1,6 +1,7 @@
 import {
   GoogleModelsProvider,
   ModelsManager,
+  OllamaModelsProvider,
   type ProviderName,
   setAuthProvider,
   setStorageProvider,
@@ -10,7 +11,6 @@ import {
 import { env } from '../lib/env';
 import FilesystemStorageProvider from './FilesystemStorageProvider';
 import InMemoryStorageProvider from './InMemoryStorageProvider';
-import OllamaModelsProvider from './OllamaModelsProvider';
 import SessionAuthProvider from './SessionAuthProvider';
 
 export async function registerProviders() {
@@ -28,6 +28,6 @@ export async function registerProviders() {
 
   await Promise.all([
     ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
-    ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider()),
+    ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('server')),
   ]);
 }

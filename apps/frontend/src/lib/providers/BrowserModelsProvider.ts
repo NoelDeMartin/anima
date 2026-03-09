@@ -8,6 +8,10 @@ export default class BrowserModelsProvider implements ModelsProvider {
   private installMonitor: CreateMonitor | null = null;
   private installListener: ((event: ProgressEvent) => void) | null = null;
 
+  async isSupported(): Promise<boolean> {
+    return Browser.promptAPIAvailable ?? false;
+  }
+
   async initialize(): Promise<void> {
     const availability = await LanguageModel.availability();
 

@@ -16,6 +16,8 @@
     "@noeldemartin/solid-utils": "catalog:",
     "@noeldemartin/utils": "catalog:",
     "ai": "catalog:",
+    "ollama": "^0.6.3",
+    "ollama-ai-provider-v2": "^3.3.1",
     "soukai-bis": "catalog:",
     "typescript": "catalog:",
     "zod": "catalog:"

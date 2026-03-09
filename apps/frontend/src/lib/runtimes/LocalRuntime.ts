@@ -3,6 +3,7 @@ import { Chat } from '@ai-sdk/vue';
 import {
   GoogleModelsProvider,
   ModelsManager,
+  OllamaModelsProvider,
   setAuthProvider,
   setStorageProvider,
   storage,
@@ -36,9 +37,9 @@ export default class LocalRuntime implements Runtime {
     setStorageProvider(new IndexedDBStorageProvider());
 
     await Promise.all([
+      ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider()),
       ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
-      Browser.promptAPIAvailable &&
-        ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider()),
+      ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('browser')),
     ]);
 
     return {
