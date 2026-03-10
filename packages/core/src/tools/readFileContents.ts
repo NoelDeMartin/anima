@@ -9,6 +9,13 @@ export default tool({
   outputSchema: z.any().describe('The contents of the file.'),
   strict: true,
   async execute({ url }) {
+    const user = auth().getUser();
+    const isInsideStorage = user.storageUrls.some((storageUrl) => url.startsWith(storageUrl));
+
+    if (!isInsideStorage) {
+      throw new Error("Cannot read files outside the user's POD");
+    }
+
     const document = await fetchSolidDocument(url, { fetch: auth().fetch });
 
     return quadsToJsonLD(document.getQuads());

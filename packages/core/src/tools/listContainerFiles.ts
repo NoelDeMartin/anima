@@ -9,6 +9,13 @@ export default tool({
   outputSchema: z.array(z.string().describe("File url (ending with / in case it's a nested container).")),
   strict: true,
   async execute({ url }) {
+    const user = auth().getUser();
+    const isInsideStorage = user.storageUrls.some((storageUrl) => url.startsWith(storageUrl));
+
+    if (!isInsideStorage) {
+      throw new Error("Cannot list files outside the user's POD");
+    }
+
     return runWithEngine(new SolidEngine(auth().fetch), async () => {
       const container = await Container.find(url);
 
