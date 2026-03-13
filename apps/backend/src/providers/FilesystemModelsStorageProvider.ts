@@ -4,83 +4,24 @@ import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
 import {
-  AnimaChatSchema,
-  MessageMetadataSchema,
   ModelMetadataSchema,
-  type AnimaChat,
-  type AnimaChatEditableFields,
-  type AnimaUIMessage,
   type ModelMetadata,
   type ModelName,
   type ProviderName,
-  type StorageProvider,
+  type ModelsStorageProvider,
 } from '@anima/core';
-import { arraySorted, isTruthy, Semaphore } from '@noeldemartin/utils';
-import { generateId } from 'ai';
-import { status } from 'elysia';
-import z from 'zod';
+import { isTruthy } from '@noeldemartin/utils';
+import type z from 'zod';
 
 import Auth from '../services/Auth';
 
 const CHUNK_SIZE = 10;
 
-const FilesystemChatSchema = AnimaChatSchema.extend({
-  createdAt: z.number(),
-  updatedAt: z.number(),
-});
-
-const FilesystemMessageSchema = z.looseObject({
-  metadata: MessageMetadataSchema.extend({ createdAt: z.number().optional() }),
-});
-
-export default class FilesystemStorageProvider implements StorageProvider {
+export default class FilesystemModelsStorageProvider implements ModelsStorageProvider {
   private rootStorage: string;
-  private semaphore = new Semaphore();
 
   constructor(root?: string) {
     this.rootStorage = root ?? join(homedir(), '.anima');
-  }
-
-  async getChat(id: AnimaChat['id']): Promise<AnimaChat | null> {
-    const data = await this.readJson(FilesystemChatSchema, `/chats/${id}/chat.json`);
-
-    if (!data) {
-      return null;
-    }
-
-    return {
-      ...data,
-      createdAt: new Date(data.createdAt),
-      updatedAt: new Date(data.updatedAt),
-    };
-  }
-
-  async getChats(): Promise<AnimaChat[]> {
-    const files = await this.listFileNames(`/chats/`);
-    const chats = await this.processInChunks(files, (chatId) => this.getChat(chatId as AnimaChat['id']));
-
-    return chats.filter(isTruthy);
-  }
-
-  async getChatMessages(chat: AnimaChat): Promise<AnimaUIMessage[]> {
-    const files = await this.listFileNames(`/chats/${chat.id}/messages/`);
-    const messages = await this.processInChunks(files, async (messageId) => {
-      const data = await this.readJson(FilesystemMessageSchema, `/chats/${chat.id}/messages/${messageId}.json`);
-
-      if (!data) {
-        return null;
-      }
-
-      return {
-        ...data,
-        metadata: {
-          ...data.metadata,
-          createdAt: data.metadata?.createdAt && new Date(data.metadata.createdAt),
-        },
-      };
-    });
-
-    return arraySorted(messages.filter(isTruthy) as AnimaUIMessage[], 'metadata.createdAt');
   }
 
   async getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null> {
@@ -100,51 +41,6 @@ export default class FilesystemStorageProvider implements StorageProvider {
     });
 
     return models.flat().filter(isTruthy);
-  }
-
-  async createChat(data: AnimaChatEditableFields): Promise<AnimaChat> {
-    const now = new Date();
-    const chat = {
-      ...data,
-      id: generateId() as AnimaChat['id'],
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    await this.writeJson(`/chats/${chat.id}/chat.json`, {
-      ...chat,
-      createdAt: now.getTime(),
-      updatedAt: now.getTime(),
-    });
-
-    return chat;
-  }
-
-  updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
-    return this.semaphore.run(async () => {
-      const existing = await this.getChat(id);
-
-      if (!existing) {
-        throw status(404, 'Chat not found');
-      }
-
-      await this.writeJson(`/chats/${id}/chat.json`, {
-        ...existing,
-        ...updates,
-        createdAt: existing.createdAt.getTime(),
-        updatedAt: Date.now(),
-      });
-    });
-  }
-
-  async storeChatMessage(chat: AnimaChat, message: AnimaUIMessage): Promise<void> {
-    await this.writeJson(`/chats/${chat.id}/messages/${message.id}.json`, {
-      ...message,
-      metadata: {
-        ...message.metadata,
-        createdAt: message.metadata?.createdAt?.getTime(),
-      },
-    });
   }
 
   async storeModelMetadata(metadata: ModelMetadata): Promise<void> {

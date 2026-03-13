@@ -5,6 +5,7 @@ import type { AuthorizationRequestState, SessionTokenSet } from '@inrupt/solid-c
 import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
 import { facade, isDevelopment, PromisedValue } from '@noeldemartin/utils';
 import { status } from 'elysia';
+import { runWithEngine, SolidEngine } from 'soukai-bis';
 
 import { PORT } from '../lib/constants';
 
@@ -24,6 +25,7 @@ export interface AuthSession {
   sessionId: string;
   user: SolidUserProfile;
   fetch: Session['fetch'];
+  refreshProfile: () => Promise<void>;
 }
 
 export class AuthService {
@@ -43,7 +45,7 @@ export class AuthService {
   public async runForRequest<T>(request: Request, callback: () => T | Promise<T>): Promise<T> {
     const session = await this.requireSession(request);
 
-    return this.context.run(session, callback);
+    return this.context.run(session, () => runWithEngine(new SolidEngine(session.fetch), callback));
   }
 
   public requireContextSession(): AuthSession {
@@ -72,7 +74,19 @@ export class AuthService {
       return null;
     }
 
-    return { sessionId, user: profile, fetch: session.fetch.bind(session) };
+    const self = this; // oxlint-disable-line typescript/no-this-alias
+    const authSession = {
+      sessionId,
+      user: profile,
+      fetch: session.fetch.bind(session),
+      async refreshProfile() {
+        delete self.profiles[webId];
+
+        this.user = (await self.profile(webId, session)) ?? this.user;
+      },
+    };
+
+    return authSession;
   }
 
   public async requireSession(request: Request): Promise<AuthSession> {

@@ -1,18 +1,7 @@
 import { fail } from '@noeldemartin/utils';
 import z from 'zod';
 
-import type { AnimaUIMessage } from './chat';
-
-let storageProvider: StorageProvider | null = null;
-
-export const AnimaChatSchema = z.object({
-  id: z.string().brand('AnimaChatId'),
-  title: z.string(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-});
-
-export const AnimaChatEditableFieldsSchema = AnimaChatSchema.pick({ title: true });
+let modelsStorageProvider: ModelsStorageProvider | null = null;
 
 export const ModelMetadataSchema = z.object({
   provider: z.string().brand('ProviderName'),
@@ -24,30 +13,22 @@ export const ModelMetadataSchema = z.object({
 
 export const ModelMetadataEditableFieldsSchema = ModelMetadataSchema.pick({ enabled: true, alias: true, apiKey: true });
 
-export type AnimaChat = z.infer<typeof AnimaChatSchema>;
-export type AnimaChatEditableFields = z.infer<typeof AnimaChatEditableFieldsSchema>;
 export type ModelMetadata = z.infer<typeof ModelMetadataSchema>;
 export type ModelMetadataEditableFields = z.infer<typeof ModelMetadataEditableFieldsSchema>;
 export type ProviderName = ModelMetadata['provider'];
 export type ModelName = ModelMetadata['name'];
 
-export interface StorageProvider {
-  getChat(id: AnimaChat['id']): Promise<AnimaChat | null>;
-  getChats(): Promise<AnimaChat[]>;
-  getChatMessages(chat: AnimaChat): Promise<AnimaUIMessage[]>;
+export interface ModelsStorageProvider {
   getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null>;
   getModelsMetadata(): Promise<ModelMetadata[]>;
-  createChat(data: AnimaChatEditableFields): Promise<AnimaChat>;
-  updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
-  storeChatMessage(chat: AnimaChat, message: AnimaUIMessage): Promise<void>;
   storeModelMetadata(metadata: ModelMetadata): Promise<void>;
   deleteModelMetadata(provider: ProviderName, name: ModelName): Promise<void>;
 }
 
-export function setStorageProvider(provider: StorageProvider): void {
-  storageProvider = provider;
+export function setModelsStorageProvider(provider: ModelsStorageProvider): void {
+  modelsStorageProvider = provider;
 }
 
-export function storage(): StorageProvider {
-  return storageProvider ?? fail('Storage provider missing');
+export function modelsStorage(): ModelsStorageProvider {
+  return modelsStorageProvider ?? fail('Models storage provider missing');
 }

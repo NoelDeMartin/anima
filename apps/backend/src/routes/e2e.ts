@@ -1,7 +1,7 @@
-import { setStorageProvider } from '@anima/core';
+import { setModelsStorageProvider } from '@anima/core';
 import Elysia, { status } from 'elysia';
 
-import InMemoryStorageProvider from '../providers/InMemoryStorageProvider';
+import InMemoryModelsStorageProvider from '../providers/InMemoryModelsStorageProvider';
 import Auth from '../services/Auth';
 
 export default new Elysia().group(
@@ -18,6 +18,6 @@ export default new Elysia().group(
   (app) =>
     app.post('reset', async () => {
       Auth.reset();
-      setStorageProvider(new InMemoryStorageProvider());
+      setModelsStorageProvider(new InMemoryModelsStorageProvider());
     }),
 );

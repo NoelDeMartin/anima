@@ -5,6 +5,8 @@ let authProvider: AuthProvider | null = null;
 
 export interface AuthProvider {
   getUser(): SolidUserProfile;
+  refreshProfile(): Promise<void>;
+  getClientId(): string;
   fetch: Fetch;
 }
 

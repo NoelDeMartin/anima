@@ -37,14 +37,14 @@ export default class RemoteRuntime implements Runtime {
     }
 
     const headers = { 'X-Anima-Session-Id': sessionId };
-    const { data: chats } = await api['ai'].chats.get({ headers });
-    const { data: models } = await api['ai'].models.get({ headers });
-    const { data: providers } = await api['ai'].models.providers.get({ headers });
+    const chats = await this.treatyResponse(api['ai'].chats.get({ headers }), []);
+    const models = await this.treatyResponse(api['ai'].models.get({ headers }), []);
+    const providers = await this.treatyResponse(api['ai'].models.providers.get({ headers }), []);
 
     return {
-      chats: chats?.map(mapChat) ?? [],
-      models: models ?? [],
-      providers: providers ?? [],
+      chats: chats.map(mapChat),
+      models,
+      providers,
     };
   }
 
@@ -73,7 +73,7 @@ export default class RemoteRuntime implements Runtime {
   }
 
   async restoreChat(chat: AnimaChat): Promise<Chat<AnimaUIMessage>> {
-    const { data: messages, error } = await api['ai'].chats({ id: chat.id }).messages.get();
+    const { data: messages, error } = await api['ai'].chats({ id: encodeURIComponent(chat.id) }).messages.get();
 
     if (!messages) {
       throw error ?? new Error('Failed to get chat messages');
@@ -83,7 +83,7 @@ export default class RemoteRuntime implements Runtime {
       id: chat.id,
       messages,
       transport: new DefaultChatTransport({
-        api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${chat.id}/messages`,
+        api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${encodeURIComponent(chat.id)}/messages`,
         headers: { 'X-Anima-Session-Id': required(getSessionId()) },
         prepareSendMessagesRequest({ messages, body }) {
           return { body: { message: messages[messages.length - 1], ...body } };
@@ -93,7 +93,7 @@ export default class RemoteRuntime implements Runtime {
   }
 
   async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
-    const { error } = await api['ai'].chats({ id }).patch(updates);
+    const { error } = await api['ai'].chats({ id: encodeURIComponent(id) }).patch(updates);
 
     if (error) {
       throw error;

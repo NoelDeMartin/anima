@@ -5,8 +5,6 @@ import {
   ModelsManager,
   OllamaModelsProvider,
   setAuthProvider,
-  setStorageProvider,
-  storage,
   systemPrompt,
   tools,
   type AIModel,
@@ -16,13 +14,16 @@ import {
   type ModelName,
   type ProviderName,
   type AnimaUIMessage,
+  ChatsManager,
+  bootAnimaModels,
+  setModelsStorageProvider,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
 import { createIdGenerator, DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
 import { toRaw } from 'vue';
 
 import BrowserModelsProvider from '@/lib/providers/BrowserModelsProvider';
-import IndexedDBStorageProvider from '@/lib/providers/IndexedDBStorageProvider';
+import IndexedDBModelsStorageProvider from '@/lib/providers/IndexedDBModelsStorageProvider';
 import SolidAuthProvider from '@/lib/providers/SolidAuthProvider';
 import AI from '@/services/AI';
 import Browser from '@/services/Browser';
@@ -32,15 +33,21 @@ import type Runtime from './Runtime';
 export default class LocalRuntime implements Runtime {
   async initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: ProviderName[] }> {
     await Browser.booted;
+    await Solid.booted;
 
+    bootAnimaModels();
     setAuthProvider(new SolidAuthProvider());
-    setStorageProvider(new IndexedDBStorageProvider());
+    setModelsStorageProvider(new IndexedDBModelsStorageProvider());
 
     await Promise.all([
       ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider()),
       ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
       ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('browser')),
     ]);
+
+    if (!Solid.isLoggedIn()) {
+      return { chats: [], models: [], providers: [] };
+    }
 
     return {
       chats: await this.getChats(),
@@ -50,7 +57,7 @@ export default class LocalRuntime implements Runtime {
   }
 
   async getChats(): Promise<AnimaChat[]> {
-    return storage().getChats();
+    return ChatsManager.getChats();
   }
 
   async getModels(): Promise<AIModel[]> {
@@ -62,13 +69,13 @@ export default class LocalRuntime implements Runtime {
   }
 
   async createChat(data: AnimaChatEditableFields): Promise<AnimaChat> {
-    const chat = await storage().createChat(data);
+    const chat = await ChatsManager.createChat(data);
 
     return chat;
   }
 
   async restoreChat(chat: AnimaChat): Promise<Chat<AnimaUIMessage>> {
-    const messages = await storage().getChatMessages(chat);
+    const messages = await ChatsManager.getChatMessages(chat);
     const messagesMap = new Map(messages.map((message) => [message.id, message]));
     const agent = new ToolLoopAgent<never, Record<string, Tool>, never>({
       tools,
@@ -124,19 +131,19 @@ export default class LocalRuntime implements Runtime {
 
         await Promise.all(
           newMessages.map(async (message) => {
-            await storage().storeChatMessage(chat, toRaw(message));
+            await ChatsManager.storeChatMessage(chat, toRaw(message));
 
             messagesMap.set(message.id, message);
           }),
         );
 
-        await storage().updateChat(chat.id, {});
+        await ChatsManager.updateChat(chat.id, {});
       },
     });
   }
 
   updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
-    return storage().updateChat(id, updates);
+    return ChatsManager.updateChat(id, updates);
   }
 
   sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {

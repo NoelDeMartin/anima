@@ -1,7 +1,9 @@
 import './lib/soukai-bis';
+import { bootAnimaModels } from '@anima/core';
 import { cors } from '@elysiajs/cors';
 import { isDevelopment } from '@noeldemartin/utils';
 import { Elysia } from 'elysia';
+import { bootCoreModels } from 'soukai-bis';
 
 import { PORT } from './lib/constants';
 import { registerProviders } from './providers';
@@ -16,7 +18,12 @@ export const Api = new Elysia({ serve: { idleTimeout: 255 } })
   .use(auth)
   .use(ai)
   .use(e2e)
-  .onStart(registerProviders)
+  .onStart(async () => {
+    bootCoreModels();
+    bootAnimaModels();
+
+    await registerProviders();
+  })
   .onError(({ code, error, request }) => {
     if (isDevelopment()) {
       const method = request.method;

@@ -12,6 +12,7 @@
     "@aerogel/core": "next",
     "@aerogel/plugin-i18n": "next",
     "@aerogel/plugin-solid": "next",
+    "@aerogel/plugin-soukai": "next",
     "@ai-sdk/vue": "^3.0.100",
     "@anima/core": "workspace:*",
     "@browser-ai/core": "^2.1.3",
@@ -28,6 +29,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@aerogel/cli": "next",
     "@aerogel/vite": "next",
     "@anima/config": "workspace:*",
     "@iconify/json": "^2.2.440",

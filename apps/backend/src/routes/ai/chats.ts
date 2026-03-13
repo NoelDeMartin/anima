@@ -1,5 +1,4 @@
 import {
-  storage,
   AnimaChatSchema,
   tools,
   ModelsManager,
@@ -7,6 +6,7 @@ import {
   systemPrompt,
   AnimaChatEditableFieldsSchema,
   type AnimaChat,
+  ChatsManager,
 } from '@anima/core';
 import { objectKeys } from '@noeldemartin/utils';
 import { convertToModelMessages, createIdGenerator, stepCountIs, streamText } from 'ai';
@@ -36,7 +36,7 @@ export default new Elysia().group('chats', (app) =>
       '/',
       ({ request }) =>
         Auth.runForRequest(request, async () => {
-          const chats = await storage().getChats();
+          const chats = await ChatsManager.getChats();
 
           return chats.map(mapChat);
         }),
@@ -46,7 +46,7 @@ export default new Elysia().group('chats', (app) =>
       '/',
       ({ request, body: data }) =>
         Auth.runForRequest(request, async () => {
-          const chat = await storage().createChat(data);
+          const chat = await ChatsManager.createChat(data);
 
           return mapChat(chat);
         }),
@@ -59,13 +59,13 @@ export default new Elysia().group('chats', (app) =>
       '/:id',
       ({ request, params: { id }, body: updates }) =>
         Auth.runForRequest(request, async () => {
-          const chat = await storage().getChat(id);
+          const chat = await ChatsManager.getChat(id);
 
           if (!chat) {
             throw status(404, 'Chat not found');
           }
 
-          await storage().updateChat(id, updates);
+          await ChatsManager.updateChat(id, updates);
         }),
       {
         params: z.object({ id: z.string().brand('AnimaChatId') }),
@@ -76,13 +76,13 @@ export default new Elysia().group('chats', (app) =>
       '/:id/messages',
       ({ request, params: { id } }) =>
         Auth.runForRequest(request, async () => {
-          const chat = await storage().getChat(id);
+          const chat = await ChatsManager.getChat(id);
 
           if (!chat) {
             throw status(404, 'Chat not found');
           }
 
-          return storage().getChatMessages(chat);
+          return ChatsManager.getChatMessages(chat);
         }),
       {
         params: z.object({ id: z.string().brand('AnimaChatId') }),
@@ -93,7 +93,7 @@ export default new Elysia().group('chats', (app) =>
       '/:id/messages',
       ({ request, params: { id }, body: { provider, model, message } }) =>
         Auth.runForRequest(request, async () => {
-          const chat = await storage().getChat(id);
+          const chat = await ChatsManager.getChat(id);
 
           if (!chat) {
             throw status(404, 'Chat not found');
@@ -110,10 +110,10 @@ export default new Elysia().group('chats', (app) =>
           } = await ModelsManager.createLanguageModel(provider, model);
 
           const session = Auth.requireContextSession();
-          const messages = await storage().getChatMessages(chat);
+          const messages = await ChatsManager.getChatMessages(chat);
           const originalMessages = [...messages, message];
 
-          await storage().storeChatMessage(chat, message);
+          await ChatsManager.storeChatMessage(chat, message);
 
           const result = streamText({
             tools,
@@ -142,8 +142,8 @@ export default new Elysia().group('chats', (app) =>
               };
             },
             async onFinish({ messages }) {
-              await Promise.all(messages.map((message) => storage().storeChatMessage(chat, message)));
-              await storage().updateChat(chat.id, {}); // touch timestamps
+              await Promise.all(messages.map((message) => ChatsManager.storeChatMessage(chat, message)));
+              await ChatsManager.updateChat(chat.id, {}); // touch timestamps
             },
           });
         }),

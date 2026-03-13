@@ -2,13 +2,13 @@ import type { SolidUserProfile } from '@noeldemartin/solid-utils';
 import { Elysia, redirect } from 'elysia';
 import z from 'zod';
 
-import { FRONTEND_URL, PORT } from '../lib/constants';
+import { CLIENT_ID, FRONTEND_URL, PORT } from '../lib/constants';
 import Auth from '../services/Auth';
 
 export default new Elysia()
   .get('clientid.jsonld', () => ({
     '@context': ['https://www.w3.org/ns/solid/oidc-context.jsonld'],
-    client_id: `http://localhost:${PORT}/clientid.jsonld`,
+    client_id: CLIENT_ID,
     client_name: 'Ànima',
     redirect_uris: [`http://localhost:${PORT}/oidc/redirect`],
     post_logout_redirect_uris: [`http://localhost:${PORT}/oidc/logout`],

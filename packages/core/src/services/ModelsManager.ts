@@ -1,7 +1,7 @@
 import {
   ModelMetadataSchema,
   ProviderModelSchema,
-  storage,
+  modelsStorage,
   type ModelMetadataEditableFields,
   type ModelName,
   type ModelsProvider,
@@ -52,7 +52,7 @@ export class ModelsManagerService {
     provider: ProviderName,
     name: ModelName,
   ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }> {
-    const data = await storage().getModelMetadata(provider, name);
+    const data = await modelsStorage().getModelMetadata(provider, name);
 
     return this.requireProvider(provider).createLanguageModel(name, data);
   }
@@ -60,7 +60,7 @@ export class ModelsManagerService {
   async installModel(provider: ProviderName, model: ModelName, data: ModelMetadataEditableFields): Promise<AIModel> {
     const providerModel = await this.requireProvider(provider).installModel(model);
 
-    await storage().storeModelMetadata({ provider, name: model, ...data });
+    await modelsStorage().storeModelMetadata({ provider, name: model, ...data });
 
     return this.toAIModel(provider, providerModel);
   }
@@ -70,9 +70,13 @@ export class ModelsManagerService {
     model: ModelName,
     updates: Partial<ModelMetadataEditableFields>,
   ): Promise<void> {
-    const metadata = (await storage().getModelMetadata(provider, model)) ?? { provider, name: model, enabled: true };
+    const metadata = (await modelsStorage().getModelMetadata(provider, model)) ?? {
+      provider,
+      name: model,
+      enabled: true,
+    };
 
-    await storage().storeModelMetadata({
+    await modelsStorage().storeModelMetadata({
       ...metadata,
       ...updates,
     });
@@ -80,12 +84,12 @@ export class ModelsManagerService {
 
   async deleteModel(provider: ProviderName, model: ModelName): Promise<void> {
     await this.requireProvider(provider).deleteModel(model);
-    await storage().deleteModelMetadata(provider, model);
+    await modelsStorage().deleteModelMetadata(provider, model);
   }
 
   async cancelModelInstallation(provider: ProviderName, model: ModelName): Promise<void> {
     await this.requireProvider(provider).cancelModelInstallation(model);
-    await storage().deleteModelMetadata(provider, model);
+    await modelsStorage().deleteModelMetadata(provider, model);
   }
 
   private requireProvider(name: ProviderName): ModelsProvider {
@@ -103,7 +107,7 @@ export class ModelsManagerService {
       provider,
       enabled: true,
       ...model,
-      ...(await storage().getModelMetadata(provider, model.name)),
+      ...(await modelsStorage().getModelMetadata(provider, model.name)),
     });
   }
 }

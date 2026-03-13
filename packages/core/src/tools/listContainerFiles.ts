@@ -1,6 +1,6 @@
 import { auth } from '@anima/core';
 import { tool } from 'ai';
-import { Container, runWithEngine, SolidEngine } from 'soukai-bis';
+import { Container } from 'soukai-bis';
 import z from 'zod';
 
 export default tool({
@@ -16,10 +16,12 @@ export default tool({
       throw new Error("Cannot list files outside the user's POD");
     }
 
-    return runWithEngine(new SolidEngine(auth().fetch), async () => {
-      const container = await Container.find(url);
+    if (!url.endsWith('/')) {
+      throw new Error('Container url must end with a slash');
+    }
 
-      return container?.resourceUrls ?? [];
-    });
+    const container = await Container.find(url);
+
+    return container?.resourceUrls ?? [];
   },
 });
