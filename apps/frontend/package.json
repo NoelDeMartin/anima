@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "deploy": "noeldemartin-deploy-app anima.noeldemartin.com",
     "dev": "vite",
     "dev:spa": "VITE_SPA_MODE=true vite",
     "type-check": "vue-tsc --build --noEmit"
@@ -35,6 +36,7 @@
     "@aerogel/vite": "next",
     "@anima/config": "workspace:*",
     "@iconify/json": "^2.2.440",
+    "@noeldemartin/scripts": "^0.3.0",
     "@types/dom-chromium-ai": "^0.0.14",
     "typescript": "catalog:",
     "unplugin-icons": "^23.0.1",
