@@ -25,26 +25,29 @@
             <Markdown v-if="part.type === 'text'" :text="part.text" />
             <ChatToolCall
               v-else-if="part.type === 'tool-readTypesIndex'"
+              :key="`type-index-${part.state}-${part.toolCallId}`"
               :label="$t('chat.tools.readTypeIndex')"
-              :data="part.output"
+              :part
             />
             <ChatToolCall
               v-else-if="part.type === 'tool-listContainerFiles'"
+              :key="`list-container-files-${part.state}-${part.toolCallId}`"
               :label="
                 $t('chat.tools.listContainerFiles', {
                   url: (part as UIToolInvocation<AnimaTools['listContainerFiles']>).input?.url,
                 })
               "
-              :data="part.output"
+              :part
             />
             <ChatToolCall
               v-else-if="part.type === 'tool-readFileContents'"
+              :key="`read-file-contents-${part.state}-${part.toolCallId}`"
               :label="
                 $t('chat.tools.readFileContents', {
                   url: (part as UIToolInvocation<AnimaTools['readFileContents']>).input?.url,
                 })
               "
-              :data="part.output"
+              :part
             />
             <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
           </template>
@@ -87,11 +90,11 @@
 <script setup lang="ts">
 import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
-import { computedAsync, stringInput, translate } from '@aerogel/core';
+import { stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import type { AnimaTools, ModelName, ProviderName, AnimaChat } from '@anima/core';
-import { arraySorted, requireUrlDirectoryName } from '@noeldemartin/utils';
+import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
 

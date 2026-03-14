@@ -1,22 +1,22 @@
 <template>
-  <aside v-if="$solid.isLoggedIn()" class="flex flex-col gap-2 border-r border-gray-200 bg-gray-50 p-4 w-64">
-    <div class="flex items-center gap-2">
+  <aside v-if="$solid.isLoggedIn()" class="flex flex-col gap-2 border-r border-gray-200 bg-gray-50 w-64">
+    <div class="flex items-center gap-2 px-4 pb-1 pt-3">
       <SolidAvatar class="size-12" />
-      {{ $solid.user?.name ?? $t('sidebar.anonymous') }}
-      <Button variant="ghost" @click="$solid.logout()" class="hover:bg-gray-100" :title="$t('sidebar.logout')">
-        <i-material-symbols-logout class="size-6" />
+      <span>{{ $solid.user?.name ?? $t('sidebar.anonymous') }}</span>
+      <div class="grow" />
+      <Button variant="ghost" @click="$solid.logout()" class="hover:bg-gray-100 -mr-2" :title="$t('sidebar.logout')">
+        <i-material-symbols-logout class="size-5" />
         <span class="sr-only">{{ $t('sidebar.logout') }}</span>
       </Button>
     </div>
 
-    <div class="mt-4 flex flex-col gap-2 flex-1 overflow-y-auto">
-      <div class="flex items-center justify-between mb-2">
-        <h2 id="recent-chats" class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+    <div class="flex flex-col gap-2 flex-1 overflow-y-auto">
+      <div class="flex items-center justify-between px-4 py-1">
+        <h2 id="recent-chats" class="font-semibold text-gray-500 uppercase tracking-wider">
           {{ $t('sidebar.recentChats') }}
         </h2>
-        <Button class="p-1 h-auto" variant="ghost" route="chats.index" :title="$t('sidebar.newChat')">
+        <Button class="hover:bg-gray-100 -mr-2" variant="ghost" route="chats.index" :title="$t('sidebar.newChat')">
           <i-material-symbols-add class="size-5" />
-
           <span class="sr-only">{{ $t('sidebar.newChat') }}</span>
         </Button>
       </div>
@@ -25,14 +25,14 @@
         <li
           v-for="chat in $ai.chatsList"
           :key="chat.url"
-          class="group flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-gray-200 transition-colors"
+          class="relative group flex items-center justify-between text-sm hover:bg-gray-200 transition-colors"
           :class="{ 'bg-gray-200 font-semibold': $ai.selectedChatUrl === chat.url }"
         >
-          <RouterLink class="truncate text-left grow" :to="chatRoute(chat.url)">
+          <RouterLink class="truncate text-left grow px-4 py-2" :to="chatRoute(chat.url)">
             {{ chat.title }}
           </RouterLink>
           <Button
-            class="hidden group-hover:flex shrink-0 p-1 h-auto text-gray-500 hover:text-gray-900"
+            class="absolute right-2 hidden group-hover:flex group-focus-within:flex text-gray-500 hover:text-gray-900"
             variant="ghost"
             @click="$ui.modal(EditChatModal, { chat })"
             :title="$t('sidebar.edit')"
