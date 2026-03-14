@@ -1,8 +1,6 @@
 import { Solid } from '@aerogel/plugin-solid';
-import type { Chat } from '@ai-sdk/vue';
 import type {
   AIModel,
-  AnimaUIMessage,
   ModelName,
   ProviderName,
   AnimaChat,
@@ -17,60 +15,47 @@ import type Runtime from '@/lib/runtimes/Runtime';
 
 import Service from './AI.state';
 
-const NEW_CHAT_ID = 'new-chat' as const;
-
 export class AIService extends Service {
   public _runtime: Runtime | null = null;
 
-  public async startChat(): Promise<void> {
-    this.selectedChatId = null;
-  }
-
-  public async selectChat(chatId: AnimaChat['id']): Promise<Chat<AnimaUIMessage>> {
-    if (this.chat?.id === chatId) {
-      return this.chat;
-    }
-
-    const chat = this.chats[chatId];
-
-    if (!chat) {
-      throw new Error(`Chat ${chatId} not found`);
-    }
-
-    const aiChat = markRaw(await this.requiredRuntime().restoreChat(chat));
-
-    this.setState({
-      chat: aiChat,
-      selectedChatId: chat.id,
-    });
-
-    return aiChat;
-  }
-
-  public async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
-    const originalChat = this.chats[id];
+  public async updateChat(chatUrl: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+    const originalChat = this.chats[chatUrl];
 
     if (!originalChat) {
       return;
     }
 
     try {
-      this.chats[id] = { ...originalChat, ...updates, updatedAt: new Date() } as AnimaChat;
+      this.chats[chatUrl] = {
+        ...originalChat,
+        anima: { ...originalChat.anima, ...updates, updatedAt: new Date() },
+      };
 
-      await this.requiredRuntime().updateChat(id, updates);
+      await this.requiredRuntime().updateChat(chatUrl, updates);
     } catch (error) {
-      this.chats[id] = originalChat;
+      this.chats[chatUrl] = originalChat;
 
       throw error;
     }
   }
 
-  public async sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {
-    const resolvedChat = await this.resolveChat(chat);
+  public async sendMessage(chatUrl: AnimaChat['url'], message: string): Promise<void> {
+    const aiChat = this.chats[chatUrl]?.ai;
 
-    this.chats = { [resolvedChat.id]: { ...resolvedChat, updatedAt: new Date() }, ...this.chats };
+    if (!aiChat) {
+      throw new Error(`Chat ${chatUrl} not found`);
+    }
 
-    await this.requiredRuntime().sendMessage(resolvedChat, message);
+    await this.requiredRuntime().sendMessage(aiChat, message);
+  }
+
+  public async createChat(attributes: AnimaChatEditableFields): Promise<AnimaChat> {
+    const animaChat = await this.requiredRuntime().createAnimaChat(attributes);
+    const aiChat = await this.requiredRuntime().createAIChat(animaChat, { loadMessages: false });
+
+    this.chats[animaChat.url] = { anima: animaChat, ai: markRaw(aiChat) };
+
+    return animaChat;
   }
 
   async installModel(
@@ -148,47 +133,27 @@ export class AIService extends Service {
 
     const { chats, models, providers } = await this._runtime.initialize();
 
-    this.chats = objectFromEntries(chats.map((chat) => [chat.id, chat]));
+    this.chats = objectFromEntries(chats.map((chat) => [chat.url, { anima: chat }]));
     this.models = objectFromEntries(models.map((model) => [`${model.provider}-${model.name}`, model]));
     this.providers = providers;
 
     if (!this.selectedModelKey || !(this.selectedModelKey in this.models)) {
       this.selectedModelKey = objectKeys(this.models)[0] ?? this.selectedModelKey;
     }
-
-    if (!this.selectedChatId || !(this.selectedChatId in this.chats)) {
-      this.selectedChatId = this.chatsList[0]?.id ?? null;
-    }
   }
 
   protected async watchSelectedChat(): Promise<void> {
     watchEffect(async () => {
-      if (!this.selectedChatId) {
-        this.chat = markRaw({ id: NEW_CHAT_ID, status: 'ready', messages: [] } as unknown as Chat<AnimaUIMessage>);
+      const selectedChat = this.selectedChatUrl && this.chats[this.selectedChatUrl];
 
+      if (!selectedChat || selectedChat.ai) {
         return;
       }
 
-      await this.selectChat(this.selectedChatId);
+      const aiChat = await this.requiredRuntime().createAIChat(selectedChat.anima, { loadMessages: true });
+
+      this.chats[selectedChat.anima.url] = { ...selectedChat, ai: markRaw(aiChat) };
     });
-  }
-
-  protected async resolveChat(chat: Chat<AnimaUIMessage>): Promise<Chat<AnimaUIMessage>> {
-    if (chat.id !== NEW_CHAT_ID) {
-      return chat;
-    }
-
-    const title = new Date().toLocaleString();
-    const newChat = await this.requiredRuntime().createChat({ title });
-    const aiChat = markRaw(await this.requiredRuntime().restoreChat(newChat));
-
-    this.setState({
-      chat: aiChat,
-      chats: { ...this.chats, [newChat.id]: newChat },
-      selectedChatId: newChat.id,
-    });
-
-    return aiChat;
   }
 
   protected requiredRuntime(): Runtime {

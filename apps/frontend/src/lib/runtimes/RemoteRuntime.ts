@@ -8,6 +8,7 @@ import {
   type ModelMetadataEditableFields,
   type ModelName,
   type AnimaChatEditableFields,
+  messagesIdGenerator,
 } from '@anima/core';
 import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
@@ -62,7 +63,7 @@ export default class RemoteRuntime implements Runtime {
     return this.treatyResponse(api['ai'].models.providers.get(), []);
   }
 
-  async createChat(chat: AnimaChatEditableFields): Promise<AnimaChat> {
+  async createAnimaChat(chat: AnimaChatEditableFields): Promise<AnimaChat> {
     const { data, error } = await api['ai'].chats.post(chat);
 
     if (!data) {
@@ -72,18 +73,21 @@ export default class RemoteRuntime implements Runtime {
     return mapChat(data);
   }
 
-  async restoreChat(chat: AnimaChat): Promise<Chat<AnimaUIMessage>> {
-    const { data: messages, error } = await api['ai'].chats({ id: encodeURIComponent(chat.id) }).messages.get();
+  async createAIChat(chat: AnimaChat, options: { loadMessages: boolean }): Promise<Chat<AnimaUIMessage>> {
+    const { data: messages, error } = options.loadMessages
+      ? await api['ai'].chats({ url: encodeURIComponent(chat.url) }).messages.get()
+      : { data: [] };
 
     if (!messages) {
       throw error ?? new Error('Failed to get chat messages');
     }
 
     return new Chat<AnimaUIMessage>({
-      id: chat.id,
+      id: chat.url,
       messages,
+      generateId: messagesIdGenerator(chat.url),
       transport: new DefaultChatTransport({
-        api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${encodeURIComponent(chat.id)}/messages`,
+        api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${encodeURIComponent(chat.url)}/messages`,
         headers: { 'X-Anima-Session-Id': required(getSessionId()) },
         prepareSendMessagesRequest({ messages, body }) {
           return { body: { message: messages[messages.length - 1], ...body } };
@@ -92,8 +96,8 @@ export default class RemoteRuntime implements Runtime {
     });
   }
 
-  async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
-    const { error } = await api['ai'].chats({ id: encodeURIComponent(id) }).patch(updates);
+  async updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+    const { error } = await api['ai'].chats({ url: encodeURIComponent(url) }).patch(updates);
 
     if (error) {
       throw error;

@@ -14,9 +14,9 @@ export default interface Runtime {
   getChats(): Promise<AnimaChat[]>;
   getModels(): Promise<AIModel[]>;
   getProviders(): Promise<ProviderName[]>;
-  createChat(data: AnimaChatEditableFields): Promise<AnimaChat>;
-  restoreChat(chat: AnimaChat): Promise<Chat<AnimaUIMessage>>;
-  updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
+  createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChat>;
+  createAIChat(chat: AnimaChat, options: { loadMessages: boolean }): Promise<Chat<AnimaUIMessage>>;
+  updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
   sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void>;
   installModel(provider: ProviderName, name: ModelName, data: ModelMetadataEditableFields): Promise<AIModel>;
   updateModel(provider: ProviderName, name: ModelName, updates: Partial<ModelMetadataEditableFields>): Promise<void>;

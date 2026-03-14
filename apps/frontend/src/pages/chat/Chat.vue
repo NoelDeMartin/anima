@@ -1,12 +1,16 @@
 <template>
   <main class="flex flex-col grow items-center justify-center mx-auto max-w-6xl">
-    <div ref="$scroll" class="flex flex-col grow self-stretch w-full overflow-auto p-8">
+    <div v-if="chat && !aiChat" class="grow flex items-center justify-center">
+      <i-svg-spinners-3-dots-bounce class="size-6 shrink-0" />
+    </div>
+    <div v-else ref="$scroll" class="flex flex-col grow self-stretch w-full overflow-auto p-8">
       <div class="grow" />
       <ul class="flex flex-col gap-4">
         <li>
           <Markdown>{{ $t('chat.greeting', { name: $solid.user?.name ?? $solid.user?.webId }) }}</Markdown>
         </li>
         <li
+          v-if="chat"
           v-for="message in messages"
           :key="message.id"
           :class="{ 'self-end bg-gray-100 rounded-lg px-4 py-2': message.role === 'user' }"
@@ -19,12 +23,12 @@
           </div>
           <template v-for="part in message.parts">
             <Markdown v-if="part.type === 'text'" :text="part.text" />
-            <HomeToolCall
+            <ChatToolCall
               v-else-if="part.type === 'tool-readTypesIndex'"
               :label="$t('chat.tools.readTypeIndex')"
               :data="part.output"
             />
-            <HomeToolCall
+            <ChatToolCall
               v-else-if="part.type === 'tool-listContainerFiles'"
               :label="
                 $t('chat.tools.listContainerFiles', {
@@ -33,7 +37,7 @@
               "
               :data="part.output"
             />
-            <HomeToolCall
+            <ChatToolCall
               v-else-if="part.type === 'tool-readFileContents'"
               :label="
                 $t('chat.tools.readFileContents', {
@@ -45,9 +49,12 @@
             <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
           </template>
         </li>
-        <li v-if="chat.error" class="text-red-500">{{ chat.error.message }}</li>
+        <li v-if="aiChat?.error" class="text-red-500">{{ aiChat.error.message }}</li>
       </ul>
-      <i-svg-spinners-3-dots-bounce v-if="chat.status !== 'ready' && chat.status !== 'error'" class="size-6 shrink-0" />
+      <i-svg-spinners-3-dots-bounce
+        v-if="aiChat && aiChat.status !== 'ready' && aiChat.status !== 'error'"
+        class="size-6 shrink-0"
+      />
     </div>
 
     <div class="px-8 w-full">
@@ -79,21 +86,23 @@
 
 <script setup lang="ts">
 import AI from '@/services/AI';
-import { stringInput, translate } from '@aerogel/core';
+import { chatRoute } from '@/utils/chats';
+import { computedAsync, stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
-import type { Chat } from '@ai-sdk/vue';
-import type { AnimaTools, ModelName, ProviderName, AnimaUIMessage } from '@anima/core';
-import { arraySorted } from '@noeldemartin/utils';
+import { Router } from '@aerogel/plugin-routing';
+import type { AnimaTools, ModelName, ProviderName, AnimaChat } from '@anima/core';
+import { arraySorted, requireUrlDirectoryName } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
 
-const { chat } = defineProps<{ chat: Chat<AnimaUIMessage> }>();
+const { chat } = defineProps<{ chat?: AnimaChat }>();
+const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);
 const $scroll = useTemplateRef('$scroll');
 const form = useForm({ message: stringInput('') });
 const models = computed(() =>
   AI.modelsList.filter((model) => model.enabled).map((model) => `${model.provider}-${model.name}` as const),
 );
-const messages = computed(() => arraySorted(chat.messages, 'metadata.createdAt'));
+const messages = computed(() => arraySorted(aiChat.value?.messages ?? [], 'metadata.createdAt'));
 
 function renderModel(model: `${ProviderName}-${ModelName}` | null) {
   if (!model) {
@@ -118,7 +127,16 @@ async function submit() {
     return;
   }
 
-  await AI.sendMessage(chat, message);
+  if (!chat?.url || !aiChat.value) {
+    const newChat = await AI.createChat({ title: new Date().toLocaleString() });
+
+    await Router.push(chatRoute(newChat.url));
+    await AI.sendMessage(newChat.url, message);
+
+    return;
+  }
+
+  await AI.sendMessage(chat.url, message);
 }
 
 function deepRead(value: unknown): void {
@@ -126,7 +144,7 @@ function deepRead(value: unknown): void {
 }
 
 watchEffect(async () => {
-  deepRead(chat.lastMessage);
+  deepRead(aiChat.value?.lastMessage);
 
   await nextTick();
 

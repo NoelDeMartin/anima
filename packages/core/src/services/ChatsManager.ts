@@ -8,7 +8,7 @@ import z from 'zod';
 const CHATS_CONTAINER_MISSING = Symbol('ChatMissing');
 
 export const AnimaChatSchema = z.object({
-  id: z.string().brand('AnimaChatId'),
+  url: z.url().brand('AnimaChatUrl'),
   title: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -23,8 +23,8 @@ export class ChatsManagerService {
   private semaphore = new Semaphore();
   private chatsContainerUrl: string | typeof CHATS_CONTAINER_MISSING | null = null;
 
-  async getChat(id: AnimaChat['id']): Promise<AnimaChat | null> {
-    const chat = await Chat.find(id);
+  async getChat(url: AnimaChat['url']): Promise<AnimaChat | null> {
+    const chat = await Chat.find(url);
 
     return chat && this.toAnimaChat(chat);
   }
@@ -42,7 +42,7 @@ export class ChatsManagerService {
   }
 
   async getChatMessages(chat: AnimaChat): Promise<AnimaUIMessage[]> {
-    const chatModel = await Chat.find(chat.id);
+    const chatModel = await Chat.find(chat.url);
 
     if (!chatModel) {
       return [];
@@ -63,19 +63,17 @@ export class ChatsManagerService {
     return this.toAnimaChat(chat);
   }
 
-  async updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
-    const chat = await Chat.findOrFail(id);
+  async updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+    const chat = await Chat.findOrFail(url);
 
     await chat.update(updates);
   }
 
-  async storeChatMessage(chat: AnimaChat, message: AnimaUIMessage): Promise<void> {
+  async storeChatMessage(message: AnimaUIMessage): Promise<void> {
     await this.semaphore.run(async () => {
-      const date = message.metadata?.createdAt ?? new Date();
       const user = auth().getUser();
-      const chatModel = await Chat.findOrFail(chat.id);
       const model = new Message({
-        url: `${chatModel.requireContainerUrl()}${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}/chat#${message.id}`,
+        url: message.id,
         author: message.role === 'user' ? user.webId : auth().getClientId(),
         model: message.metadata?.model,
         provider: message.metadata?.provider,
@@ -127,7 +125,7 @@ export class ChatsManagerService {
 
   private toAnimaChat(chat: Chat): AnimaChat {
     return {
-      id: chat.url as AnimaChat['id'],
+      url: chat.url as AnimaChat['url'],
       title: chat.title,
       createdAt: chat.createdAt ?? new Date(),
       updatedAt: chat.updatedAt ?? new Date(),

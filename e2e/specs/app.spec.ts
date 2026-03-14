@@ -20,13 +20,13 @@ test('chats', async ({ page }) => {
 
   await expect(page.getByText("mock response for model 'qwen3:1.7b' to 'Hello, world!'")).toBeVisible();
 
-  await page.getByRole('button', { name: 'New Chat' }).click();
+  await page.getByRole('link', { name: 'New Chat' }).click();
   await page.getByRole('textbox', { name: 'Message' }).fill('Second chat');
   await page.getByRole('button', { name: 'Send' }).click();
   await expect(page.getByText('Hello, world!')).toHaveCount(0);
   await expect(page.getByText("mock response for model 'qwen3:1.7b' to 'Second chat'")).toBeVisible();
 
-  await page.getByRole('list', { name: 'Recent Chats' }).getByRole('listitem').last().getByRole('button').click();
+  await page.getByRole('list', { name: 'Recent Chats' }).getByRole('listitem').last().getByRole('link').click();
   await expect(page.getByText("mock response for model 'qwen3:1.7b' to 'Hello, world!'")).toBeVisible();
 });
 

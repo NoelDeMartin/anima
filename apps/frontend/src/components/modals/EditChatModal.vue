@@ -23,7 +23,7 @@ const form = useForm({
 });
 
 async function submit() {
-  await AI.updateChat(chat.id, {
+  await AI.updateChat(chat.url, {
     title: form.title?.trim() || chat.title,
   });
 

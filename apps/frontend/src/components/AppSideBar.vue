@@ -14,7 +14,7 @@
         <h2 id="recent-chats" class="text-sm font-semibold text-gray-500 uppercase tracking-wider">
           {{ $t('sidebar.recentChats') }}
         </h2>
-        <Button class="p-1 h-auto" variant="ghost" @click="$ai.startChat()" :title="$t('sidebar.newChat')">
+        <Button class="p-1 h-auto" variant="ghost" route="chats.index" :title="$t('sidebar.newChat')">
           <i-material-symbols-add class="size-5" />
 
           <span class="sr-only">{{ $t('sidebar.newChat') }}</span>
@@ -24,13 +24,13 @@
       <ul v-else aria-labelledby="recent-chats">
         <li
           v-for="chat in $ai.chatsList"
-          :key="chat.id"
+          :key="chat.url"
           class="group flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-gray-200 transition-colors"
-          :class="{ 'bg-gray-200 font-semibold': $ai.selectedChatId === chat.id }"
+          :class="{ 'bg-gray-200 font-semibold': $ai.selectedChatUrl === chat.url }"
         >
-          <button class="truncate text-left grow" @click="$ai.selectChat(chat.id)">
+          <RouterLink class="truncate text-left grow" :to="chatRoute(chat.url)">
             {{ chat.title }}
-          </button>
+          </RouterLink>
           <Button
             class="hidden group-hover:flex shrink-0 p-1 h-auto text-gray-500 hover:text-gray-900"
             variant="ghost"
@@ -47,4 +47,5 @@
 
 <script setup lang="ts">
 import EditChatModal from '@/components/modals/EditChatModal.vue';
+import { chatRoute } from '@/utils/chats';
 </script>

@@ -17,9 +17,10 @@ import {
   ChatsManager,
   bootAnimaModels,
   setModelsStorageProvider,
+  messagesIdGenerator,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
-import { createIdGenerator, DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
+import { DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
 import { toRaw } from 'vue';
 
 import BrowserModelsProvider from '@/lib/providers/BrowserModelsProvider';
@@ -68,14 +69,14 @@ export default class LocalRuntime implements Runtime {
     return ModelsManager.getProviders();
   }
 
-  async createChat(data: AnimaChatEditableFields): Promise<AnimaChat> {
+  async createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChat> {
     const chat = await ChatsManager.createChat(data);
 
     return chat;
   }
 
-  async restoreChat(chat: AnimaChat): Promise<Chat<AnimaUIMessage>> {
-    const messages = await ChatsManager.getChatMessages(chat);
+  async createAIChat(chat: AnimaChat, options: { loadMessages: boolean }): Promise<Chat<AnimaUIMessage>> {
+    const messages = options.loadMessages ? await ChatsManager.getChatMessages(chat) : [];
     const messagesMap = new Map(messages.map((message) => [message.id, message]));
     const agent = new ToolLoopAgent<never, Record<string, Tool>, never>({
       tools,
@@ -108,12 +109,13 @@ export default class LocalRuntime implements Runtime {
     });
 
     return new Chat<AnimaUIMessage>({
-      id: chat.id,
+      id: chat.url,
       messages,
+      generateId: messagesIdGenerator(chat.url),
       transport: new DirectChatTransport({
         agent,
         originalMessages: messages,
-        generateMessageId: createIdGenerator(),
+        generateMessageId: messagesIdGenerator(chat.url),
         messageMetadata({ part }) {
           if (part.type !== 'start') {
             return;
@@ -131,23 +133,26 @@ export default class LocalRuntime implements Runtime {
 
         await Promise.all(
           newMessages.map(async (message) => {
-            await ChatsManager.storeChatMessage(chat, toRaw(message));
+            await ChatsManager.storeChatMessage(toRaw(message));
 
             messagesMap.set(message.id, message);
           }),
         );
 
-        await ChatsManager.updateChat(chat.id, {});
+        await ChatsManager.updateChat(chat.url, {});
       },
     });
   }
 
-  updateChat(id: AnimaChat['id'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
-    return ChatsManager.updateChat(id, updates);
+  updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+    return ChatsManager.updateChat(url, updates);
   }
 
   sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {
-    return chat.sendMessage({ text: message, metadata: { createdAt: new Date() } });
+    return chat.sendMessage({
+      text: message,
+      metadata: { createdAt: new Date() },
+    });
   }
 
   async installModel(
