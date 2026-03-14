@@ -12,6 +12,10 @@ export default class BrowserModelsProvider implements ModelsProvider {
     return Browser.promptAPIAvailable ?? false;
   }
 
+  async availableNames(): Promise<ModelName[]> {
+    return [Browser.getModelName()];
+  }
+
   async initialize(): Promise<void> {
     const availability = await LanguageModel.availability();
 

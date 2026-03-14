@@ -21,19 +21,29 @@ sidebar:
   edit: Edit
 
 models:
-  create: Create model
+  create: Add model
   edit: Edit model
   provider: Provider
   name: Name
   alias: Alias
   apiKey: API Key
+  unsafeStorageWarning: This will store your API key in the browser, make sure to log out or delete the model if you want to remove it.
   cancel: Cancel
-  install: Install
+  add: Add
   update: Update
   delete: Delete
   deleteConfirm:
     title: Delete `{name}`
     message: Are you sure you want to delete this model?
+  names:
+    browser: Browser built-in (local)
+    ollama: Ollama (local)
+    openai: OpenAI
+  unsupported:
+    browser: Built-in models are not supported in this browser, try using Chrome or Edge. [learn more](https://developer.chrome.com/docs/ai/prompt-api)
+    other: |
+      Missing a provider? This app supports pretty much everything that can be used with [Vercel's AI SDK](https://ai-sdk.dev/).
+      If you want me to add a new one, just [let me know](https://github.com/noeldemartin/anima/issues).
 
 chats:
   edit: Edit Chat
@@ -46,4 +56,4 @@ settings:
     title: AI models
     description: Configure the AI models you want to use.
     installBuiltIn: Install built-in model
-    install: Install model
+    add: Add model

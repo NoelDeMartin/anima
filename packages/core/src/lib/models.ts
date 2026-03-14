@@ -18,6 +18,8 @@ export type ProviderModel = z.infer<typeof ProviderModelSchema>;
 
 export interface ModelsProvider {
   isSupported?(): Promise<boolean>;
+  availableNames?(): Promise<ModelName[]>;
+  requiresAPIKey?(): Promise<boolean>;
   initialize?(): Promise<void>;
   getModels(): Promise<ProviderModel[]>;
   installModel(name: ModelName): Promise<ProviderModel>;

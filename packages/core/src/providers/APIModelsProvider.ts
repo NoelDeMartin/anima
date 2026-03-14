@@ -5,6 +5,10 @@ import type { LanguageModel } from 'ai';
 export default abstract class APIModelsProvider implements ModelsProvider {
   private installedModels: Set<ModelName> = new Set();
 
+  async requiresAPIKey(): Promise<boolean> {
+    return true;
+  }
+
   async getModels(): Promise<ProviderModel[]> {
     return Array.from(this.installedModels).map((name) => ({ name, status: 'installed' }));
   }

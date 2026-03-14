@@ -23,6 +23,7 @@ export interface ModelsStorageProvider {
   getModelsMetadata(): Promise<ModelMetadata[]>;
   storeModelMetadata(metadata: ModelMetadata): Promise<void>;
   deleteModelMetadata(provider: ProviderName, name: ModelName): Promise<void>;
+  clear(): Promise<void>;
 }
 
 export function setModelsStorageProvider(provider: ModelsStorageProvider): void {

@@ -1,4 +1,4 @@
-import { AIModelSchema, ModelMetadataEditableFieldsSchema, ModelsManager } from '@anima/core';
+import { AIModelSchema, AIProviderSchema, ModelMetadataEditableFieldsSchema, ModelsManager } from '@anima/core';
 import Elysia from 'elysia';
 import z from 'zod';
 
@@ -10,7 +10,7 @@ export default new Elysia().group('models', (app) =>
       response: z.array(AIModelSchema),
     })
     .get('/providers/', ({ request }) => Auth.runForRequest(request, () => ModelsManager.getProviders()), {
-      response: z.array(z.string().brand('ProviderName')),
+      response: z.array(AIProviderSchema),
     })
     .post(
       '/',

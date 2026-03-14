@@ -135,7 +135,7 @@ export class AIService extends Service {
 
     this.chats = objectFromEntries(chats.map((chat) => [chat.url, { anima: chat }]));
     this.models = objectFromEntries(models.map((model) => [`${model.provider}-${model.name}`, model]));
-    this.providers = providers;
+    this.providersList = providers;
 
     if (!this.selectedModelKey || !(this.selectedModelKey in this.models)) {
       this.selectedModelKey = objectKeys(this.models)[0] ?? this.selectedModelKey;

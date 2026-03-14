@@ -51,6 +51,10 @@ export default class FilesystemModelsStorageProvider implements ModelsStoragePro
     await this.removeFile(`/models/${provider}/${name}.json`);
   }
 
+  async clear(): Promise<void> {
+    throw new Error('Clearing filesystem storage is not implemented');
+  }
+
   private getStoragePath(path: string): string {
     const { user } = Auth.requireContextSession();
     const userRoot = join(this.rootStorage, encodeURIComponent(user.webId));

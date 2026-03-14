@@ -1,7 +1,10 @@
 import {
+  AnthropicModelsProvider,
   GoogleModelsProvider,
   ModelsManager,
   OllamaModelsProvider,
+  OpenAIModelsProvider,
+  OtherModelsProvider,
   type ProviderName,
   setAuthProvider,
   setModelsStorageProvider,
@@ -26,8 +29,9 @@ export async function registerProviders() {
 
   setModelsStorageProvider(new FilesystemModelsStorageProvider());
 
-  await Promise.all([
-    ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
-    ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('server')),
-  ]);
+  await ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('server'));
+  await ModelsManager.registerProvider('anthropic' as ProviderName, new AnthropicModelsProvider());
+  await ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider());
+  await ModelsManager.registerProvider('openai' as ProviderName, new OpenAIModelsProvider());
+  await ModelsManager.registerProvider('other' as ProviderName, new OtherModelsProvider());
 }

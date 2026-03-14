@@ -9,6 +9,7 @@ import {
   type ModelName,
   type AnimaChatEditableFields,
   messagesIdGenerator,
+  type AIProvider,
 } from '@anima/core';
 import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
@@ -30,7 +31,7 @@ function mapChat(chat: ApiAnimaChat): AnimaChat {
 }
 
 export default class RemoteRuntime implements Runtime {
-  async initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: ProviderName[] }> {
+  async initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: AIProvider[] }> {
     const sessionId = getSessionId();
 
     if (!sessionId) {
@@ -59,7 +60,7 @@ export default class RemoteRuntime implements Runtime {
     return this.treatyResponse(api['ai'].models.get(), []);
   }
 
-  async getProviders(): Promise<ProviderName[]> {
+  async getProviders(): Promise<AIProvider[]> {
     return this.treatyResponse(api['ai'].models.providers.get(), []);
   }
 

@@ -1,3 +1,4 @@
+import { Events } from '@aerogel/core';
 import { Solid } from '@aerogel/plugin-solid';
 import { Chat } from '@ai-sdk/vue';
 import {
@@ -18,6 +19,11 @@ import {
   bootAnimaModels,
   setModelsStorageProvider,
   messagesIdGenerator,
+  AnthropicModelsProvider,
+  OpenAIModelsProvider,
+  type AIProvider,
+  OtherModelsProvider,
+  modelsStorage,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
 import { DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
@@ -32,19 +38,26 @@ import Browser from '@/services/Browser';
 import type Runtime from './Runtime';
 
 export default class LocalRuntime implements Runtime {
-  async initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: ProviderName[] }> {
+  async initialize(): Promise<{
+    chats: AnimaChat[];
+    models: AIModel[];
+    providers: AIProvider[];
+  }> {
     await Browser.booted;
     await Solid.booted;
+
+    Events.on('auth:logout', () => modelsStorage().clear());
 
     bootAnimaModels();
     setAuthProvider(new SolidAuthProvider());
     setModelsStorageProvider(new IndexedDBModelsStorageProvider());
 
-    await Promise.all([
-      ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider()),
-      ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider()),
-      ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('browser')),
-    ]);
+    await ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider());
+    await ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('browser'));
+    await ModelsManager.registerProvider('anthropic' as ProviderName, new AnthropicModelsProvider());
+    await ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider());
+    await ModelsManager.registerProvider('openai' as ProviderName, new OpenAIModelsProvider());
+    await ModelsManager.registerProvider('other' as ProviderName, new OtherModelsProvider());
 
     if (!Solid.isLoggedIn()) {
       return { chats: [], models: [], providers: [] };
@@ -65,7 +78,7 @@ export default class LocalRuntime implements Runtime {
     return ModelsManager.getModels();
   }
 
-  async getProviders(): Promise<ProviderName[]> {
+  async getProviders(): Promise<AIProvider[]> {
     return ModelsManager.getProviders();
   }
 

@@ -1,12 +1,30 @@
-import { APIModelsProvider, type ModelName } from '@anima/core';
+import { type ModelName, type ModelsProvider, type ProviderModel } from '@anima/core';
 import { simulateReadableStream, type LanguageModel } from 'ai';
 import { MockLanguageModelV3 } from 'ai/test';
 
-export default class TestingModelsProvider extends APIModelsProvider {
-  constructor() {
-    super();
+export default class TestingModelsProvider implements ModelsProvider {
+  private installedModels: Set<ModelName> = new Set();
 
+  constructor() {
     this.installModel('qwen3:1.7b' as ModelName);
+  }
+
+  async getModels(): Promise<ProviderModel[]> {
+    return Array.from(this.installedModels).map((name) => ({ name, status: 'installed' }));
+  }
+
+  async installModel(name: ModelName): Promise<ProviderModel> {
+    this.installedModels.add(name);
+
+    return { name, status: 'installed' };
+  }
+
+  async deleteModel(name: ModelName): Promise<void> {
+    this.installedModels.delete(name);
+  }
+
+  async cancelModelInstallation(): Promise<void> {
+    // Nothing to do here.
   }
 
   async createLanguageModel(name: ModelName): Promise<{ model: LanguageModel; supportsTools: boolean }> {

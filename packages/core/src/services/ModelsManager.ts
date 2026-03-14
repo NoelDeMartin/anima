@@ -9,13 +9,20 @@ import {
   type ProviderName,
   type ProviderOptions,
 } from '@anima/core';
-import { facade, objectEntries, objectKeys } from '@noeldemartin/utils';
+import { facade, objectEntries } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
-import type z from 'zod';
+import z from 'zod';
 
 export const AIModelSchema = ModelMetadataSchema.and(ProviderModelSchema);
+export const AIProviderSchema = z.object({
+  name: z.string().brand('ProviderName'),
+  requiresAPIKey: z.boolean(),
+  supported: z.boolean(),
+  availableNames: z.array(z.string().brand('ModelName')).optional(),
+});
 
 export type AIModel = z.infer<typeof AIModelSchema>;
+export type AIProvider = z.infer<typeof AIProviderSchema>;
 
 export class ModelsManagerService {
   private providers: Record<ProviderName, ModelsProvider> = {};
@@ -23,17 +30,22 @@ export class ModelsManagerService {
   async registerProvider(name: ProviderName, provider: ModelsProvider): Promise<void> {
     const supported = provider.isSupported ? await provider.isSupported() : true;
 
-    if (!supported) {
-      return;
-    }
-
     this.providers[name] = provider;
 
-    await provider.initialize?.();
+    supported && (await provider.initialize?.());
   }
 
-  getProviders(): ProviderName[] {
-    return objectKeys(this.providers);
+  async getProviders(): Promise<AIProvider[]> {
+    const providers = await Promise.all(
+      objectEntries(this.providers).map(async ([name, provider]) => ({
+        name,
+        requiresAPIKey: (await provider.requiresAPIKey?.()) ?? false,
+        supported: (await provider.isSupported?.()) ?? true,
+        availableNames: await provider.availableNames?.(),
+      })),
+    );
+
+    return providers;
   }
 
   async getModels(): Promise<AIModel[]> {

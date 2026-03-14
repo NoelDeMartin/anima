@@ -32,10 +32,10 @@ test('chats', async ({ page }) => {
 
 test('install models', async ({ page }) => {
   await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: 'Install Model' }).click();
+  await page.getByRole('button', { name: 'Add Model' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('qwen3:4b');
   await page.getByRole('textbox', { name: 'Alias' }).fill('Smart');
-  await page.getByRole('button', { name: 'Install' }).click();
+  await page.getByRole('button', { name: 'Add' }).click();
 
   await expect(page.getByText('qwen3:4b (Smart)')).toBeVisible();
 });

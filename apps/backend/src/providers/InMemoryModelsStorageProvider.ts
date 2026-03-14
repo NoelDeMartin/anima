@@ -25,4 +25,8 @@ export default class InMemoryModelsStorageProvider implements ModelsStorageProvi
   async deleteModelMetadata(provider: ProviderName, name: ModelName): Promise<void> {
     this.modelsMetadata = this.modelsMetadata.filter((model) => model.provider !== provider || model.name !== name);
   }
+
+  async clear(): Promise<void> {
+    this.modelsMetadata = [];
+  }
 }

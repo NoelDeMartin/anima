@@ -47,4 +47,10 @@ export default class IndexedDBModelsStorageProvider implements ModelsStorageProv
 
     await db.delete('modelsMetadata', [provider, name]);
   }
+
+  async clear(): Promise<void> {
+    const db = await this.dbPromise;
+
+    await db.clear('modelsMetadata');
+  }
 }

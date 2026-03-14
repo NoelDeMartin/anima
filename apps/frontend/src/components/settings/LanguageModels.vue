@@ -13,7 +13,7 @@
         {{ $t('settings.models.installBuiltIn') }}
       </Button>
       <Button variant="secondary" class="w-full" @click="$ui.modal(CreateModelModal)">
-        {{ $t('settings.models.install') }}
+        {{ $t('settings.models.add') }}
       </Button>
     </div>
   </Setting>

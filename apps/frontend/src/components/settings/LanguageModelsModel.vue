@@ -6,6 +6,8 @@
   >
     <i-simple-icons-ollama v-if="model.provider === 'ollama'" class="size-4" />
     <i-simple-icons-google v-else-if="model.provider === 'google'" class="size-4" />
+    <i-simple-icons-anthropic v-else-if="model.provider === 'anthropic'" class="size-4" />
+    <i-simple-icons-openai v-else-if="model.provider === 'openai'" class="size-4" />
     <i-simple-icons-googlechrome
       v-else-if="model.provider === 'browser' && $browser.name === 'chrome'"
       class="size-4"

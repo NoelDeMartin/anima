@@ -7,13 +7,14 @@ import type {
   AnimaUIMessage,
   AnimaChatEditableFields,
   ModelMetadataEditableFields,
+  AIProvider,
 } from '@anima/core';
 
 export default interface Runtime {
-  initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: ProviderName[] }>;
+  initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: AIProvider[] }>;
   getChats(): Promise<AnimaChat[]>;
   getModels(): Promise<AIModel[]>;
-  getProviders(): Promise<ProviderName[]>;
+  getProviders(): Promise<AIProvider[]>;
   createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChat>;
   createAIChat(chat: AnimaChat, options: { loadMessages: boolean }): Promise<Chat<AnimaUIMessage>>;
   updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
