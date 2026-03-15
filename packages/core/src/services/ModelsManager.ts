@@ -51,6 +51,12 @@ export class ModelsManagerService {
   async getModels(): Promise<AIModel[]> {
     const models = await Promise.all(
       objectEntries(this.providers).map(async ([providerName, providerInstance]) => {
+        const supported = providerInstance.isSupported ? await providerInstance.isSupported() : true;
+
+        if (!supported) {
+          return [];
+        }
+
         const providerModels = await providerInstance.getModels();
 
         return await Promise.all(providerModels.map((model) => this.toAIModel(providerName, model)));
