@@ -52,6 +52,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ORIGIN_TRIALS: ${{ secrets.ORIGIN_TRIALS }}
+      VITE_SPA_MODE: 'true'
     permissions:
       contents: write
     steps:

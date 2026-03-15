@@ -1,15 +1,13 @@
 <template>
   <main class="flex flex-col justify-center items-center w-full min-h-screen relative overflow-hidden bg-primary">
     <div class="relative z-10 flex flex-col justify-center items-center w-full">
-      <div class="relative">
-        <h1 class="text-7xl font-bold tracking-tight mb-4 text-white leading-tight">
-          {{ $t('home.title') }}
-        </h1>
-        <div
-          class="text-xs whitespace-nowrap font-medium tracking-wide text-pink-500 border border-pink-200 bg-white rounded-full px-4 py-1.5 mb-6 uppercase absolute bottom-0 right-0 translate-x-1/2 -rotate-6 translate-y-[60%]"
-        >
-          {{ $t('home.workInProgress') }}
-        </div>
+      <h1 class="text-7xl font-bold tracking-tight text-white leading-tight">
+        {{ $t('home.title') }}
+      </h1>
+      <div
+        class="text-xs whitespace-nowrap font-medium tracking-wide text-pink-500 border border-pink-200 bg-white rounded-full px-4 py-1.5 mb-6 uppercase"
+      >
+        {{ $t('home.workInProgress') }}
       </div>
       <div class="flex flex-col items-center max-w-[300px] w-full gap-2 mt-4 bg-white p-6 rounded-2xl">
         <SolidLogin v-if="loggingIn" layout="vertical" class="w-full" />

@@ -17,7 +17,7 @@ import { DefaultChatTransport } from 'ai';
 
 import { getSessionId } from '@/auth/session';
 import api from '@/lib/api';
-import { env } from '@/lib/env';
+import { requireEnv } from '@/lib/env';
 import AI from '@/services/AI';
 
 import type Runtime from './Runtime';
@@ -88,7 +88,7 @@ export default class RemoteRuntime implements Runtime {
       messages,
       generateId: messagesIdGenerator(chat.url),
       transport: new DefaultChatTransport({
-        api: `${window.location.protocol}//${env('VITE_API_DOMAIN')}/ai/chats/${encodeURIComponent(chat.url)}/messages`,
+        api: `${window.location.protocol}//${requireEnv('VITE_API_DOMAIN')}/ai/chats/${encodeURIComponent(chat.url)}/messages`,
         headers: { 'X-Anima-Session-Id': required(getSessionId()) },
         prepareSendMessagesRequest({ messages, body }) {
           return { body: { message: messages[messages.length - 1], ...body } };
