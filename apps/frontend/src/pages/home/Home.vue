@@ -10,7 +10,12 @@
         {{ $t('home.workInProgress') }}
       </div>
       <div class="flex flex-col items-center max-w-[300px] w-full gap-2 mt-4 bg-white p-6 rounded-2xl">
-        <SolidLogin v-if="loggingIn" layout="vertical" class="w-full" />
+        <template v-if="loggingIn">
+          <SolidLogin layout="vertical" class="w-full" />
+          <Button variant="link" @click="loggingIn = false" class="w-full">
+            {{ $t('home.logInCancel') }}
+          </Button>
+        </template>
         <template v-else>
           <Button @click="loggingIn = true" class="w-full">
             {{ $t('home.logInWithSolid') }}

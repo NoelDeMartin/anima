@@ -4,6 +4,7 @@ home:
   learnMore: Learn more
   sourceCode: Source code
   logInWithSolid: Log in with Solid
+  logInCancel: cancel
 
 chat:
   greeting: Hello {name}, how can I help you today?
