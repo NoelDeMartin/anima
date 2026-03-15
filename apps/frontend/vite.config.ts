@@ -9,7 +9,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
-    Aerogel({ name: 'Ànima', soukaiBis: true }),
+    Aerogel({ name: 'Ànima', soukaiBis: true, baseUrl: 'https://anima.noeldemartin.com' }),
     Components({
       deep: true,
       dts: 'src/types/components.d.ts',
