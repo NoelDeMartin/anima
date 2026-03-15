@@ -16,7 +16,9 @@
     <span v-else class="uppercase">{{ model.provider[0] }}</span>
 
     <div class="flex items-center whitespace-nowrap overflow-hidden">
-      <Button variant="link" @click="$ui.modal(EditModelModal, { model })" class="truncate">{{ model.name }}</Button>
+      <Button variant="link" @click="$ui.modal(EditModelModal, { model })" class="truncate text-gray-900">
+        {{ model.name }}
+      </Button>
       &nbsp;
       <span v-if="model.alias" class="text-gray-500 text-sm truncate">({{ model.alias }})</span>
     </div>

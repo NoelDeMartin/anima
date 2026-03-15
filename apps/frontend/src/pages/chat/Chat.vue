@@ -1,156 +1,30 @@
 <template>
-  <main class="flex flex-col grow items-center justify-center mx-auto max-w-6xl">
-    <div v-if="chat && !aiChat" class="grow flex items-center justify-center">
-      <i-svg-spinners-3-dots-bounce class="size-6 shrink-0" />
-    </div>
-    <div v-else ref="$scroll" class="flex flex-col grow self-stretch w-full overflow-auto p-8">
-      <div class="grow" />
-      <ul class="flex flex-col gap-4">
-        <li>
-          <Markdown>{{ $t('chat.greeting', { name: $solid.user?.name ?? $solid.user?.webId }) }}</Markdown>
-        </li>
-        <li
-          v-if="chat"
-          v-for="message in messages"
-          :key="message.id"
-          :class="{ 'self-end bg-gray-100 rounded-lg px-4 py-2': message.role === 'user' }"
-        >
-          <div class="text-xs text-gray-400 mb-1" :class="{ 'text-right': message.role === 'user' }">
-            <span v-if="message.metadata?.createdAt">{{ new Date(message.metadata.createdAt).toLocaleString() }}</span>
-            <span v-if="message.metadata?.model && message.metadata?.provider">
-              &middot; {{ message.metadata.provider }} / {{ message.metadata.model }}
-            </span>
-          </div>
-          <template v-for="part in message.parts">
-            <Markdown v-if="part.type === 'text'" :text="part.text" />
-            <ChatToolCall
-              v-else-if="part.type === 'tool-readTypesIndex'"
-              :key="`type-index-${part.state}-${part.toolCallId}`"
-              :label="$t('chat.tools.readTypeIndex')"
-              :part
-            />
-            <ChatToolCall
-              v-else-if="part.type === 'tool-listContainerFiles'"
-              :key="`list-container-files-${part.state}-${part.toolCallId}`"
-              :label="
-                $t('chat.tools.listContainerFiles', {
-                  url: (part as UIToolInvocation<AnimaTools['listContainerFiles']>).input?.url,
-                })
-              "
-              :part
-            />
-            <ChatToolCall
-              v-else-if="part.type === 'tool-readFileContents'"
-              :key="`read-file-contents-${part.state}-${part.toolCallId}`"
-              :label="
-                $t('chat.tools.readFileContents', {
-                  url: (part as UIToolInvocation<AnimaTools['readFileContents']>).input?.url,
-                })
-              "
-              :part
-            />
-            <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
-          </template>
-        </li>
-        <li v-if="aiChat?.error" class="text-red-500">{{ aiChat.error.message }}</li>
-      </ul>
-      <i-svg-spinners-3-dots-bounce
-        v-if="aiChat && aiChat.status !== 'ready' && aiChat.status !== 'error'"
-        class="size-6 shrink-0"
-      />
-    </div>
-
-    <div class="px-8 w-full">
-      <Form :form @submit="submit()" class="relative mb-16 w-full">
-        <TextArea
-          :label="$t('chat.message')"
-          label-class="sr-only"
-          name="message"
-          @keydown.enter.prevent="form.submit()"
-          input-class="resize-none w-full h-[150px]"
-        />
-        <div class="absolute bottom-2.5 right-2 flex gap-2 items-center">
-          <Select
-            :label="$t('chat.model')"
-            class="w-full [&>button]:mt-0"
-            label-class="sr-only"
-            v-model="$ai.selectedModelKey"
-            :options="models"
-            :render-option="renderModel"
-          />
-          <Button submit :disabled="!form.message || form.message.trim().length === 0" class="h-9">
-            {{ $t('chat.send') }}
+  <div class="flex grow isolate">
+    <ChatSettings />
+    <ChatSideBar />
+    <div class="flex flex-col grow h-screen overflow-hidden">
+      <header>
+        <div class="mx-auto w-full max-w-6xl px-8 py-4 flex flex-row items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            @click="$ai.sidebar = !$ai.sidebar"
+            :title="$t('sidebar.toggle')"
+            class="md:hidden"
+          >
+            <i-tabler-layout-sidebar-filled class="size-6" />
+            <span class="sr-only">{{ $t('sidebar.toggle') }}</span>
           </Button>
+          <h1 class="font-bold tracking-tight leading-tight text-primary text-2xl">Ànima</h1>
         </div>
-      </Form>
+      </header>
+      <ChatConversation :chat />
     </div>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
-import { chatRoute } from '@/utils/chats';
-import { stringInput, translate } from '@aerogel/core';
-import { useForm } from '@aerogel/core';
-import { Router } from '@aerogel/plugin-routing';
-import type { AnimaTools, ModelName, ProviderName, AnimaChat } from '@anima/core';
-import { arraySorted } from '@noeldemartin/utils';
-import type { UIToolInvocation } from 'ai';
-import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
+import type { AnimaChat } from '@anima/core';
 
-const { chat } = defineProps<{ chat?: AnimaChat }>();
-const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);
-const $scroll = useTemplateRef('$scroll');
-const form = useForm({ message: stringInput('') });
-const models = computed(() =>
-  AI.modelsList.filter((model) => model.enabled).map((model) => `${model.provider}-${model.name}` as const),
-);
-const messages = computed(() => arraySorted(aiChat.value?.messages ?? [], 'metadata.createdAt'));
-
-function renderModel(model: `${ProviderName}-${ModelName}` | null) {
-  if (!model) {
-    return translate('chat.unknownModel');
-  }
-
-  const instance = AI.models[model];
-
-  if (!instance) {
-    return model?.split('-')[1] || translate('chat.unknownModel');
-  }
-
-  return instance.alias || `${instance.provider} / ${instance.name}`;
-}
-
-async function submit() {
-  const message = form.message;
-
-  form.reset();
-
-  if (!message || message.trim().length === 0) {
-    return;
-  }
-
-  if (!chat?.url || !aiChat.value) {
-    const newChat = await AI.createChat({ title: new Date().toLocaleString() });
-
-    await Router.push(chatRoute(newChat.url));
-    await AI.sendMessage(newChat.url, message);
-
-    return;
-  }
-
-  await AI.sendMessage(chat.url, message);
-}
-
-function deepRead(value: unknown): void {
-  JSON.stringify(value);
-}
-
-watchEffect(async () => {
-  deepRead(aiChat.value?.lastMessage);
-
-  await nextTick();
-
-  $scroll.value?.scrollTo({ top: $scroll.value?.scrollHeight, behavior: 'smooth' });
-});
+defineProps<{ chat?: AnimaChat }>();
 </script>

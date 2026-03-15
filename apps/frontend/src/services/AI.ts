@@ -1,3 +1,5 @@
+import { Events } from '@aerogel/core';
+import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import type {
   AIModel,
@@ -122,6 +124,7 @@ export class AIService extends Service {
     await Solid.booted;
     await this.initializeRuntime();
     await this.watchSelectedChat();
+    await this.watchLogout();
   }
 
   protected async initializeRuntime(): Promise<void> {
@@ -154,6 +157,10 @@ export class AIService extends Service {
 
       this.chats[selectedChat.anima.url] = { ...selectedChat, ai: markRaw(aiChat) };
     });
+  }
+
+  protected async watchLogout(): Promise<void> {
+    Events.on('auth:logout', () => Router.push({ name: 'home' }));
   }
 
   protected requiredRuntime(): Runtime {

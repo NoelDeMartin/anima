@@ -10,6 +10,7 @@ export default defineServiceState({
   persist: ['selectedModelKey'],
   initialState: () => ({
     providersList: [] as AIProvider[],
+    sidebar: false,
     chats: {} as Record<
       AnimaChat['url'],
       {

@@ -1,5 +1,9 @@
-landing:
-  title: Welcome to Ànima
+home:
+  title: Ànima
+  workInProgress: 🛠️ Work in progress
+  learnMore: Learn more
+  sourceCode: Source code
+  logInWithSolid: Log in with Solid
 
 chat:
   greeting: Hello {name}, how can I help you today?
@@ -13,6 +17,7 @@ chat:
     readFileContents: Read {url}
 
 sidebar:
+  toggle: Toggle sidebar
   anonymous: Anonymous
   logout: Logout
   recentChats: Recent Chats

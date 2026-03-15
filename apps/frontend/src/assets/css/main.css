@@ -1,1 +1,5 @@
 @import '@aerogel/core';
+
+@theme {
+  --color-primary: #eb487f;
+}
