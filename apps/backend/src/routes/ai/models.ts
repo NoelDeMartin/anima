@@ -1,4 +1,4 @@
-import { AIModelSchema, AIProviderSchema, ModelMetadataEditableFieldsSchema, ModelsManager } from '@anima/core';
+import { AIModelSchema, InstalledModelEditableFieldsSchema, ModelsManager } from '@anima/core';
 import Elysia from 'elysia';
 import z from 'zod';
 
@@ -9,46 +9,36 @@ export default new Elysia().group('models', (app) =>
     .get('/', ({ request }) => Auth.runForRequest(request, () => ModelsManager.getModels()), {
       response: z.array(AIModelSchema),
     })
-    .get('/providers/', ({ request }) => Auth.runForRequest(request, () => ModelsManager.getProviders()), {
-      response: z.array(AIProviderSchema),
-    })
     .post(
       '/',
-      ({ request, body: { provider, name, ...data } }) =>
-        Auth.runForRequest(request, () => ModelsManager.installModel(provider, name, data)),
+      ({ request, body: { providerId, name, ...data } }) =>
+        Auth.runForRequest(request, () => ModelsManager.createModel(providerId, name, data)),
       {
-        body: ModelMetadataEditableFieldsSchema.extend({
-          provider: z.string().brand('ProviderName'),
-          name: z.string().brand('ModelName'),
+        body: InstalledModelEditableFieldsSchema.extend({
+          providerId: z.string().brand('ProviderId'),
+          name: z.string(),
         }),
         response: AIModelSchema,
       },
     )
     .patch(
-      '/:name',
-      ({ request, params: { name }, body: { provider, ...updates } }) =>
-        Auth.runForRequest(request, () => ModelsManager.upsertModel(provider, name, updates)),
+      '/:id',
+      ({ request, params: { id }, body }) => Auth.runForRequest(request, () => ModelsManager.updateModel(id, body)),
       {
-        params: z.object({ name: z.string().brand('ModelName') }),
-        body: ModelMetadataEditableFieldsSchema.partial().extend({ provider: z.string().brand('ProviderName') }),
+        params: z.object({ id: z.string().brand('ModelId') }),
+        body: InstalledModelEditableFieldsSchema.partial(),
       },
     )
-    .delete(
-      '/:name',
-      ({ request, params: { name }, body: { provider } }) =>
-        Auth.runForRequest(request, () => ModelsManager.deleteModel(provider, name)),
-      {
-        params: z.object({ name: z.string().brand('ModelName') }),
-        body: z.object({ provider: z.string().brand('ProviderName') }),
-      },
-    )
+    .delete('/:id', ({ request, params: { id } }) => Auth.runForRequest(request, () => ModelsManager.deleteModel(id)), {
+      params: z.object({ id: z.string().brand('ModelId') }),
+    })
     .post(
-      '/:name/cancel-installation',
-      ({ request, params: { name }, body: { provider } }) =>
-        Auth.runForRequest(request, () => ModelsManager.cancelModelInstallation(provider, name)),
+      '/:id/cancel-installation',
+      ({ request, params: { id }, body: { providerId } }) =>
+        Auth.runForRequest(request, () => ModelsManager.cancelModelInstallation(providerId, id)),
       {
-        params: z.object({ name: z.string().brand('ModelName') }),
-        body: z.object({ provider: z.string().brand('ProviderName') }),
+        params: z.object({ id: z.string().brand('ModelId') }),
+        body: z.object({ providerId: z.string().brand('ProviderId') }),
       },
     ),
 );

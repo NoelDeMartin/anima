@@ -2,34 +2,35 @@ import { Events } from '@aerogel/core';
 import { Solid } from '@aerogel/plugin-solid';
 import { Chat } from '@ai-sdk/vue';
 import {
-  GoogleModelsProvider,
   ModelsManager,
-  OllamaModelsProvider,
   setAuthProvider,
   systemPrompt,
   tools,
   type AIModel,
   type AnimaChat,
   type AnimaChatEditableFields,
-  type ModelMetadataEditableFields,
-  type ModelName,
-  type ProviderName,
   type AnimaUIMessage,
   ChatsManager,
   bootAnimaModels,
-  setModelsStorageProvider,
   messagesIdGenerator,
-  AnthropicModelsProvider,
-  OpenAIModelsProvider,
+  type ProviderType,
+  AnthropicModelsProviderFactory,
+  GoogleModelsProviderFactory,
+  OpenAIModelsProviderFactory,
+  OllamaModelsProviderFactory,
   type AIProvider,
-  OtherModelsProvider,
-  modelsStorage,
+  type ModelId,
+  type ProviderId,
+  type InstalledModelEditableFields,
+  type AIProviderEditableFields,
+  type AIProviderFactory,
+  OtherModelsProviderFactory,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
 import { DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
 import { toRaw } from 'vue';
 
-import BrowserModelsProvider from '@/lib/providers/BrowserModelsProvider';
+import BrowserModelsProviderFactory from '@/lib/providers/BrowserModelsProviderFactory';
 import IndexedDBModelsStorageProvider from '@/lib/providers/IndexedDBModelsStorageProvider';
 import SolidAuthProvider from '@/lib/providers/SolidAuthProvider';
 import AI from '@/services/AI';
@@ -42,32 +43,49 @@ export default class LocalRuntime implements Runtime {
     chats: AnimaChat[];
     models: AIModel[];
     providers: AIProvider[];
+    factories: AIProviderFactory[];
   }> {
     await Browser.booted;
     await Solid.booted;
 
-    Events.on('auth:logout', () => modelsStorage().clear());
+    const browserFactory = new BrowserModelsProviderFactory();
+
+    Events.on('auth:logout', () => ModelsManager.clear());
 
     bootAnimaModels();
     setAuthProvider(new SolidAuthProvider());
-    setModelsStorageProvider(new IndexedDBModelsStorageProvider());
 
-    await ModelsManager.registerProvider('browser' as ProviderName, new BrowserModelsProvider());
-    await ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('browser'));
-    await ModelsManager.registerProvider('anthropic' as ProviderName, new AnthropicModelsProvider());
-    await ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider());
-    await ModelsManager.registerProvider('openai' as ProviderName, new OpenAIModelsProvider());
-    await ModelsManager.registerProvider('other' as ProviderName, new OtherModelsProvider());
+    ModelsManager.setStorageProvider(new IndexedDBModelsStorageProvider());
+    ModelsManager.registerFactory('browser' as ProviderType, browserFactory);
+    ModelsManager.registerFactory('ollama' as ProviderType, new OllamaModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory());
+    ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory());
+    ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory());
+    ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
 
     if (!Solid.isLoggedIn()) {
-      return { chats: [], models: [], providers: [] };
+      return { chats: [], models: [], providers: [], factories: [] };
     }
 
-    return {
+    const isBrowserSupported = await browserFactory.isSupported();
+    const result = {
       chats: await this.getChats(),
       models: await this.getModels(),
       providers: await this.getProviders(),
+      factories: await ModelsManager.getProviderFactories(),
     };
+
+    if (isBrowserSupported && !result.providers.some((provider) => provider.type === 'browser')) {
+      await this.createProvider({
+        type: 'browser' as ProviderType,
+        name: 'Browser',
+      });
+
+      result.models = await this.getModels();
+      result.providers = await this.getProviders();
+    }
+
+    return result;
   }
 
   async getChats(): Promise<AnimaChat[]> {
@@ -107,10 +125,11 @@ export default class LocalRuntime implements Runtime {
           throw new Error('No selected model');
         }
 
-        const { model, supportsTools, providerOptions } = await ModelsManager.createLanguageModel(
-          AI.selectedModel.provider,
-          AI.selectedModel.name,
-        );
+        const {
+          languageModel: model,
+          supportsTools,
+          providerOptions,
+        } = await ModelsManager.createLanguageModel(AI.selectedModel.id);
 
         return {
           model,
@@ -136,7 +155,7 @@ export default class LocalRuntime implements Runtime {
 
           return {
             model: AI.selectedModel?.name,
-            provider: AI.selectedModel?.provider,
+            provider: AI.selectedModel?.providerId && AI.providers[AI.selectedModel.providerId]?.type,
             createdAt: new Date(),
           };
         },
@@ -169,26 +188,34 @@ export default class LocalRuntime implements Runtime {
   }
 
   async installModel(
-    provider: ProviderName,
-    model: ModelName,
-    data: ModelMetadataEditableFields = { enabled: true },
+    providerId: ProviderId,
+    name: string,
+    data: InstalledModelEditableFields = { enabled: true, alias: null },
   ): Promise<AIModel> {
-    return ModelsManager.installModel(provider, model, data);
+    return ModelsManager.createModel(providerId, name, data);
   }
 
-  async updateModel(
-    provider: ProviderName,
-    model: ModelName,
-    updates: Partial<ModelMetadataEditableFields>,
-  ): Promise<void> {
-    await ModelsManager.upsertModel(provider, model, updates);
+  async updateModel(id: ModelId, updates: Partial<InstalledModelEditableFields>): Promise<void> {
+    await ModelsManager.updateModel(id, updates);
   }
 
-  async deleteModel(provider: ProviderName, model: ModelName): Promise<void> {
-    await ModelsManager.deleteModel(provider, model);
+  async deleteModel(id: ModelId): Promise<void> {
+    await ModelsManager.deleteModel(id);
   }
 
-  async cancelModelInstallation(provider: ProviderName, model: ModelName): Promise<void> {
-    await ModelsManager.cancelModelInstallation(provider, model);
+  async cancelModelInstallation(providerId: ProviderId, id: ModelId): Promise<void> {
+    await ModelsManager.cancelModelInstallation(providerId, id);
+  }
+
+  async createProvider(provider: Omit<AIProvider, 'id'>): Promise<void> {
+    await ModelsManager.createProvider(provider);
+  }
+
+  async updateProvider(id: ProviderId, updates: Partial<AIProviderEditableFields>): Promise<void> {
+    await ModelsManager.updateProvider(id, updates);
+  }
+
+  async deleteProvider(id: ProviderId): Promise<void> {
+    await ModelsManager.deleteProvider(id);
   }
 }

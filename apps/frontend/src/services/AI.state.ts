@@ -2,13 +2,14 @@ import { defineServiceState } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { computedModel } from '@aerogel/plugin-soukai';
 import type { Chat } from '@ai-sdk/vue';
-import type { AIModel, AIProvider, AnimaChat, AnimaUIMessage, ModelName, ProviderName } from '@anima/core';
+import type { AIModel, AIProvider, AIProviderFactory, AnimaChat, AnimaUIMessage, ModelId } from '@anima/core';
 import { arraySorted, objectFromEntries, requireUrlDirectoryName } from '@noeldemartin/utils';
 
 export default defineServiceState({
   name: 'ai',
   persist: ['selectedModelKey'],
   initialState: () => ({
+    providerFactoriesList: [] as AIProviderFactory[],
     providersList: [] as AIProvider[],
     sidebar: false,
     chats: {} as Record<
@@ -18,8 +19,8 @@ export default defineServiceState({
         ai?: Chat<AnimaUIMessage>;
       }
     >,
-    models: {} as Record<`${ProviderName}-${ModelName}`, AIModel>,
-    selectedModelKey: null as `${ProviderName}-${ModelName}` | null,
+    models: {} as Record<ModelId, AIModel>,
+    selectedModelKey: null as ModelId | null,
     selectedChatUrl: computedModel(() => {
       const routeParams: { chat?: AnimaChat } = Router.currentRoute.value?.params ?? {};
 
@@ -36,7 +37,9 @@ export default defineServiceState({
     chatsBySlug: ({ chats }) =>
       objectFromEntries(Object.values(chats).map((chat) => [requireUrlDirectoryName(chat.anima.url), chat])),
     modelsList: ({ models }) => Object.values(models),
-    providers: ({ providersList }) => objectFromEntries(providersList.map((provider) => [provider.name, provider])),
+    providers: ({ providersList }) => objectFromEntries(providersList.map((provider) => [provider.id, provider])),
+    providerFactories: ({ providerFactoriesList }) =>
+      objectFromEntries(providerFactoriesList.map((factory) => [factory.type, factory])),
     selectedModel: ({ models, selectedModelKey }) => (selectedModelKey && models[selectedModelKey]) ?? null,
   },
 });

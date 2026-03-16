@@ -1,5 +1,4 @@
 import { Service } from '@aerogel/core';
-import type { ModelName } from '@anima/core';
 import { facade } from '@noeldemartin/utils';
 
 function getBrowserName(): 'chrome' | 'edge' | 'other' {
@@ -24,14 +23,14 @@ export class BrowserService extends Service {
     this.promptAPIAvailable = await this.isPromptAPIAvailable();
   }
 
-  public getModelName(): ModelName {
+  public getModelName(): string {
     switch (this.name) {
       case 'edge':
-        return 'Phi-4-mini' as ModelName;
+        return 'Phi-4-mini';
       case 'chrome':
-        return 'Gemini Nano' as ModelName;
+        return 'Gemini Nano';
       default:
-        return 'Browser Model' as ModelName;
+        return 'Browser Model';
     }
   }
 

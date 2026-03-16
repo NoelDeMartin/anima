@@ -1,7 +1,6 @@
-import { setModelsStorageProvider } from '@anima/core';
+import { ModelsManager, type ProviderType } from '@anima/core';
 import Elysia, { status } from 'elysia';
 
-import InMemoryModelsStorageProvider from '../providers/InMemoryModelsStorageProvider';
 import Auth from '../services/Auth';
 
 export default new Elysia().group(
@@ -18,6 +17,8 @@ export default new Elysia().group(
   (app) =>
     app.post('reset', async () => {
       Auth.reset();
-      setModelsStorageProvider(new InMemoryModelsStorageProvider());
+
+      await ModelsManager.clear();
+      await ModelsManager.createProvider({ type: 'testing' as ProviderType, name: 'Testing' });
     }),
 );

@@ -4,12 +4,14 @@ import {
   type AnimaUIMessage,
   type AIModel,
   type AnimaChat,
-  type ProviderName,
-  type ModelMetadataEditableFields,
-  type ModelName,
+  type AIProvider,
+  type AIProviderEditableFields,
+  type ProviderId,
+  type ModelId,
+  type InstalledModelEditableFields,
   type AnimaChatEditableFields,
   messagesIdGenerator,
-  type AIProvider,
+  type AIProviderFactory,
 } from '@anima/core';
 import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
@@ -31,22 +33,29 @@ function mapChat(chat: ApiAnimaChat): AnimaChat {
 }
 
 export default class RemoteRuntime implements Runtime {
-  async initialize(): Promise<{ chats: AnimaChat[]; models: AIModel[]; providers: AIProvider[] }> {
+  async initialize(): Promise<{
+    chats: AnimaChat[];
+    models: AIModel[];
+    providers: AIProvider[];
+    factories: AIProviderFactory[];
+  }> {
     const sessionId = getSessionId();
 
     if (!sessionId) {
-      return { chats: [], models: [], providers: [] };
+      return { chats: [], models: [], providers: [], factories: [] };
     }
 
     const headers = { 'X-Anima-Session-Id': sessionId };
     const chats = await this.treatyResponse(api['ai'].chats.get({ headers }), []);
     const models = await this.treatyResponse(api['ai'].models.get({ headers }), []);
-    const providers = await this.treatyResponse(api['ai'].models.providers.get({ headers }), []);
+    const providers = await this.treatyResponse(api['ai'].providers.get({ headers }), []);
+    const factories = await this.treatyResponse(api['ai'].providers.factories.get({ headers }), []);
 
     return {
       chats: chats.map(mapChat),
       models,
       providers,
+      factories,
     };
   }
 
@@ -61,7 +70,7 @@ export default class RemoteRuntime implements Runtime {
   }
 
   async getProviders(): Promise<AIProvider[]> {
-    return this.treatyResponse(api['ai'].models.providers.get(), []);
+    return this.treatyResponse(api['ai'].providers.get(), []);
   }
 
   async createAnimaChat(chat: AnimaChatEditableFields): Promise<AnimaChat> {
@@ -112,42 +121,62 @@ export default class RemoteRuntime implements Runtime {
 
     return chat.sendMessage(
       { text: message, metadata: { createdAt: new Date() } },
-      { body: { provider: AI.selectedModel?.provider, model: AI.selectedModel?.name } },
+      { body: { model: AI.selectedModel.id } },
     );
   }
 
   async installModel(
-    provider: ProviderName,
-    name: ModelName,
-    data: ModelMetadataEditableFields = { enabled: true },
+    providerId: ProviderId,
+    name: string,
+    data: InstalledModelEditableFields = { enabled: true, alias: null },
   ): Promise<AIModel> {
     const { data: responseData } = await api['ai'].models.post({
+      providerId,
       name,
-      provider,
       ...data,
     });
 
     return required(responseData);
   }
 
-  async updateModel(
-    provider: ProviderName,
-    name: ModelName,
-    updates: Partial<ModelMetadataEditableFields>,
-  ): Promise<void> {
-    const { error } = await api['ai'].models({ name }).patch({ provider, ...updates });
+  async updateModel(id: ModelId, updates: Partial<InstalledModelEditableFields>): Promise<void> {
+    const { error } = await api['ai'].models({ id }).patch(updates);
 
     if (error) {
       throw error;
     }
   }
 
-  async deleteModel(provider: ProviderName, name: ModelName): Promise<void> {
-    await api['ai'].models({ name }).delete({ provider });
+  async deleteModel(id: ModelId): Promise<void> {
+    await api['ai'].models({ id }).delete();
   }
 
-  async cancelModelInstallation(provider: ProviderName, name: ModelName): Promise<void> {
-    await api['ai'].models({ name })['cancel-installation'].post({ provider });
+  async cancelModelInstallation(providerId: ProviderId, id: ModelId): Promise<void> {
+    await api['ai'].models({ id })['cancel-installation'].post({ providerId });
+  }
+
+  async createProvider(provider: Omit<AIProvider, 'id'>): Promise<void> {
+    const { error } = await api['ai'].providers.post(provider);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  async updateProvider(id: ProviderId, updates: Partial<AIProviderEditableFields>): Promise<void> {
+    const { error } = await api['ai'].providers({ id }).patch(updates);
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  async deleteProvider(id: ProviderId): Promise<void> {
+    const { error } = await api['ai'].providers({ id }).delete();
+
+    if (error) {
+      throw error;
+    }
   }
 
   private async treatyResponse<T extends Record<number, unknown>, TResponse extends Treaty.TreatyResponse<T>>(

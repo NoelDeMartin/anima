@@ -9,7 +9,7 @@ import {
   ChatsManager,
   messagesIdGenerator,
 } from '@anima/core';
-import { objectKeys } from '@noeldemartin/utils';
+import { objectKeys, required } from '@noeldemartin/utils';
 import { convertToModelMessages, stepCountIs, streamText } from 'ai';
 import Elysia, { status } from 'elysia';
 import z from 'zod';
@@ -92,26 +92,28 @@ export default new Elysia().group('chats', (app) =>
     )
     .post(
       '/:url/messages',
-      ({ request, params: { url }, body: { provider, model, message } }) =>
+      ({ request, params: { url }, body: { model: modelId, message } }) =>
         Auth.runForRequest(request, async () => {
           const chat = await ChatsManager.getChat(url);
+          const model = await ModelsManager.getModel(modelId);
 
           if (!chat) {
             throw status(404, 'Chat not found');
+          }
+
+          if (!model) {
+            throw status(404, 'Model not found');
           }
 
           if (message.metadata?.createdAt) {
             message.metadata.createdAt = new Date(message.metadata.createdAt);
           }
 
-          const {
-            model: languageModel,
-            supportsTools,
-            providerOptions,
-          } = await ModelsManager.createLanguageModel(provider, model);
+          const { languageModel, supportsTools, providerOptions } = await ModelsManager.createLanguageModel(modelId);
 
           const session = Auth.requireContextSession();
           const messages = await ChatsManager.getChatMessages(chat);
+          const provider = required(await ModelsManager.getProvider(model.providerId));
           const originalMessages = [...messages, message];
 
           await ChatsManager.storeChatMessage(message);
@@ -137,8 +139,8 @@ export default new Elysia().group('chats', (app) =>
               }
 
               return {
-                model,
-                provider,
+                model: modelId,
+                provider: provider.type,
                 createdAt: new Date(),
               };
             },
@@ -151,8 +153,7 @@ export default new Elysia().group('chats', (app) =>
       {
         params: z.object({ url: z.string().brand('AnimaChatUrl') }),
         body: z.object({
-          provider: z.string().brand('ProviderName'),
-          model: z.string().brand('ModelName'),
+          model: z.string().brand('ModelId'),
           message: z.any().transform((value) => value as AnimaUIMessage),
         }),
       },

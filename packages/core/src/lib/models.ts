@@ -1,32 +1,34 @@
-import type { ModelMetadata, ModelName } from '@anima/core';
-import type { Nullable } from '@noeldemartin/utils';
 import type { streamText, LanguageModel } from 'ai';
 import z from 'zod';
 
-export type ProviderOptions = NonNullable<Parameters<typeof streamText>[0]['providerOptions']>;
+import type { AIProvider, ModelId } from './storage';
 
-export const BaseProviderModelSchema = z.object({
-  name: z.string().brand('ModelName'),
+export const InstallingModelSchema = z.object({
+  id: z.string().brand('ModelId'),
+  providerId: z.string().brand('ProviderId'),
+  name: z.string(),
+  progress: z.number(),
 });
 
-export const ProviderModelSchema = z.union([
-  BaseProviderModelSchema.extend({ status: z.literal('installed') }),
-  BaseProviderModelSchema.extend({ status: z.literal('installing'), progress: z.number() }),
-]);
+export type ProviderOptions = NonNullable<Parameters<typeof streamText>[0]['providerOptions']>;
+export type InstallingModel = z.infer<typeof InstallingModelSchema>;
 
-export type ProviderModel = z.infer<typeof ProviderModelSchema>;
-
-export interface ModelsProvider {
+export interface ModelsProviderFactory {
   isSupported?(): Promise<boolean>;
-  availableNames?(): Promise<ModelName[]>;
   requiresAPIKey?(): Promise<boolean>;
-  initialize?(): Promise<void>;
-  getModels(): Promise<ProviderModel[]>;
-  installModel(name: ModelName): Promise<ProviderModel>;
-  deleteModel(name: ModelName): Promise<void>;
-  cancelModelInstallation(name: ModelName): Promise<void>;
+  requiresUrl?(): Promise<boolean>;
+  getInstallingModels(provider: AIProvider): Promise<InstallingModel[]>;
+  getPreinstalledModels?(provider: AIProvider): Promise<string[]>;
   createLanguageModel(
-    name: ModelName,
-    data: Nullable<ModelMetadata>,
-  ): Promise<{ model: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
+    provider: AIProvider,
+    name: string,
+  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
+  installModel(
+    provider: AIProvider,
+    id: ModelId,
+    name: string,
+    options: { onInstalled: () => Promise<void> },
+  ): Promise<InstallingModel>;
+  cancelModelInstallation(provider: AIProvider, id: ModelId): Promise<void>;
+  uninstallModel(provider: AIProvider, name: string): Promise<void>;
 }

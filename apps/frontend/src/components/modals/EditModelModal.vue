@@ -2,21 +2,14 @@
   <Modal :title="model.name">
     <div v-if="installingModel">
       <ProgressBar :progress="installingModel.progress / 100" class="w-full" />
-      <Button class="w-full mt-2" @click="($ai.cancelInstallation(model.provider, model.name), close())">
+      <Button class="w-full mt-2" @click="($ai.cancelInstallation(model.providerId, model.id), close())">
         {{ $t('models.cancel') }}
       </Button>
     </div>
     <Form v-else :form @submit="submit" class="flex flex-col gap-2">
       <Input :label="$t('models.alias')" name="alias" class="w-full" />
-      <Input
-        v-if="model.provider === 'google'"
-        :label="$t('models.apiKey')"
-        name="apiKey"
-        type="password"
-        class="w-full"
-      />
       <div class="flex gap-2 mt-2">
-        <Button v-if="model.provider !== 'browser'" variant="ghost" @click="deleteModel()" :title="$t('models.delete')">
+        <Button v-if="providerType !== 'browser'" variant="ghost" @click="deleteModel()" :title="$t('models.delete')">
           <i-heroicons-trash class="size-4" />
           <span class="sr-only">{{ $t('models.delete') }}</span>
         </Button>
@@ -39,11 +32,11 @@ import { computed } from 'vue';
 const { model } = defineProps<{ model: AIModel }>();
 const { close } = useModal();
 const form = useForm({
-  alias: stringInput(model.alias ?? ''),
-  apiKey: stringInput(('apiKey' in model && model.apiKey) || ''),
+  alias: stringInput((model.status === 'installed' && model.alias) || ''),
 });
+const providerType = computed(() => AI.providers[model.providerId]?.type);
 const installingModel = computed(() => {
-  const updatedModel = AI.models[`${model.provider}-${model.name}`];
+  const updatedModel = AI.models[model.id];
 
   if (!updatedModel || updatedModel.status !== 'installing') {
     return null;
@@ -66,15 +59,14 @@ async function deleteModel() {
     return;
   }
 
-  await AI.deleteModel(model.provider, model.name);
+  await AI.deleteModel(model.id);
 
   close();
 }
 
 async function submit() {
-  await AI.updateModel(model.provider, model.name, {
+  await AI.updateModel(model.id, {
     alias: form.alias?.trim() || null,
-    apiKey: form.apiKey?.trim() || null,
   });
 
   close();

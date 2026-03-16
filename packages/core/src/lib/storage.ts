@@ -1,35 +1,42 @@
-import { fail } from '@noeldemartin/utils';
 import z from 'zod';
 
-let modelsStorageProvider: ModelsStorageProvider | null = null;
-
-export const ModelMetadataSchema = z.object({
-  provider: z.string().brand('ProviderName'),
-  name: z.string().brand('ModelName'),
-  enabled: z.boolean(),
-  alias: z.string().nullable().optional(),
+export const AIProviderSchema = z.object({
+  id: z.string().brand('ProviderId'),
+  name: z.string(),
+  type: z.string().brand('ProviderType'),
   apiKey: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
 });
 
-export const ModelMetadataEditableFieldsSchema = ModelMetadataSchema.pick({ enabled: true, alias: true, apiKey: true });
+export const InstalledModelSchema = z.object({
+  id: z.string().brand('ModelId'),
+  providerId: z.string().brand('ProviderId'),
+  name: z.string(),
+  enabled: z.boolean(),
+  alias: z.string().nullable().optional(),
+});
 
-export type ModelMetadata = z.infer<typeof ModelMetadataSchema>;
-export type ModelMetadataEditableFields = z.infer<typeof ModelMetadataEditableFieldsSchema>;
-export type ProviderName = ModelMetadata['provider'];
-export type ModelName = ModelMetadata['name'];
+export const AIProviderEditableFieldsSchema = AIProviderSchema.pick({ name: true, apiKey: true, url: true });
+export const InstalledModelEditableFieldsSchema = InstalledModelSchema.pick({ enabled: true, alias: true });
+
+export type AIProvider = z.infer<typeof AIProviderSchema>;
+export type AIProviderEditableFields = z.infer<typeof AIProviderEditableFieldsSchema>;
+export type InstalledModel = z.infer<typeof InstalledModelSchema>;
+export type InstalledModelEditableFields = z.infer<typeof InstalledModelEditableFieldsSchema>;
+export type ProviderId = AIProvider['id'];
+export type ProviderType = AIProvider['type'];
+export type ModelId = InstalledModel['id'];
 
 export interface ModelsStorageProvider {
-  getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null>;
-  getModelsMetadata(): Promise<ModelMetadata[]>;
-  storeModelMetadata(metadata: ModelMetadata): Promise<void>;
-  deleteModelMetadata(provider: ProviderName, name: ModelName): Promise<void>;
+  getProvider(id: ProviderId): Promise<AIProvider | null>;
+  getProviders(): Promise<AIProvider[]>;
+  createProvider(provider: AIProvider): Promise<void>;
+  updateProvider(id: ProviderId, updates: Partial<AIProviderEditableFields>): Promise<void>;
+  deleteProvider(id: ProviderId): Promise<void>;
+  getModel(id: ModelId): Promise<InstalledModel | null>;
+  getModels(): Promise<InstalledModel[]>;
+  createModel(model: InstalledModel): Promise<void>;
+  updateModel(id: ModelId, updates: Partial<InstalledModelEditableFields>): Promise<void>;
+  deleteModel(id: ModelId): Promise<void>;
   clear(): Promise<void>;
-}
-
-export function setModelsStorageProvider(provider: ModelsStorageProvider): void {
-  modelsStorageProvider = provider;
-}
-
-export function modelsStorage(): ModelsStorageProvider {
-  return modelsStorageProvider ?? fail('Models storage provider missing');
 }

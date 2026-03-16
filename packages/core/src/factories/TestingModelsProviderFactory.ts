@@ -1,25 +1,41 @@
-import { type ModelName, type ModelsProvider, type ProviderModel } from '@anima/core';
+import { type InstallingModel, type ModelsProviderFactory, type ModelId, type AIProvider } from '@anima/core';
 import { simulateReadableStream, type LanguageModel } from 'ai';
 import { MockLanguageModelV3 } from 'ai/test';
 
-export default class TestingModelsProvider implements ModelsProvider {
-  private installedModels: Set<ModelName> = new Set();
+export default class TestingModelsProviderFactory implements ModelsProviderFactory {
+  private installedModels: Set<string> = new Set();
 
   constructor() {
-    this.installModel('qwen3:1.7b' as ModelName);
+    this.installedModels.add('qwen3:1.7b');
   }
 
-  async getModels(): Promise<ProviderModel[]> {
-    return Array.from(this.installedModels).map((name) => ({ name, status: 'installed' }));
+  async getPreinstalledModels(): Promise<string[]> {
+    return Array.from(this.installedModels);
   }
 
-  async installModel(name: ModelName): Promise<ProviderModel> {
+  async getInstallingModels(): Promise<InstallingModel[]> {
+    return [];
+  }
+
+  async installModel(
+    provider: AIProvider,
+    id: ModelId,
+    name: string,
+    options: { onInstalled: () => Promise<void> },
+  ): Promise<InstallingModel> {
     this.installedModels.add(name);
 
-    return { name, status: 'installed' };
+    await options.onInstalled();
+
+    return {
+      id,
+      name,
+      providerId: provider.id,
+      progress: 1,
+    };
   }
 
-  async deleteModel(name: ModelName): Promise<void> {
+  async uninstallModel(_: AIProvider, name: string): Promise<void> {
     this.installedModels.delete(name);
   }
 
@@ -27,10 +43,13 @@ export default class TestingModelsProvider implements ModelsProvider {
     // Nothing to do here.
   }
 
-  async createLanguageModel(name: ModelName): Promise<{ model: LanguageModel; supportsTools: boolean }> {
+  async createLanguageModel(
+    _: AIProvider,
+    name: string,
+  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean }> {
     return {
       supportsTools: false,
-      model: new MockLanguageModelV3({
+      languageModel: new MockLanguageModelV3({
         async doStream({ prompt }) {
           const message = String((prompt as any)[prompt.length - 1]?.content[0]?.text);
 

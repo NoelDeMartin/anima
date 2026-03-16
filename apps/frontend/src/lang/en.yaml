@@ -26,14 +26,37 @@ sidebar:
   noChats: No chats yet
   edit: Edit
 
+providers:
+  create: Add provider
+  edit: Edit provider
+  name: Name
+  type: Type
+  apiKey: API Key
+  url: URL
+  unsafeStorageWarning: This will store your API key in the browser, make sure to log out or delete the provider if you want to remove it.
+  cancel: Cancel
+  add: Add
+  update: Update
+  delete: Delete
+  deleteConfirm:
+    title: Delete `{name}`
+    message: Are you sure you want to delete this provider? Its models will no longer be usable.
+  names:
+    browser: Browser (local)
+    openai: OpenAI
+    ollama: Ollama (local)
+  unsupported:
+    browser: Built-in models are not supported in this browser, try using Chrome or Edge. [learn more](https://developer.chrome.com/docs/ai/prompt-api)
+    other: |
+      Missing a provider? This app supports pretty much everything that can be used with [Vercel's AI SDK](https://ai-sdk.dev/).
+      If you want me to add a new one, just [let me know](https://github.com/noeldemartin/anima/issues).
+
 models:
   create: Add model
   edit: Edit model
   provider: Provider
   name: Name
   alias: Alias
-  apiKey: API Key
-  unsafeStorageWarning: This will store your API key in the browser, make sure to log out or delete the model if you want to remove it.
   cancel: Cancel
   add: Add
   update: Update
@@ -45,11 +68,6 @@ models:
     browser: Browser built-in (local)
     ollama: Ollama (local)
     openai: OpenAI
-  unsupported:
-    browser: Built-in models are not supported in this browser, try using Chrome or Edge. [learn more](https://developer.chrome.com/docs/ai/prompt-api)
-    other: |
-      Missing a provider? This app supports pretty much everything that can be used with [Vercel's AI SDK](https://ai-sdk.dev/).
-      If you want me to add a new one, just [let me know](https://github.com/noeldemartin/anima/issues).
 
 chats:
   edit: Edit Chat
@@ -58,8 +76,13 @@ chats:
   update: Update
 
 settings:
+  providers:
+    title: Providers
+    description: Configure the AI providers you want to use.
+    add: Add provider
   models:
     title: AI models
     description: Configure the AI models you want to use.
+    modelsTitle: Models
     installBuiltIn: Install built-in model
     add: Add model

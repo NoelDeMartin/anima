@@ -78,7 +78,11 @@
             :options="models"
             :render-option="renderModel"
           />
-          <Button submit :disabled="!form.message || form.message.trim().length === 0" class="h-9">
+          <Button
+            submit
+            :disabled="!$ai.selectedModelKey || !form.message || form.message.trim().length === 0"
+            class="h-9"
+          >
             {{ $t('chat.send') }}
           </Button>
         </div>
@@ -93,7 +97,7 @@ import { chatRoute } from '@/utils/chats';
 import { stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
-import type { AnimaTools, ModelName, ProviderName, AnimaChat } from '@anima/core';
+import type { AnimaTools, ModelId, AnimaChat } from '@anima/core';
 import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
@@ -103,25 +107,29 @@ const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);
 const $scroll = useTemplateRef('$scroll');
 const form = useForm({ message: stringInput('') });
 const models = computed(() =>
-  AI.modelsList.filter((model) => model.enabled).map((model) => `${model.provider}-${model.name}` as const),
+  AI.modelsList.filter((model) => model.status === 'installed' && model.enabled).map((model) => model.id),
 );
 const messages = computed(() => arraySorted(aiChat.value?.messages ?? [], 'metadata.createdAt'));
 
-function renderModel(model: `${ProviderName}-${ModelName}` | null) {
-  if (!model) {
+function renderModel(modelId: ModelId | null) {
+  if (!modelId) {
     return translate('chat.unknownModel');
   }
 
-  const instance = AI.models[model];
+  const instance = AI.models[modelId];
 
   if (!instance) {
-    return model?.split('-')[1] || translate('chat.unknownModel');
+    return translate('chat.unknownModel');
   }
 
-  return instance.alias || `${instance.provider} / ${instance.name}`;
+  return (instance.status === 'installed' && instance.alias) || instance.name;
 }
 
 async function submit() {
+  if (!AI.selectedModelKey) {
+    return;
+  }
+
   const message = form.message;
 
   form.reset();

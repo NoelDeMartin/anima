@@ -4,11 +4,15 @@ import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
 import {
-  ModelMetadataSchema,
-  type ModelMetadata,
-  type ModelName,
-  type ProviderName,
+  AIProviderSchema,
+  InstalledModelSchema,
+  type AIProvider,
+  type AIProviderEditableFields,
+  type InstalledModel,
+  type InstalledModelEditableFields,
+  type ModelId,
   type ModelsStorageProvider,
+  type ProviderId,
 } from '@anima/core';
 import { isTruthy } from '@noeldemartin/utils';
 import type z from 'zod';
@@ -24,31 +28,62 @@ export default class FilesystemModelsStorageProvider implements ModelsStoragePro
     this.rootStorage = root ?? join(homedir(), '.anima');
   }
 
-  async getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null> {
-    const data = await this.readJson(ModelMetadataSchema, `/models/${provider}/${name}.json`);
-
-    return data;
+  async getModel(id: ModelId): Promise<InstalledModel | null> {
+    return this.readJson(InstalledModelSchema, `/models/${id}.json`);
   }
 
-  async getModelsMetadata(): Promise<ModelMetadata[]> {
-    const providerFiles = await this.listFileNames(`/models/`);
-    const models = await this.processInChunks(providerFiles, async (provider) => {
-      const modelFiles = await this.listFileNames(`/models/${provider}`);
+  async getModels(): Promise<InstalledModel[]> {
+    const ids = await this.listFileNames('/models/');
+    const models = await this.processInChunks(ids, (id) => this.getModel(id as ModelId));
 
-      return await this.processInChunks(modelFiles, (model) =>
-        this.getModelMetadata(provider as ProviderName, model as ModelName),
-      );
-    });
-
-    return models.flat().filter(isTruthy);
+    return models.filter(isTruthy);
   }
 
-  async storeModelMetadata(metadata: ModelMetadata): Promise<void> {
-    await this.writeJson(`/models/${metadata.provider}/${metadata.name}.json`, metadata);
+  async createModel(model: InstalledModel): Promise<void> {
+    await this.writeJson(`/models/${model.id}.json`, model);
   }
 
-  async deleteModelMetadata(provider: ProviderName, name: ModelName): Promise<void> {
-    await this.removeFile(`/models/${provider}/${name}.json`);
+  async updateModel(id: ModelId, updates: Partial<InstalledModelEditableFields>): Promise<void> {
+    const existing = await this.getModel(id);
+
+    if (!existing) {
+      throw new Error(`Model with id ${id} not found`);
+    }
+
+    await this.writeJson(`/models/${id}.json`, { ...existing, ...updates });
+  }
+
+  async deleteModel(id: ModelId): Promise<void> {
+    await this.removeFile(`/models/${id}.json`);
+  }
+
+  async getProvider(id: ProviderId): Promise<AIProvider | null> {
+    return this.readJson(AIProviderSchema, `/providers/${id}.json`);
+  }
+
+  async getProviders(): Promise<AIProvider[]> {
+    const ids = await this.listFileNames('/providers/');
+    const providers = await this.processInChunks(ids, (id) => this.getProvider(id as ProviderId));
+
+    return providers.filter(isTruthy);
+  }
+
+  async createProvider(provider: AIProvider): Promise<void> {
+    await this.writeJson(`/providers/${provider.id}.json`, provider);
+  }
+
+  async updateProvider(id: ProviderId, updates: Partial<AIProviderEditableFields>): Promise<void> {
+    const existing = await this.getProvider(id);
+
+    if (!existing) {
+      throw new Error(`Provider with id ${id} not found`);
+    }
+
+    await this.writeJson(`/providers/${id}.json`, { ...existing, ...updates });
+  }
+
+  async deleteProvider(id: ProviderId): Promise<void> {
+    await this.removeFile(`/providers/${id}.json`);
   }
 
   async clear(): Promise<void> {

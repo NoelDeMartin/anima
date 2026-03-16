@@ -1,10 +1,22 @@
-import type { ModelMetadata, ModelName, ProviderName, ModelsStorageProvider } from '@anima/core';
+import type {
+  AIProvider,
+  AIProviderEditableFields,
+  InstalledModel,
+  InstalledModelEditableFields,
+  ModelId,
+  ModelsStorageProvider,
+  ProviderId,
+} from '@anima/core';
 import { type DBSchema, type IDBPDatabase, openDB } from 'idb';
 
 interface Database extends DBSchema {
-  modelsMetadata: {
-    key: [string, string];
-    value: ModelMetadata;
+  models: {
+    key: string;
+    value: InstalledModel;
+  };
+  providers: {
+    key: string;
+    value: AIProvider;
   };
 }
 
@@ -17,40 +29,88 @@ export default class IndexedDBModelsStorageProvider implements ModelsStorageProv
   constructor() {
     this.dbPromise = openDB<Database>(DB_NAME, DB_VERSION, {
       upgrade(db) {
-        if (!db.objectStoreNames.contains('modelsMetadata')) {
-          db.createObjectStore('modelsMetadata', { keyPath: ['provider', 'name'] });
-        }
+        db.createObjectStore('models', { keyPath: 'id' });
+        db.createObjectStore('providers', { keyPath: 'id' });
       },
     });
   }
 
-  async getModelMetadata(provider: ProviderName, name: ModelName): Promise<ModelMetadata | null> {
+  async getModel(id: ModelId): Promise<InstalledModel | null> {
     const db = await this.dbPromise;
+    const model = await db.get('models', id);
 
-    return (await db.get('modelsMetadata', [provider, name])) ?? null;
+    return model ?? null;
   }
 
-  async getModelsMetadata(): Promise<ModelMetadata[]> {
+  async getModels(): Promise<InstalledModel[]> {
     const db = await this.dbPromise;
 
-    return db.getAll('modelsMetadata');
+    return db.getAll('models');
   }
 
-  async storeModelMetadata(metadata: ModelMetadata): Promise<void> {
+  async createModel(model: InstalledModel): Promise<void> {
     const db = await this.dbPromise;
 
-    await db.put('modelsMetadata', metadata);
+    await db.add('models', model);
   }
 
-  async deleteModelMetadata(provider: ProviderName, name: ModelName): Promise<void> {
+  async updateModel(id: ModelId, updates: Partial<InstalledModelEditableFields>): Promise<void> {
+    const db = await this.dbPromise;
+    const existing = await db.get('models', id);
+
+    if (!existing) {
+      throw new Error(`Model with id ${id} not found`);
+    }
+
+    await db.put('models', { ...existing, ...updates });
+  }
+
+  async deleteModel(id: ModelId): Promise<void> {
     const db = await this.dbPromise;
 
-    await db.delete('modelsMetadata', [provider, name]);
+    await db.delete('models', id);
+  }
+
+  async getProvider(id: ProviderId): Promise<AIProvider | null> {
+    const db = await this.dbPromise;
+    const provider = await db.get('providers', id);
+
+    return provider ?? null;
+  }
+
+  async getProviders(): Promise<AIProvider[]> {
+    const db = await this.dbPromise;
+
+    return db.getAll('providers');
+  }
+
+  async createProvider(provider: AIProvider): Promise<void> {
+    const db = await this.dbPromise;
+
+    await db.add('providers', provider);
+  }
+
+  async updateProvider(id: ProviderId, updates: Partial<AIProviderEditableFields>): Promise<void> {
+    const db = await this.dbPromise;
+    const existing = await db.get('providers', id);
+
+    if (!existing) {
+      throw new Error(`Provider with id ${id} not found`);
+    }
+
+    await db.put('providers', { ...existing, ...updates });
+  }
+
+  async deleteProvider(id: ProviderId): Promise<void> {
+    const db = await this.dbPromise;
+
+    await db.delete('providers', id);
   }
 
   async clear(): Promise<void> {
     const db = await this.dbPromise;
 
-    await db.clear('modelsMetadata');
+    await db.clear('models');
+    await db.clear('providers');
   }
 }

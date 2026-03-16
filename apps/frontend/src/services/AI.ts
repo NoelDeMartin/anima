@@ -2,12 +2,13 @@ import { Events } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import type {
-  AIModel,
-  ModelName,
-  ProviderName,
+  AIProvider,
+  AIProviderEditableFields,
+  ProviderId,
+  ModelId,
   AnimaChat,
   AnimaChatEditableFields,
-  ModelMetadataEditableFields,
+  InstalledModelEditableFields,
 } from '@anima/core';
 import { facade, fail, objectFromEntries, objectKeys } from '@noeldemartin/utils';
 import { markRaw, watchEffect } from 'vue';
@@ -61,63 +62,89 @@ export class AIService extends Service {
   }
 
   async installModel(
-    provider: ProviderName,
-    name: ModelName,
-    data: ModelMetadataEditableFields = { enabled: true },
+    providerId: ProviderId,
+    name: string,
+    data: InstalledModelEditableFields = { enabled: true, alias: null },
   ): Promise<void> {
-    this.models[`${provider}-${name}`] = await this.requiredRuntime().installModel(provider, name, data);
+    const model = await this.requiredRuntime().installModel(providerId, name, data);
+
+    this.models[model.id] = model;
   }
 
   async refreshModels(): Promise<void> {
     const models = await this.requiredRuntime().getModels();
 
-    this.models = objectFromEntries(models.map((model) => [`${model.provider}-${model.name}`, model]));
+    this.models = objectFromEntries(models.map((model) => [model.id, model]));
   }
 
-  async updateModel(
-    provider: ProviderName,
-    name: ModelName,
-    updates: Partial<ModelMetadataEditableFields>,
-  ): Promise<void> {
-    const key = `${provider}-${name}` as const;
-    const originalModel = this.models[key];
+  async updateModel(id: ModelId, updates: Partial<InstalledModelEditableFields>): Promise<void> {
+    const originalModel = this.models[id];
 
     if (!originalModel) {
       return;
     }
 
     try {
-      this.models[key] = { ...originalModel, ...updates } as AIModel;
+      this.models[id] = { ...originalModel, ...updates };
 
-      await this.requiredRuntime().updateModel(provider, name, updates);
+      await this.requiredRuntime().updateModel(id, updates);
     } catch (error) {
-      this.models[key] = originalModel;
+      this.models[id] = originalModel;
 
       throw error;
     }
   }
 
-  async deleteModel(provider: ProviderName, name: ModelName): Promise<void> {
-    const key = `${provider}-${name}` as const;
-    const originalModel = this.models[key];
+  async deleteModel(id: ModelId): Promise<void> {
+    const originalModel = this.models[id];
 
     if (!originalModel) {
       return;
     }
 
     try {
-      delete this.models[key];
+      delete this.models[id];
 
-      await this.requiredRuntime().deleteModel(provider, name);
+      await this.requiredRuntime().deleteModel(id);
     } catch (error) {
-      this.models[key] = originalModel;
+      this.models[id] = originalModel;
 
       throw error;
     }
   }
 
-  async cancelInstallation(provider: ProviderName, name: ModelName): Promise<void> {
-    await this.requiredRuntime().cancelModelInstallation(provider, name);
+  async cancelInstallation(providerId: ProviderId, id: ModelId): Promise<void> {
+    await this.requiredRuntime().cancelModelInstallation(providerId, id);
+  }
+
+  async createProvider(provider: Omit<AIProvider, 'id'>): Promise<void> {
+    await this.requiredRuntime().createProvider(provider);
+
+    const providersList = await this.requiredRuntime().getProviders();
+    const models = await this.requiredRuntime().getModels();
+
+    this.setState({
+      providersList,
+      models: objectFromEntries(models.map((model) => [model.id, model])),
+    });
+  }
+
+  async updateProvider(id: ProviderId, updates: Partial<AIProviderEditableFields>): Promise<void> {
+    await this.requiredRuntime().updateProvider(id, updates);
+
+    this.providersList = await this.requiredRuntime().getProviders();
+  }
+
+  async deleteProvider(id: ProviderId): Promise<void> {
+    await this.requiredRuntime().deleteProvider(id);
+
+    const providers = await this.requiredRuntime().getProviders();
+    const models = await this.requiredRuntime().getModels();
+
+    this.setState({
+      providersList: providers,
+      models: objectFromEntries(models.map((model) => [model.id, model])),
+    });
   }
 
   protected async boot(): Promise<void> {
@@ -134,11 +161,14 @@ export class AIService extends Service {
 
     this._runtime = new Runtime();
 
-    const { chats, models, providers } = await this._runtime.initialize();
+    const { chats, models, providers, factories } = await this._runtime.initialize();
 
-    this.chats = objectFromEntries(chats.map((chat) => [chat.url, { anima: chat }]));
-    this.models = objectFromEntries(models.map((model) => [`${model.provider}-${model.name}`, model]));
-    this.providersList = providers;
+    this.setState({
+      chats: objectFromEntries(chats.map((chat) => [chat.url, { anima: chat }])),
+      models: objectFromEntries(models.map((model) => [model.id, model])),
+      providersList: providers,
+      providerFactoriesList: factories,
+    });
 
     if (!this.selectedModelKey || !(this.selectedModelKey in this.models)) {
       this.selectedModelKey = objectKeys(this.models)[0] ?? this.selectedModelKey;

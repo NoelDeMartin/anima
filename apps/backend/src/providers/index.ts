@@ -1,14 +1,13 @@
 import {
-  AnthropicModelsProvider,
-  GoogleModelsProvider,
+  AnthropicModelsProviderFactory,
+  GoogleModelsProviderFactory,
   ModelsManager,
-  OllamaModelsProvider,
-  OpenAIModelsProvider,
-  OtherModelsProvider,
-  type ProviderName,
+  OllamaModelsProviderFactory,
+  OpenAIModelsProviderFactory,
+  OtherModelsProviderFactory,
   setAuthProvider,
-  setModelsStorageProvider,
-  TestingModelsProvider,
+  TestingModelsProviderFactory,
+  type ProviderType,
 } from '@anima/core';
 
 import { env } from '../lib/env';
@@ -20,18 +19,16 @@ export async function registerProviders() {
   setAuthProvider(new SessionAuthProvider());
 
   if (env('E2E')) {
-    setModelsStorageProvider(new InMemoryModelsStorageProvider());
-
-    await ModelsManager.registerProvider('testing' as ProviderName, new TestingModelsProvider());
+    ModelsManager.setStorageProvider(new InMemoryModelsStorageProvider());
+    ModelsManager.registerFactory('testing' as ProviderType, new TestingModelsProviderFactory());
 
     return;
   }
 
-  setModelsStorageProvider(new FilesystemModelsStorageProvider());
-
-  await ModelsManager.registerProvider('ollama' as ProviderName, new OllamaModelsProvider('server'));
-  await ModelsManager.registerProvider('anthropic' as ProviderName, new AnthropicModelsProvider());
-  await ModelsManager.registerProvider('google' as ProviderName, new GoogleModelsProvider());
-  await ModelsManager.registerProvider('openai' as ProviderName, new OpenAIModelsProvider());
-  await ModelsManager.registerProvider('other' as ProviderName, new OtherModelsProvider());
+  ModelsManager.setStorageProvider(new FilesystemModelsStorageProvider());
+  ModelsManager.registerFactory('ollama' as ProviderType, new OllamaModelsProviderFactory('server'));
+  ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory());
+  ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory());
+  ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory());
+  ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
 }
