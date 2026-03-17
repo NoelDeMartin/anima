@@ -1,5 +1,7 @@
 <template>
-  <main class="flex flex-col grow items-center justify-center overflow-hidden mx-auto w-full max-w-6xl">
+  <main
+    class="flex flex-col grow items-center justify-center overflow-hidden mx-auto w-full max-w-6xl [--textarea-height:150px]"
+  >
     <div v-if="chat && !aiChat" class="grow flex items-center justify-center">
       <i-svg-spinners-3-dots-bounce class="size-6 shrink-0" />
     </div>
@@ -60,14 +62,14 @@
       />
     </div>
 
-    <div class="px-8 w-full">
-      <Form :form @submit="submit()" class="relative mb-16 w-full">
+    <div class="px-8 w-full mb-16">
+      <Form v-if="$ai.selectedModel" :form @submit="submit()" class="relative w-full">
         <TextArea
           :label="$t('chat.message')"
           label-class="sr-only"
           name="message"
           @keydown.enter.prevent="form.submit()"
-          input-class="resize-none w-full h-[150px]"
+          input-class="resize-none w-full h-(--textarea-height)"
         />
         <div class="absolute bottom-2.5 right-2 flex gap-2 items-center">
           <Select
@@ -87,6 +89,7 @@
           </Button>
         </div>
       </Form>
+      <ChatMissingModels v-else />
     </div>
   </main>
 </template>
@@ -97,7 +100,7 @@ import { chatRoute } from '@/utils/chats';
 import { stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
-import type { AnimaTools, ModelId, AnimaChat } from '@anima/core';
+import { type AnimaTools, type ModelId, type AnimaChat } from '@anima/core';
 import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
@@ -112,17 +115,14 @@ const models = computed(() =>
 const messages = computed(() => arraySorted(aiChat.value?.messages ?? [], 'metadata.createdAt'));
 
 function renderModel(modelId: ModelId | null) {
-  if (!modelId) {
+  const model = modelId && AI.models[modelId];
+  const provider = model && AI.providers[model.providerId];
+
+  if (!model || !provider || model.status !== 'installed') {
     return translate('chat.unknownModel');
   }
 
-  const instance = AI.models[modelId];
-
-  if (!instance) {
-    return translate('chat.unknownModel');
-  }
-
-  return (instance.status === 'installed' && instance.alias) || instance.name;
+  return model.alias || `${provider.type}/${model.name}`;
 }
 
 async function submit() {

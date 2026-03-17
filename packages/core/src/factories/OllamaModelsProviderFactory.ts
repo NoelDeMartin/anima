@@ -21,6 +21,10 @@ export default class OllamaModelsProviderFactory implements ModelsProviderFactor
     return true;
   }
 
+  async getDefaultConfig(): Promise<{ url: string }> {
+    return { url: 'http://localhost:11434' };
+  }
+
   async getPreinstalledModels(provider: AIProvider): Promise<string[]> {
     return this.getInstalledModelNames(provider);
   }

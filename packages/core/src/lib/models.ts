@@ -17,6 +17,8 @@ export interface ModelsProviderFactory {
   isSupported?(): Promise<boolean>;
   requiresAPIKey?(): Promise<boolean>;
   requiresUrl?(): Promise<boolean>;
+  getDefaultConfig?(): Promise<{ url?: string; apiKey?: string }>;
+  getAvailableModels?(): Promise<string[]>;
   getInstallingModels(provider: AIProvider): Promise<InstallingModel[]>;
   getPreinstalledModels?(provider: AIProvider): Promise<string[]>;
   createLanguageModel(

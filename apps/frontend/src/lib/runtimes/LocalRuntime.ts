@@ -58,9 +58,9 @@ export default class LocalRuntime implements Runtime {
     ModelsManager.setStorageProvider(new IndexedDBModelsStorageProvider());
     ModelsManager.registerFactory('browser' as ProviderType, browserFactory);
     ModelsManager.registerFactory('ollama' as ProviderType, new OllamaModelsProviderFactory('browser'));
-    ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory());
-    ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory());
-    ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory());
+    ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory('browser'));
     ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
 
     if (!Solid.isLoggedIn()) {

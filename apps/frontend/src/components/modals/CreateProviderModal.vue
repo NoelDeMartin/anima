@@ -8,10 +8,7 @@
         :options="providerTypes"
         :render-option="(option) => $td(`providers.names.${option}`, stringToStudlyCase(option))"
       />
-      <Markdown v-if="!selectedFactory?.isSupported" class="text-red-500 text-sm p-2 bg-red-100 rounded-lg">
-        {{ $t(`providers.unsupported.${form.type}`) }}
-      </Markdown>
-      <template v-else>
+      <template v-if="selectedFactory?.isSupported">
         <Input :label="$t('providers.name')" name="name" class="w-full" />
         <Input v-if="selectedFactory?.requiresUrl" :label="$t('providers.url')" name="url" class="w-full" />
         <Input
@@ -22,16 +19,17 @@
           class="w-full"
           required
         />
-        <div
-          v-if="selectedFactory?.requiresAPIKey && env('VITE_SPA_MODE')"
-          class="flex items-start gap-3 bg-yellow-50 text-yellow-800 px-4 py-3 rounded-lg"
-          role="alert"
-        >
-          <i-heroicons-exclamation-triangle class="size-5 text-yellow-600 shrink-0 mt-0.5" />
-          <Markdown class="text-sm font-medium text-yellow-800">
-            {{ $t('providers.unsafeStorageWarning') }}
-          </Markdown>
-        </div>
+      </template>
+      <MessageAlert type="info" v-if="$te(`providers.instructions.${form.type}`)">
+        {{ $t(`providers.instructions.${form.type}`) }}
+      </MessageAlert>
+      <MessageAlert type="warning" v-if="selectedFactory?.requiresAPIKey && env('VITE_SPA_MODE')">
+        {{ $t('providers.unsafeStorageWarning') }}
+      </MessageAlert>
+      <MessageAlert type="error" v-if="!selectedFactory?.isSupported && !$te(`providers.instructions.${form.type}`)">
+        {{ $t(`providers.unsupported.${form.type}`) }}
+      </MessageAlert>
+      <template v-if="selectedFactory?.isSupported">
         <div class="flex gap-2 mt-2">
           <div class="grow" />
           <Button variant="secondary" @click="close()">{{ $t('providers.cancel') }}</Button>
@@ -81,6 +79,8 @@ watch(
   () => form.type,
   () => {
     form.name = translateWithDefault(`providers.names.${form.type}`, stringToStudlyCase(form.type));
+    form.url = selectedFactory.value?.defaultConfig?.url ?? form.url;
+    form.apiKey = selectedFactory.value?.defaultConfig?.apiKey ?? form.apiKey;
   },
   { immediate: true },
 );

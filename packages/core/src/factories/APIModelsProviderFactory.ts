@@ -2,6 +2,12 @@ import type { InstallingModel, ModelsProviderFactory, ProviderOptions, ModelId, 
 import type { LanguageModel } from 'ai';
 
 export default abstract class APIModelsProviderFactory implements ModelsProviderFactory {
+  protected runtime: 'server' | 'browser';
+
+  constructor(runtime: 'server' | 'browser') {
+    this.runtime = runtime;
+  }
+
   async requiresAPIKey(): Promise<boolean> {
     return true;
   }

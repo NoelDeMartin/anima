@@ -5,7 +5,7 @@ import z from 'zod';
 
 export default tool({
   description: 'Read the contents of the given file.',
-  inputSchema: z.object({ url: z.url().describe('The file url to read the contents of.') }),
+  inputSchema: z.object({ url: z.string().describe('The file url to read the contents of.') }),
   outputSchema: z.any().describe('The contents of the file.'),
   strict: true,
   async execute({ url }) {

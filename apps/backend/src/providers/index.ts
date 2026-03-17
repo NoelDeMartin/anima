@@ -27,8 +27,8 @@ export async function registerProviders() {
 
   ModelsManager.setStorageProvider(new FilesystemModelsStorageProvider());
   ModelsManager.registerFactory('ollama' as ProviderType, new OllamaModelsProviderFactory('server'));
-  ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory());
-  ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory());
-  ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory());
+  ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory('server'));
+  ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory('server'));
+  ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory('server'));
   ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
 }

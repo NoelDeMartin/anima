@@ -151,6 +151,7 @@ export class AIService extends Service {
     await Solid.booted;
     await this.initializeRuntime();
     await this.watchSelectedChat();
+    await this.watchSelectedModel();
     await this.watchLogout();
   }
 
@@ -169,10 +170,6 @@ export class AIService extends Service {
       providersList: providers,
       providerFactoriesList: factories,
     });
-
-    if (!this.selectedModelKey || !(this.selectedModelKey in this.models)) {
-      this.selectedModelKey = objectKeys(this.models)[0] ?? this.selectedModelKey;
-    }
   }
 
   protected async watchSelectedChat(): Promise<void> {
@@ -186,6 +183,16 @@ export class AIService extends Service {
       const aiChat = await this.requiredRuntime().createAIChat(selectedChat.anima, { loadMessages: true });
 
       this.chats[selectedChat.anima.url] = { ...selectedChat, ai: markRaw(aiChat) };
+    });
+  }
+
+  protected async watchSelectedModel(): Promise<void> {
+    watchEffect(() => {
+      if (this.selectedModelKey && this.selectedModelKey in this.models) {
+        return;
+      }
+
+      this.selectedModelKey = objectKeys(this.models)[0] ?? this.selectedModelKey;
     });
   }
 

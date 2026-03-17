@@ -5,6 +5,19 @@ import type { LanguageModel } from 'ai';
 import APIModelsProviderFactory from './APIModelsProviderFactory';
 
 export default class AnthropicModelsProviderFactory extends APIModelsProviderFactory {
+  async getAvailableModels(): Promise<string[]> {
+    return [
+      'claude-opus-4-6',
+      'claude-sonnet-4-6',
+      'claude-opus-4-5',
+      'claude-haiku-4-5',
+      'claude-sonnet-4-5',
+      'claude-opus-4-1',
+      'claude-opus-4-0',
+      'claude-sonnet-4-0',
+    ];
+  }
+
   async createLanguageModel(
     provider: AIProvider,
     name: string,
@@ -13,7 +26,15 @@ export default class AnthropicModelsProviderFactory extends APIModelsProviderFac
 
     return {
       supportsTools: true,
-      languageModel: createAnthropic({ apiKey: required(provider.apiKey) })(name),
+      languageModel: createAnthropic({
+        apiKey: required(provider.apiKey),
+        headers:
+          this.runtime === 'browser'
+            ? {
+                'anthropic-dangerous-direct-browser-access': 'true',
+              }
+            : undefined,
+      })(name),
     };
   }
 }

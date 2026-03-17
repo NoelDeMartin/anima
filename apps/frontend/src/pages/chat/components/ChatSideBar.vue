@@ -29,7 +29,9 @@
             <span class="sr-only">{{ $t('sidebar.newChat') }}</span>
           </Button>
         </div>
-        <div v-if="$ai.chatsList.length === 0" class="text-sm text-gray-400 italic">{{ $t('sidebar.noChats') }}</div>
+        <div v-if="$ai.chatsList.length === 0" class="text-sm text-gray-400 italic px-4 py-2">
+          {{ $t('sidebar.noChats') }}
+        </div>
         <ul v-else aria-labelledby="recent-chats">
           <li
             v-for="chat in $ai.chatsList"

@@ -11,6 +11,8 @@ chat:
   message: Message
   model: Model
   unknownModel: Unknown
+  missingModels: Before you start, you'll need to configure some AI models.
+  configureModels: Configure models
   send: Send
   tools:
     readTypeIndex: Read type index
@@ -44,12 +46,19 @@ providers:
   names:
     browser: Browser (local)
     openai: OpenAI
-    ollama: Ollama (local)
-  unsupported:
-    browser: Built-in models are not supported in this browser, try using Chrome or Edge. [learn more](https://developer.chrome.com/docs/ai/prompt-api)
+  instructions:
+    anthropic: You can get your API Key in [Anthropic's Claude Console](https://platform.claude.com/settings/keys).
+    openai: You can get your API Key in [OpenAI's Platform](https://platform.openai.com/api-keys).
+    google: You can get your API Key in [Google's AI Studio](https://aistudio.google.com/app/api-keys).
+    ollama: |
+      If you want to access a local Ollama instance from the browser, you'll need to [configure CORS origins](https://docs.ollama.com/faq#how-can-i-allow-additional-web-origins-to-access-ollama)
+      and probably serve Ollama behind a tunnel (such as [ngrok](https://docs.ollama.com/faq#how-can-i-use-ollama-with-ngrok) or [Cloudfare Tunnel](https://docs.ollama.com/faq#how-can-i-use-ollama-with-cloudflare-tunnel))
+      in order to bypass Mixed Content restrictions.
     other: |
       Missing a provider? This app supports pretty much everything that can be used with [Vercel's AI SDK](https://ai-sdk.dev/).
-      If you want me to add a new one, just [let me know](https://github.com/noeldemartin/anima/issues).
+      If you need one that isn't listed here, just [let me know](https://github.com/noeldemartin/anima/issues).
+  unsupported:
+    browser: Built-in models are not supported in this browser, try using Chrome or Edge. [learn more](https://developer.chrome.com/docs/ai/prompt-api)
 
 models:
   create: Add model

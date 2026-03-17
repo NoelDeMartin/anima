@@ -7,7 +7,7 @@ import z from 'zod';
 const TypesIndexSchema = z.array(
   z.object({
     dataType: z.string().describe('The type of data being indexed, expressed as an RDF type.'),
-    url: z.url().describe('The location of the data being indexed, expressed as the container url.'),
+    url: z.string().describe('The location of the data being indexed, expressed as the container url.'),
   }),
 );
 

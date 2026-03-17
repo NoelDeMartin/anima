@@ -29,6 +29,11 @@ export const AIProviderFactorySchema = z.object({
   requiresAPIKey: z.boolean(),
   requiresUrl: z.boolean(),
   isSupported: z.boolean(),
+  availableModels: z.array(z.string()).optional(),
+  defaultConfig: z.object({
+    url: z.string().optional(),
+    apiKey: z.string().optional(),
+  }),
 });
 
 export type AIModel = z.infer<typeof AIModelSchema>;
@@ -53,6 +58,8 @@ export class ModelsManagerService {
         requiresAPIKey: (await factory.requiresAPIKey?.()) ?? false,
         requiresUrl: (await factory.requiresUrl?.()) ?? false,
         isSupported: (await factory.isSupported?.()) ?? true,
+        defaultConfig: (await factory.getDefaultConfig?.()) ?? {},
+        availableModels: await factory.getAvailableModels?.(),
       })),
     );
 
@@ -103,6 +110,18 @@ export class ModelsManagerService {
   }
 
   async deleteProvider(id: ProviderId): Promise<void> {
+    const models = await this.getModels();
+
+    await Promise.all(
+      models.map(async (model) => {
+        if (model.providerId !== id) {
+          return;
+        }
+
+        await this.deleteModel(model.id, { uninstall: false });
+      }),
+    );
+
     await this.requireStorage().deleteProvider(id);
   }
 
@@ -167,12 +186,14 @@ export class ModelsManagerService {
     await this.requireStorage().updateModel(id, updates);
   }
 
-  async deleteModel(id: ModelId): Promise<void> {
+  async deleteModel(id: ModelId, options: { uninstall?: boolean } = {}): Promise<void> {
+    const uninstall = options.uninstall ?? true;
     const model = required(await this.requireStorage().getModel(id));
     const provider = required(await this.requireStorage().getProvider(model.providerId));
     const factory = required(this.factories.find(([type]) => provider.type === type)?.[1]);
 
-    await factory.uninstallModel(provider, model.name);
+    uninstall && (await factory.uninstallModel(provider, model.name));
+
     await this.requireStorage().deleteModel(id);
   }
 

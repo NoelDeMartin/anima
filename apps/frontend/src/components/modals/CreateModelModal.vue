@@ -8,7 +8,14 @@
         :options="providerIds"
         :render-option="(id) => AI.providers[id]?.name ?? id"
       />
-      <Input :label="$t('models.name')" name="name" class="w-full" />
+      <Combobox
+        v-if="selectedProviderFactory?.availableModels?.length"
+        name="name"
+        class="w-full"
+        :label="$t('models.name')"
+        :options="selectedProviderFactory.availableModels"
+      />
+      <Input v-else :label="$t('models.name')" name="name" class="w-full" />
       <Input :label="$t('models.alias')" name="alias" class="w-full" />
       <div class="flex gap-2 mt-2">
         <div class="grow" />
@@ -21,10 +28,11 @@
 
 <script setup lang="ts">
 import AI from '@/services/AI';
-import { Form, requiredEnumInput, requiredStringInput, useModal } from '@aerogel/core';
+import { requiredEnumInput, requiredStringInput, useModal } from '@aerogel/core';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import type { ProviderId } from '@anima/core';
+import { computed } from 'vue';
 
 const { close } = useModal();
 const providerIds = AI.providersList.map((provider) => provider.id);
@@ -33,6 +41,10 @@ const form = useForm({
   name: requiredStringInput(''),
   alias: stringInput(''),
 });
+const selectedProvider = computed(() => AI.providers[form.provider]);
+const selectedProviderFactory = computed(
+  () => selectedProvider.value?.type && AI.providerFactories[selectedProvider.value.type],
+);
 
 async function submit() {
   await AI.installModel(form.provider as ProviderId, form.name, {
