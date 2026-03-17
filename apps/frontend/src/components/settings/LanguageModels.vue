@@ -45,8 +45,8 @@ let pollingIntervalId: NodeJS.Timeout | null = null;
 const browserProviderId = computed(() => AI.providersList.find((p) => p.type === 'browser')?.id);
 const showBrowserInstall = computed(
   () =>
-    Browser.promptAPIAvailable &&
     browserProviderId.value &&
+    Browser.promptAPIAvailability === 'available' &&
     !AI.modelsList.some((model) => model.providerId === browserProviderId.value),
 );
 

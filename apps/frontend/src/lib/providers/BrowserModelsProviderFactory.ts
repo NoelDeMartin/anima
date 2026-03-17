@@ -9,8 +9,8 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
   private installMonitor: CreateMonitor | null = null;
   private installListener: ((event: ProgressEvent) => void) | null = null;
 
-  async isSupported(): Promise<boolean> {
-    return !!Browser.promptAPIAvailable;
+  async getAvailability(): Promise<'available' | 'unavailable' | 'unsupported'> {
+    return Browser.getPromptAPIAvailability();
   }
 
   async getPreinstalledModels(): Promise<string[]> {

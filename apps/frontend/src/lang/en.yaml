@@ -57,6 +57,10 @@ providers:
     other: |
       Missing a provider? This app supports pretty much everything that can be used with [Vercel's AI SDK](https://ai-sdk.dev/).
       If you need one that isn't listed here, just [let me know](https://github.com/noeldemartin/anima/issues).
+  unavailable:
+    browser: |
+      Built-in models are are not available right now. This could be because you don't have enough free space in your device, or
+      your it doesn't meet the requirements. [learn more](https://developer.chrome.com/docs/ai/prompt-api)
   unsupported:
     browser: Built-in models are not supported in this browser, try using Chrome or Edge. [learn more](https://developer.chrome.com/docs/ai/prompt-api)
 

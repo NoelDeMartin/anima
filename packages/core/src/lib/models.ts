@@ -14,7 +14,7 @@ export type ProviderOptions = NonNullable<Parameters<typeof streamText>[0]['prov
 export type InstallingModel = z.infer<typeof InstallingModelSchema>;
 
 export interface ModelsProviderFactory {
-  isSupported?(): Promise<boolean>;
+  getAvailability?(): Promise<'available' | 'unavailable' | 'unsupported'>;
   requiresAPIKey?(): Promise<boolean>;
   requiresUrl?(): Promise<boolean>;
   getDefaultConfig?(): Promise<{ url?: string; apiKey?: string }>;

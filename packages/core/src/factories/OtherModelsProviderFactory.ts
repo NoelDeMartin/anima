@@ -2,8 +2,8 @@ import type { InstallingModel, ModelsProviderFactory } from '@anima/core';
 import type { LanguageModel } from 'ai';
 
 export default class OtherModelsProviderFactory implements ModelsProviderFactory {
-  async isSupported(): Promise<boolean> {
-    return false;
+  async getAvailability(): Promise<'available' | 'unavailable' | 'unsupported'> {
+    return 'unavailable';
   }
 
   async getInstallingModels(): Promise<InstallingModel[]> {

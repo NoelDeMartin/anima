@@ -17,10 +17,10 @@ function getBrowserName(): 'chrome' | 'edge' | 'other' {
 
 export class BrowserService extends Service {
   public name: 'chrome' | 'edge' | 'other' = getBrowserName();
-  public promptAPIAvailable: boolean | null = null;
+  public promptAPIAvailability: 'available' | 'unavailable' | 'unsupported' | null = null;
 
   protected async boot(): Promise<void> {
-    this.promptAPIAvailable = await this.isPromptAPIAvailable();
+    this.promptAPIAvailability = await this.getPromptAPIAvailability();
   }
 
   public getModelName(): string {
@@ -34,18 +34,18 @@ export class BrowserService extends Service {
     }
   }
 
-  public async isPromptAPIAvailable(): Promise<boolean> {
-    if (this.promptAPIAvailable !== null) {
-      return this.promptAPIAvailable;
+  public async getPromptAPIAvailability(): Promise<'available' | 'unavailable' | 'unsupported'> {
+    if (this.promptAPIAvailability !== null) {
+      return this.promptAPIAvailability;
     }
 
     if (!('LanguageModel' in globalThis)) {
-      return false;
+      return 'unsupported';
     }
 
     const availability = await LanguageModel.availability();
 
-    return availability !== 'unavailable';
+    return availability !== 'unavailable' ? 'available' : 'unavailable';
   }
 }
 

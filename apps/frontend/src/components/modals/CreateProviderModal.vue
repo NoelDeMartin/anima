@@ -8,7 +8,7 @@
         :options="providerTypes"
         :render-option="(option) => $td(`providers.names.${option}`, stringToStudlyCase(option))"
       />
-      <template v-if="selectedFactory?.isSupported">
+      <template v-if="selectedFactory?.availability === 'available'">
         <Input :label="$t('providers.name')" name="name" class="w-full" />
         <Input v-if="selectedFactory?.requiresUrl" :label="$t('providers.url')" name="url" class="w-full" />
         <Input
@@ -26,10 +26,13 @@
       <MessageAlert type="warning" v-if="selectedFactory?.requiresAPIKey && env('VITE_SPA_MODE')">
         {{ $t('providers.unsafeStorageWarning') }}
       </MessageAlert>
-      <MessageAlert type="error" v-if="!selectedFactory?.isSupported && !$te(`providers.instructions.${form.type}`)">
-        {{ $t(`providers.unsupported.${form.type}`) }}
+      <MessageAlert
+        type="error"
+        v-if="selectedFactory?.availability !== 'available' && !$te(`providers.instructions.${form.type}`)"
+      >
+        {{ $t(`providers.${selectedFactory?.availability}.${form.type}`) }}
       </MessageAlert>
-      <template v-if="selectedFactory?.isSupported">
+      <template v-if="selectedFactory?.availability === 'available'">
         <div class="flex gap-2 mt-2">
           <div class="grow" />
           <Button variant="secondary" @click="close()">{{ $t('providers.cancel') }}</Button>

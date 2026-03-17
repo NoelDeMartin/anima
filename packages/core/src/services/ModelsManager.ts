@@ -28,7 +28,7 @@ export const AIProviderFactorySchema = z.object({
   type: z.string().brand('ProviderType'),
   requiresAPIKey: z.boolean(),
   requiresUrl: z.boolean(),
-  isSupported: z.boolean(),
+  availability: z.enum(['available', 'unavailable', 'unsupported']),
   availableModels: z.array(z.string()).optional(),
   defaultConfig: z.object({
     url: z.string().optional(),
@@ -57,7 +57,7 @@ export class ModelsManagerService {
         type,
         requiresAPIKey: (await factory.requiresAPIKey?.()) ?? false,
         requiresUrl: (await factory.requiresUrl?.()) ?? false,
-        isSupported: (await factory.isSupported?.()) ?? true,
+        availability: (await factory.getAvailability?.()) ?? 'available',
         defaultConfig: (await factory.getDefaultConfig?.()) ?? {},
         availableModels: await factory.getAvailableModels?.(),
       })),

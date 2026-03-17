@@ -67,7 +67,7 @@ export default class LocalRuntime implements Runtime {
       return { chats: [], models: [], providers: [], factories: [] };
     }
 
-    const isBrowserSupported = await browserFactory.isSupported();
+    const browserAvailability = await browserFactory.getAvailability();
     const result = {
       chats: await this.getChats(),
       models: await this.getModels(),
@@ -75,7 +75,7 @@ export default class LocalRuntime implements Runtime {
       factories: await ModelsManager.getProviderFactories(),
     };
 
-    if (isBrowserSupported && !result.providers.some((provider) => provider.type === 'browser')) {
+    if (browserAvailability === 'available' && !result.providers.some((provider) => provider.type === 'browser')) {
       await this.createProvider({
         type: 'browser' as ProviderType,
         name: 'Browser',
