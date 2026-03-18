@@ -13,6 +13,7 @@ export const InstalledModelSchema = z.object({
   providerId: z.string().brand('ProviderId'),
   name: z.string(),
   enabled: z.boolean(),
+  supportsTools: z.boolean(),
   alias: z.string().nullable().optional(),
 });
 

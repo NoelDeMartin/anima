@@ -18,14 +18,10 @@ export default class AnthropicModelsProviderFactory extends APIModelsProviderFac
     ];
   }
 
-  async createLanguageModel(
-    provider: AIProvider,
-    name: string,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean }> {
+  async createLanguageModel(provider: AIProvider, name: string): Promise<{ languageModel: LanguageModel }> {
     const { createAnthropic } = await import('@ai-sdk/anthropic');
 
     return {
-      supportsTools: true,
       languageModel: createAnthropic({
         apiKey: required(provider.apiKey),
         headers:

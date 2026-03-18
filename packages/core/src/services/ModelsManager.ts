@@ -91,8 +91,14 @@ export class ModelsManagerService {
     const names = (await factory.getPreinstalledModels?.(newProvider)) ?? [];
 
     await Promise.all(
-      names.map((name) =>
-        this.requireStorage().createModel({ id: uuid() as ModelId, providerId, name, enabled: true }),
+      names.map(async (name) =>
+        this.requireStorage().createModel({
+          id: uuid() as ModelId,
+          providerId,
+          name,
+          enabled: true,
+          supportsTools: (await factory.supportsTools?.(newProvider, name)) ?? true,
+        }),
       ),
     );
 
@@ -155,7 +161,7 @@ export class ModelsManagerService {
 
   async createLanguageModel(
     modelId: ModelId,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }> {
+  ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }> {
     const model = required(await this.requireStorage().getModel(modelId));
     const provider = required(await this.requireStorage().getProvider(model.providerId));
     const factory = required(this.factories.find(([type]) => provider.type === type)?.[1]);
@@ -173,6 +179,7 @@ export class ModelsManagerService {
           id,
           providerId,
           name,
+          supportsTools: (await factory.supportsTools?.(provider, name)) ?? true,
           ...data,
         });
       },

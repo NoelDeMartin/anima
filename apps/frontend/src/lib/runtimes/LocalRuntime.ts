@@ -125,17 +125,13 @@ export default class LocalRuntime implements Runtime {
           throw new Error('No selected model');
         }
 
-        const {
-          languageModel: model,
-          supportsTools,
-          providerOptions,
-        } = await ModelsManager.createLanguageModel(AI.selectedModel.id);
+        const { languageModel: model, providerOptions } = await ModelsManager.createLanguageModel(AI.selectedModel.id);
 
         return {
           model,
           providerOptions,
-          activeTools: supportsTools ? objectKeys(tools) : [],
-          system: systemPrompt(Solid.requireUser()),
+          activeTools: AI.selectedModel.supportsTools ? objectKeys(tools) : [],
+          system: systemPrompt({ user: Solid.requireUser(), supportsTools: AI.selectedModel.supportsTools }),
         };
       },
     });

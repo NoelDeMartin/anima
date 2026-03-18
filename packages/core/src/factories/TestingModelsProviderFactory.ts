@@ -9,6 +9,10 @@ export default class TestingModelsProviderFactory implements ModelsProviderFacto
     this.installedModels.add('qwen3:1.7b');
   }
 
+  async supportsTools(): Promise<boolean> {
+    return false;
+  }
+
   async getPreinstalledModels(): Promise<string[]> {
     return Array.from(this.installedModels);
   }
@@ -43,12 +47,8 @@ export default class TestingModelsProviderFactory implements ModelsProviderFacto
     // Nothing to do here.
   }
 
-  async createLanguageModel(
-    _: AIProvider,
-    name: string,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean }> {
+  async createLanguageModel(_: AIProvider, name: string): Promise<{ languageModel: LanguageModel }> {
     return {
-      supportsTools: false,
       languageModel: new MockLanguageModelV3({
         async doStream({ prompt }) {
           const message = String((prompt as any)[prompt.length - 1]?.content[0]?.text);

@@ -22,7 +22,7 @@ export default class OtherModelsProviderFactory implements ModelsProviderFactory
     throw new Error('Unsupported provider');
   }
 
-  async createLanguageModel(): Promise<{ languageModel: LanguageModel; supportsTools: boolean }> {
+  async createLanguageModel(): Promise<{ languageModel: LanguageModel }> {
     throw new Error('Unsupported provider');
   }
 }

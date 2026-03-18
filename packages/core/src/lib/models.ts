@@ -18,13 +18,14 @@ export interface ModelsProviderFactory {
   requiresAPIKey?(): Promise<boolean>;
   requiresUrl?(): Promise<boolean>;
   getDefaultConfig?(): Promise<{ url?: string; apiKey?: string }>;
+  supportsTools?(provider: AIProvider, model: string): Promise<boolean>;
   getAvailableModels?(): Promise<string[]>;
   getInstallingModels(provider: AIProvider): Promise<InstallingModel[]>;
   getPreinstalledModels?(provider: AIProvider): Promise<string[]>;
   createLanguageModel(
     provider: AIProvider,
     name: string,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
+  ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }>;
   installModel(
     provider: AIProvider,
     id: ModelId,

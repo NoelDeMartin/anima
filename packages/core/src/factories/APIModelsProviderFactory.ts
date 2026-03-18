@@ -43,5 +43,5 @@ export default abstract class APIModelsProviderFactory implements ModelsProvider
   abstract createLanguageModel(
     provider: AIProvider,
     name: string,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean; providerOptions?: ProviderOptions }>;
+  ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }>;
 }

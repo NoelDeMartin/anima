@@ -72,6 +72,15 @@
           input-class="resize-none w-full h-(--textarea-height)"
         />
         <div class="absolute bottom-2.5 right-2 flex gap-2 items-center">
+          <Button
+            v-if="$ai.selectedModel && !$ai.selectedModel.supportsTools"
+            variant="ghost"
+            :title="$t('chat.toolsNotSupported')"
+            @click="$ui.alert($t('chat.toolsNotSupported'), $t('chat.toolsNotSupportedMessage'))"
+          >
+            <i-heroicons-exclamation-triangle class="size-4" />
+            <span class="sr-only">{{ $t('chat.toolsNotSupported') }}</span>
+          </Button>
           <Select
             :label="$t('chat.model')"
             class="w-full [&>button]:mt-0"

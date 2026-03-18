@@ -40,6 +40,14 @@ export default defineServiceState({
     providers: ({ providersList }) => objectFromEntries(providersList.map((provider) => [provider.id, provider])),
     providerFactories: ({ providerFactoriesList }) =>
       objectFromEntries(providerFactoriesList.map((factory) => [factory.type, factory])),
-    selectedModel: ({ models, selectedModelKey }) => (selectedModelKey && models[selectedModelKey]) ?? null,
+    selectedModel: ({ models, selectedModelKey }) => {
+      const model = selectedModelKey && models[selectedModelKey];
+
+      if (!model || model.status === 'installing') {
+        return null;
+      }
+
+      return model;
+    },
   },
 });

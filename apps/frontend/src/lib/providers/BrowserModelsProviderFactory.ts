@@ -9,6 +9,10 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
   private installMonitor: CreateMonitor | null = null;
   private installListener: ((event: ProgressEvent) => void) | null = null;
 
+  async supportsTools(): Promise<boolean> {
+    return false;
+  }
+
   async getAvailability(): Promise<'available' | 'unavailable' | 'unsupported'> {
     return Browser.getPromptAPIAvailability();
   }
@@ -89,15 +93,11 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
 
   async createLanguageModel(): Promise<{
     languageModel: LanguageModel;
-    supportsTools: boolean;
     providerOptions?: ProviderOptions;
   }> {
     const { browserAI } = await import('@browser-ai/core');
 
-    return {
-      supportsTools: false,
-      languageModel: browserAI(),
-    };
+    return { languageModel: browserAI() };
   }
 
   private async watchInstallProgress(onInstalled?: () => Promise<void>): Promise<void> {

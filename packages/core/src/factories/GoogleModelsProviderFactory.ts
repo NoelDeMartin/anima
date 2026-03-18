@@ -21,14 +21,10 @@ export default class GoogleModelsProviderFactory extends APIModelsProviderFactor
     ];
   }
 
-  async createLanguageModel(
-    provider: AIProvider,
-    name: string,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean }> {
+  async createLanguageModel(provider: AIProvider, name: string): Promise<{ languageModel: LanguageModel }> {
     const { createGoogleGenerativeAI } = await import('@ai-sdk/google');
 
     return {
-      supportsTools: true,
       languageModel: createGoogleGenerativeAI({ apiKey: required(provider.apiKey) })(name),
     };
   }

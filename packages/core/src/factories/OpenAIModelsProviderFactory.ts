@@ -31,14 +31,10 @@ export default class OpenAIModelsProviderFactory extends APIModelsProviderFactor
     ];
   }
 
-  async createLanguageModel(
-    provider: AIProvider,
-    name: string,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean }> {
+  async createLanguageModel(provider: AIProvider, name: string): Promise<{ languageModel: LanguageModel }> {
     const { createOpenAI } = await import('@ai-sdk/openai');
 
     return {
-      supportsTools: true,
       languageModel: createOpenAI({ apiKey: required(provider.apiKey) })(name),
     };
   }

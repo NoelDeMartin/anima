@@ -101,7 +101,7 @@ export default new Elysia().group('chats', (app) =>
             throw status(404, 'Chat not found');
           }
 
-          if (!model) {
+          if (!model || model.status === 'installing') {
             throw status(404, 'Model not found');
           }
 
@@ -109,7 +109,7 @@ export default new Elysia().group('chats', (app) =>
             message.metadata.createdAt = new Date(message.metadata.createdAt);
           }
 
-          const { languageModel, supportsTools, providerOptions } = await ModelsManager.createLanguageModel(modelId);
+          const { languageModel, providerOptions } = await ModelsManager.createLanguageModel(modelId);
 
           const session = Auth.requireContextSession();
           const messages = await ChatsManager.getChatMessages(chat);
@@ -122,9 +122,9 @@ export default new Elysia().group('chats', (app) =>
             tools,
             providerOptions,
             model: languageModel,
-            activeTools: supportsTools ? objectKeys(tools) : [],
+            activeTools: model.supportsTools ? objectKeys(tools) : [],
             messages: await convertToModelMessages(originalMessages),
-            system: systemPrompt(session.user),
+            system: systemPrompt({ user: session.user, supportsTools: model.supportsTools }),
             stopWhen: stepCountIs(10),
           });
 

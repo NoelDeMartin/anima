@@ -71,12 +71,11 @@ export default class OllamaModelsProviderFactory implements ModelsProviderFactor
   public async createLanguageModel(
     provider: AIProvider,
     name: string,
-  ): Promise<{ languageModel: LanguageModel; supportsTools: boolean; providerOptions: ProviderOptions }> {
+  ): Promise<{ languageModel: LanguageModel; providerOptions: ProviderOptions }> {
     const { createOllama } = await import('ollama-ai-provider-v2');
     const ollama = createOllama({ baseURL: `${provider.url}/api` });
 
     return {
-      supportsTools: true,
       languageModel: ollama(name),
       providerOptions: { ollama: { think: false } },
     };
