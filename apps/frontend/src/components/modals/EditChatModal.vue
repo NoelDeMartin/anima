@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { Form, useModal, stringInput, useForm } from '@aerogel/core';
 import type { AnimaChat } from '@anima/core';
+
 import AI from '@/services/AI';
 
 const { chat } = defineProps<{ chat: AnimaChat }>();
@@ -22,10 +23,12 @@ const form = useForm({
   title: stringInput(chat.title),
 });
 
+
 async function submit() {
   await AI.updateChat(chat.url, {
     title: form.title?.trim() || chat.title,
   });
+
 
   close();
 }

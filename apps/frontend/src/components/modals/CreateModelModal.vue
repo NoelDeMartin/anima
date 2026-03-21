@@ -27,12 +27,13 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
 import { requiredEnumInput, requiredStringInput, useModal } from '@aerogel/core';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import type { ProviderId } from '@anima/core';
 import { computed } from 'vue';
+
+import AI from '@/services/AI';
 
 const { close } = useModal();
 const providerIds = AI.providersList.map((provider) => provider.id);
@@ -46,11 +47,13 @@ const selectedProviderFactory = computed(
   () => selectedProvider.value?.type && AI.providerFactories[selectedProvider.value.type],
 );
 
+
 async function submit() {
   await AI.installModel(form.provider as ProviderId, form.name, {
     enabled: true,
     alias: form.alias?.trim() || null,
   });
+
 
   close();
 }

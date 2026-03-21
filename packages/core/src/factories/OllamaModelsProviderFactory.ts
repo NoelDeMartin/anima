@@ -49,7 +49,7 @@ export default class OllamaModelsProviderFactory implements ModelsProviderFactor
 
     const model: InstallingModel = { id, providerId: provider.id, name, progress: 0 };
 
-    this.backgroundInstall(provider, id, model, options.onInstalled);
+    void this.backgroundInstall(provider, id, model, options.onInstalled);
 
     return model;
   }

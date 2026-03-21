@@ -5,9 +5,16 @@ import I18n from '@intlify/unplugin-vue-i18n/vite';
 import IconsResolver from 'unplugin-icons/resolver';
 import Icons from 'unplugin-icons/vite';
 import Components from 'unplugin-vue-components/vite';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
+  lint: {
+    extends: ['../../packages/config/oxlint/vue.json'],
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+  },
   plugins: [
     Aerogel({ name: 'Ànima', soukaiBis: true, baseUrl: 'https://anima.noeldemartin.com' }),
     Components({

@@ -29,7 +29,12 @@ export const Api = new Elysia({ serve: { idleTimeout: 255 } })
       const method = request.method;
       const path = new URL(request.url).pathname;
       const status = 'status' in error && typeof error.status === 'number' ? error.status : 500;
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null
+            ? JSON.stringify(error)
+            : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
       const errorCause =
         error instanceof Error && 'cause' in error ? (error as Error & { cause?: unknown }).cause : undefined;

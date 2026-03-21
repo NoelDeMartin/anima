@@ -1,7 +1,6 @@
 {
   "extends": "@anima/config/typescript/base.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

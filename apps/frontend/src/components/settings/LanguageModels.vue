@@ -35,11 +35,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onUnmounted, watchEffect } from 'vue';
+
 import CreateModelModal from '@/components/modals/CreateModelModal.vue';
 import CreateProviderModal from '@/components/modals/CreateProviderModal.vue';
 import AI from '@/services/AI';
 import Browser from '@/services/Browser';
-import { computed, onUnmounted, watchEffect } from 'vue';
 
 let pollingIntervalId: NodeJS.Timeout | null = null;
 const browserProviderId = computed(() => AI.providersList.find((p) => p.type === 'browser')?.id);
@@ -49,6 +50,7 @@ const showBrowserInstall = computed(
     Browser.promptAPIAvailability === 'available' &&
     !AI.modelsList.some((model) => model.providerId === browserProviderId.value),
 );
+
 
 watchEffect(() => {
   const hasModelsInstalling = !!AI.modelsList.some((model) => model.status === 'installing');
@@ -69,6 +71,7 @@ watchEffect(() => {
     pollingIntervalId = setInterval(() => AI.refreshModels(), 1000);
   }
 });
+
 
 onUnmounted(() => pollingIntervalId && clearInterval(pollingIntervalId));
 </script>
