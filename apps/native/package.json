@@ -5,7 +5,7 @@
   "scripts": {
     "build": "electrobun build --env=canary",
     "dev": "electrobun dev --watch",
-    "type-check": "tsc --project tsconfig.app.json --noEmit"
+    "type-check": "vp check"
   },
   "dependencies": {
     "@noeldemartin/utils": "catalog:",

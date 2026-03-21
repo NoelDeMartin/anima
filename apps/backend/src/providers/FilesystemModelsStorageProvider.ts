@@ -130,7 +130,7 @@ export default class FilesystemModelsStorageProvider implements ModelsStoragePro
       return null;
     }
 
-    return await schema.parse(JSON.parse(contents));
+    return schema.parse(JSON.parse(contents));
   }
 
   private async writeJson(path: string, value: any): Promise<void> {

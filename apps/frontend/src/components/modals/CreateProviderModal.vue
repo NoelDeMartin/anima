@@ -44,8 +44,6 @@
 </template>
 
 <script setup lang="ts">
-import { env } from '@/lib/env';
-import AI from '@/services/AI';
 import {
   stringInput,
   useForm,
@@ -57,6 +55,9 @@ import {
 import { stringToStudlyCase } from '@noeldemartin/utils';
 import { computed, watch } from 'vue';
 
+import { env } from '@/lib/env';
+import AI from '@/services/AI';
+
 const { close } = useModal();
 const providerTypes = AI.providerFactoriesList.map((factory) => factory.type);
 const form = useForm({
@@ -67,6 +68,7 @@ const form = useForm({
 });
 const selectedFactory = computed(() => AI.providerFactories[form.type]);
 
+
 async function submit() {
   await AI.createProvider({
     type: form.type,
@@ -75,8 +77,10 @@ async function submit() {
     url: form.url?.trim() || null,
   });
 
+
   close();
 }
+
 
 watch(
   () => form.type,

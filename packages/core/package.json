@@ -8,7 +8,7 @@
     }
   },
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "type-check": "vp check"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.58",

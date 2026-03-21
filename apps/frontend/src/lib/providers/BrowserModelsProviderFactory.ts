@@ -124,7 +124,7 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
       this.installMonitor = null;
       this.installListener = null;
 
-      onInstalled?.();
+      void onInstalled?.();
 
       return;
     }

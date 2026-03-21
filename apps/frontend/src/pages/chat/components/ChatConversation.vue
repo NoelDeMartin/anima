@@ -104,8 +104,6 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
-import { chatRoute } from '@/utils/chats';
 import { stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
@@ -113,6 +111,9 @@ import { type AnimaTools, type ModelId, type AnimaChat } from '@anima/core';
 import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
+
+import AI from '@/services/AI';
+import { chatRoute } from '@/utils/chats';
 
 const { chat } = defineProps<{ chat?: AnimaChat }>();
 const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);
@@ -123,45 +124,58 @@ const models = computed(() =>
 );
 const messages = computed(() => arraySorted(aiChat.value?.messages ?? [], 'metadata.createdAt'));
 
+
 function renderModel(modelId: ModelId | null) {
   const model = modelId && AI.models[modelId];
   const provider = model && AI.providers[model.providerId];
+
 
   if (!model || !provider || model.status !== 'installed') {
     return translate('chat.unknownModel');
   }
 
+
   return model.alias || `${provider.type}/${model.name}`;
 }
+
 
 async function submit() {
   if (!AI.selectedModelKey) {
     return;
   }
 
+
   const message = form.message;
 
+
   form.reset();
+
 
   if (!message || message.trim().length === 0) {
     return;
   }
 
+
   if (!chat?.url || !aiChat.value) {
     const newChat = await AI.createChat({ title: new Date().toLocaleString() });
+
 
     await Router.push(chatRoute(newChat.url));
     await AI.sendMessage(newChat.url, message);
 
+
     return;
   }
+
 
   await AI.sendMessage(chat.url, message);
 }
 
+
 function deepRead(value: unknown): void {
   JSON.stringify(value);
 }
+
 
 watchEffect(async () => {
   deepRead(aiChat.value?.lastMessage);

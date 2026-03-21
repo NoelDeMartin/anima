@@ -12,10 +12,11 @@ catalog:
   soukai-bis: next
   tailwindcss: ^4.1.18
   typescript: ~5.9.3
-  vite: beta
+  vite: npm:@voidzero-dev/vite-plus-core@latest
   vue: ^3.5.28
-  vue-tsc: ^3.2.4
   zod: ^4.3.6
+  vitest: npm:@voidzero-dev/vite-plus-test@latest
+  vite-plus: latest
 
 overrides:
   '@vue/compat': beta
@@ -31,6 +32,8 @@ overrides:
   '@vue/server-renderer': beta
   '@vue/shared': beta
   vue: beta
+  vite: 'catalog:'
+  vitest: 'catalog:'
 
 patchedDependencies:
   '@inrupt/solid-client-authn-core': patches/@inrupt__solid-client-authn-core.patch
@@ -39,3 +42,8 @@ patchedDependencies:
 peerDependencyRules:
   allowAny:
     - vue
+    - vite
+    - vitest
+  allowedVersions:
+    vite: '*'
+    vitest: '*'

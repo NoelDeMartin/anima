@@ -22,12 +22,13 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
 import { Form, translate, UI, useModal } from '@aerogel/core';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import type { AIModel } from '@anima/core';
 import { computed } from 'vue';
+
+import AI from '@/services/AI';
 
 const { model } = defineProps<{ model: AIModel }>();
 const { close } = useModal();
@@ -45,6 +46,7 @@ const installingModel = computed(() => {
   return updatedModel;
 });
 
+
 async function deleteModel() {
   if (
     !(await UI.confirm(
@@ -59,15 +61,19 @@ async function deleteModel() {
     return;
   }
 
+
   await AI.deleteModel(model.id);
+
 
   close();
 }
+
 
 async function submit() {
   await AI.updateModel(model.id, {
     alias: form.alias?.trim() || null,
   });
+
 
   close();
 }

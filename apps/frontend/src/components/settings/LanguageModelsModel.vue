@@ -36,11 +36,12 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
 import type { AIModel } from '@anima/core';
-import { useLoading } from '@/utils/loading';
-import EditModelModal from '@/components/modals/EditModelModal.vue';
 import { computed } from 'vue';
+
+import EditModelModal from '@/components/modals/EditModelModal.vue';
+import AI from '@/services/AI';
+import { useLoading } from '@/utils/loading';
 
 const { model } = defineProps<{ model: AIModel }>();
 const { loading, run } = useLoading();

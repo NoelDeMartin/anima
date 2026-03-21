@@ -29,9 +29,10 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
 import { stringInput, useForm, requiredStringInput, translate, UI, useModal } from '@aerogel/core';
 import type { AIProvider } from '@anima/core';
+
+import AI from '@/services/AI';
 
 const { provider } = defineProps<{ provider: AIProvider }>();
 const { close } = useModal();
@@ -40,6 +41,7 @@ const form = useForm({
   apiKey: stringInput(provider.apiKey ?? ''),
   url: stringInput(provider.url ?? ''),
 });
+
 
 async function deleteProvider() {
   if (
@@ -52,10 +54,13 @@ async function deleteProvider() {
     return;
   }
 
+
   await AI.deleteProvider(provider.id);
+
 
   close();
 }
+
 
 async function submit() {
   await AI.updateProvider(provider.id, {
@@ -63,6 +68,7 @@ async function submit() {
     apiKey: form.apiKey?.trim() || null,
     url: form.url?.trim() || null,
   });
+
 
   close();
 }

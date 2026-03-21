@@ -5,7 +5,7 @@
   "scripts": {
     "build": "bun build ./src/index.ts --compile --outfile ../native/bin/backend",
     "dev": "bun --watch src/index.ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "vp check"
   },
   "dependencies": {
     "@anima/core": "workspace:*",

@@ -9,9 +9,10 @@
 </template>
 
 <script setup lang="ts">
-import EditProviderModal from '@/components/modals/EditProviderModal.vue';
 import type { AIProvider } from '@anima/core';
 import { stringToStudlyCase } from '@noeldemartin/utils';
+
+import EditProviderModal from '@/components/modals/EditProviderModal.vue';
 
 defineProps<{ provider: AIProvider }>();
 </script>

@@ -29,6 +29,7 @@ import { computed, type VNode } from 'vue';
 
 defineProps<{ type: 'warning' | 'info' | 'error' }>();
 
+
 const slots = defineSlots<{ default?(): VNode[] }>();
 const text = computed(() => slots.default?.().map(renderVNode).join('') ?? '');
 </script>
