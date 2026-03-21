@@ -1,14 +1,16 @@
 import { expect, test } from '@playwright/test';
+import { solidLogin, solidReset } from 'playwright-solid';
 
-import { logIn } from '@/solid';
+import { animaReset } from '@/helpers';
 
 test.beforeEach(async ({ page }) => {
-  await fetch('http://localhost:1191/__e2e__/reset', { method: 'POST' });
+  await solidReset();
+  await animaReset();
   await page.goto('/');
 
   await page.getByRole('button', { name: 'Log in with Solid' }).click();
   await page.getByRole('button', { name: 'Log in to dev server' }).click();
-  await logIn(page);
+  await solidLogin(page);
 });
 
 test('login', async ({ page }) => {
