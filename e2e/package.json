@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "playwright test --ui",
+    "install-deps": "playwright install --with-deps",
     "test": "playwright test --workers 1"
   },
   "devDependencies": {

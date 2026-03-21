@@ -22,12 +22,13 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
 import { Form, translate, UI, useModal } from '@aerogel/core';
 import { stringInput } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import type { AIModel } from '@anima/core';
 import { computed } from 'vue';
+
+import AI from '@/services/AI';
 
 const { model } = defineProps<{ model: AIModel }>();
 const { close } = useModal();

@@ -11,7 +11,7 @@ import { settings } from './components';
 import { bindings, routes } from './pages';
 import { services } from './services';
 
-bootstrap(App, {
+await bootstrap(App, {
   services,
   settings,
   plugins: [

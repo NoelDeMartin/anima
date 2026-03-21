@@ -35,11 +35,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed, onUnmounted, watchEffect } from 'vue';
+
 import CreateModelModal from '@/components/modals/CreateModelModal.vue';
 import CreateProviderModal from '@/components/modals/CreateProviderModal.vue';
 import AI from '@/services/AI';
 import Browser from '@/services/Browser';
-import { computed, onUnmounted, watchEffect } from 'vue';
 
 let pollingIntervalId: NodeJS.Timeout | null = null;
 const browserProviderId = computed(() => AI.providersList.find((p) => p.type === 'browser')?.id);

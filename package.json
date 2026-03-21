@@ -1,26 +1,19 @@
 {
   "scripts": {
-    "build": "pnpm -r build",
     "dev": "concurrently \"pnpm dev:serve-pod\" \"pnpm --filter @anima/backend dev\" \"pnpm --filter @anima/frontend dev\"",
     "dev:e2e": "pnpm --filter @anima/e2e dev",
     "dev:serve-pod": "community-solid-server -c @css:config/file.json -f ./solid",
     "dev:spa": "concurrently \"pnpm dev:serve-pod\" \"pnpm --filter @anima/frontend dev:spa\"",
     "e2e": "pnpm --filter @anima/e2e test",
     "e2e:serve": "concurrently \"pnpm e2e:serve-pod\" \"E2E=true pnpm --filter @anima/backend dev\" \"pnpm --filter @anima/frontend dev\"",
-    "e2e:serve-pod": "community-solid-server -l warn",
-    "format": "oxfmt --check",
-    "format:fix": "oxfmt",
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
-    "type-check": "pnpm -r type-check"
+    "e2e:serve-pod": "community-solid-server -l warn"
   },
   "devDependencies": {
     "@solid/community-server": "^7.1.8",
     "@types/bun": "latest",
     "@types/node": "^24.10.13",
     "concurrently": "^9.2.1",
-    "oxfmt": "^0.33.0",
-    "oxlint": "^1.48.0"
+    "vite-plus": "catalog:"
   },
   "packageManager": "pnpm@10.32.1"
 }

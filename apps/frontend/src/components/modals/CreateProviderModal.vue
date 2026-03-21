@@ -44,8 +44,6 @@
 </template>
 
 <script setup lang="ts">
-import { env } from '@/lib/env';
-import AI from '@/services/AI';
 import {
   stringInput,
   useForm,
@@ -56,6 +54,9 @@ import {
 } from '@aerogel/core';
 import { stringToStudlyCase } from '@noeldemartin/utils';
 import { computed, watch } from 'vue';
+
+import { env } from '@/lib/env';
+import AI from '@/services/AI';
 
 const { close } = useModal();
 const providerTypes = AI.providerFactoriesList.map((factory) => factory.type);

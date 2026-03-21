@@ -104,8 +104,6 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
-import { chatRoute } from '@/utils/chats';
 import { stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
@@ -113,6 +111,9 @@ import { type AnimaTools, type ModelId, type AnimaChat } from '@anima/core';
 import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
+
+import AI from '@/services/AI';
+import { chatRoute } from '@/utils/chats';
 
 const { chat } = defineProps<{ chat?: AnimaChat }>();
 const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);

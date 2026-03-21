@@ -29,9 +29,10 @@
 </template>
 
 <script setup lang="ts">
-import AI from '@/services/AI';
 import { stringInput, useForm, requiredStringInput, translate, UI, useModal } from '@aerogel/core';
 import type { AIProvider } from '@anima/core';
+
+import AI from '@/services/AI';
 
 const { provider } = defineProps<{ provider: AIProvider }>();
 const { close } = useModal();

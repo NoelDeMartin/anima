@@ -15,31 +15,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version-file: '.nvmrc'
-          cache: pnpm
+          node-version-file: '.node-version'
+          cache: true
       - uses: oven-sh/setup-bun@v2
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm format
-      - run: pnpm lint
-      - run: pnpm build
-      - run: pnpm type-check
+      - run: vp check
+      - run: vp run build -r
 
   e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version-file: '.nvmrc'
-          cache: pnpm
+          node-version-file: '.node-version'
+          cache: true
       - uses: oven-sh/setup-bun@v2
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @anima/e2e exec playwright install --with-deps
-      - run: pnpm e2e
+      - run: vp run e2e#install-deps
+      - run: vp run e2e
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() && failure() }}
         with:
@@ -59,11 +53,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version-file: '.nvmrc'
-          cache: pnpm
+          node-version-file: '.node-version'
+          cache: true
       - uses: oven-sh/setup-bun@v2
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run --filter @anima/frontend deploy
+      - run: vp run frontend#deploy

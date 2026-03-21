@@ -3,11 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "vp build",
     "deploy": "noeldemartin-deploy-app anima.noeldemartin.com",
-    "dev": "vite",
-    "dev:spa": "VITE_SPA_MODE=true vite",
-    "type-check": "vue-tsc --build --noEmit"
+    "dev": "vp dev",
+    "dev:spa": "VITE_SPA_MODE=true vp dev"
   },
   "dependencies": {
     "@aerogel/core": "next",
@@ -41,7 +40,6 @@
     "typescript": "catalog:",
     "unplugin-icons": "^23.0.1",
     "unplugin-vue-components": "^31.0.0",
-    "vite": "catalog:",
-    "vue-tsc": "catalog:"
+    "vite-plus": "catalog:"
   }
 }

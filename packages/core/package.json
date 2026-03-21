@@ -7,9 +7,6 @@
       "default": "./src/index.ts"
     }
   },
-  "scripts": {
-    "type-check": "tsc --noEmit"
-  },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.58",
     "@ai-sdk/google": "^3.0.30",

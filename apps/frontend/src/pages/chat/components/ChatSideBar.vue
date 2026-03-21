@@ -58,10 +58,11 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue';
+
 import EditChatModal from '@/components/modals/EditChatModal.vue';
 import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
-import { onMounted, onUnmounted } from 'vue';
 
 function onKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape' || !AI.sidebar) {
