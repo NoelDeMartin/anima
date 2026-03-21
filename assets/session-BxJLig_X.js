@@ -1,0 +1,1 @@
+import{et as e}from"./env-D-AxkUpy.js";var t=null,n=`anima:sessionId`;function r(){return t??={id:e.get(n)},t.id}function i(r){t={id:r},e.set(n,r)}function a(){t={id:null},e.remove(n)}export{a as n,i as r,r as t};
