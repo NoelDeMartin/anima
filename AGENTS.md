@@ -12,17 +12,17 @@ This repository contains the monorepo for Ànima, a personal AI assistant built 
 
 ## Tooling
 
-Dependencies are managed using `pnpm`, with the following scripts can be used to apply checks in the entire monorepo:
+This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`.
 
-- `pnpm lint and pnpm lint:fix`: Checks and fixes linting issues with Oxlint.
-- `pnpm format` and `pnpm format:fix`: Checks and fixes formatting with Oxfmt.
-- `pnpm type-check`: Runs type checks.
-- `pnpm dev`: Launches the backend, frontend, and a local Solid POD server for development. The application can be used in `http://localhost:5173`.
-- `pnpm e2e:serve`: Launches the services to be used in the E2E environment (mocks some dependencies like AI models).
-- `pnpm e2e`: Runs Playwright tests, launching `e2e:serve` if necessary, but reusing the process if it's running (prepend `HEADLESS=true` to the command to use a headless browser outside of CI).
+These are the following commands to work with the monorepo:
+
+- `vp check`: Runs linting, formatting, and type checks.
+- `vp run dev`: Launches the backend, frontend, and a local Solid POD server for development. The application can be used in `http://localhost:5173`.
+- `vp run e2e:serve`: Launches the services to be used in the E2E environment (mocks some dependencies like AI models).
+- `vp run e2e`: Runs Playwright tests (install dependencies first with `vp run e2e#install-deps`).
 
 ## Instructions
 
-- Always run `pnpm lint`, `pnpm format` and `pnpm type-check` after completing any task.
+- Always run `vp check` after completing any task.
 - Only run E2E tests when modifying critical flows, don't run them for small tweaks.
 - Be extremely concise in your replies. Sacrifice grammar for the sake of concision.
