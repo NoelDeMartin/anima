@@ -28,4 +28,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  optimizeDeps: {
+    exclude: ['@mediapipe/tasks-text'], // TODO: bump @browser-ai/core / remove when mediapipe fixes exports
+  },
 });

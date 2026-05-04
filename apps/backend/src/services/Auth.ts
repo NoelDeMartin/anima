@@ -7,7 +7,7 @@ import { facade, isDevelopment, PromisedValue } from '@noeldemartin/utils';
 import { status } from 'elysia';
 import { runWithEngine, SolidEngine } from 'soukai-bis';
 
-import { PORT } from '../lib/constants';
+import { BACKEND_URL, CLIENT_ID } from '../lib/constants';
 
 const SESSION_HEADER = 'X-Anima-Session-Id';
 
@@ -114,8 +114,8 @@ export class AuthService {
     await session
       .login({
         oidcIssuer,
-        clientId: `http://localhost:${PORT}/clientid.jsonld`,
-        redirectUrl: `http://localhost:${PORT}/oidc/redirect`,
+        clientId: CLIENT_ID,
+        redirectUrl: `${BACKEND_URL}/oidc/redirect`,
         handleRedirect: (redirectUrl) => promisedResult.resolve({ redirectUrl }),
       })
       .then(() => {

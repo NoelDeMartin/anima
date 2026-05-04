@@ -2,7 +2,7 @@ import type { SolidUserProfile } from '@noeldemartin/solid-utils';
 import { Elysia, redirect } from 'elysia';
 import z from 'zod';
 
-import { CLIENT_ID, FRONTEND_URL, PORT } from '../lib/constants';
+import { BACKEND_URL, CLIENT_ID, FRONTEND_URL } from '../lib/constants';
 import Auth from '../services/Auth';
 
 export default new Elysia()
@@ -10,8 +10,8 @@ export default new Elysia()
     '@context': ['https://www.w3.org/ns/solid/oidc-context.jsonld'],
     client_id: CLIENT_ID,
     client_name: 'Ànima',
-    redirect_uris: [`http://localhost:${PORT}/oidc/redirect`],
-    post_logout_redirect_uris: [`http://localhost:${PORT}/oidc/logout`],
+    redirect_uris: [`${BACKEND_URL}/oidc/redirect`],
+    post_logout_redirect_uris: [`${BACKEND_URL}/oidc/logout`],
     grant_types: ['authorization_code', 'refresh_token'],
     scope: 'openid webid offline_access',
     response_types: ['code'],

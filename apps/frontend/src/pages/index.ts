@@ -7,6 +7,7 @@ import { chatRoute } from '@/utils/chats';
 
 import Chat from './chat/Chat.vue';
 import Home from './home/Home.vue';
+import Register from './register/Register.vue';
 
 export const bindings = defineRouteBindings({
   chat(slug) {
@@ -26,6 +27,11 @@ export const routes = defineRoutes([
       void (
         Solid.isLoggedIn() && Router.push(AI.chatsList[0] ? chatRoute(AI.chatsList[0].url) : { name: 'chats.index' })
       ),
+  },
+  {
+    name: 'register',
+    path: '/register',
+    component: Register,
   },
   {
     name: 'chats.index',

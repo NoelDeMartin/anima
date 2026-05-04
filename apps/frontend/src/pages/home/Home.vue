@@ -20,6 +20,9 @@
           <Button @click="loggingIn = true" class="w-full">
             {{ $t('home.logInWithSolid') }}
           </Button>
+          <Button variant="secondary" route="register" class="w-full">
+            {{ $t('home.register') }}
+          </Button>
           <Button variant="secondary" href="https://noeldemartin.com/tasks/raising-an-agent" class="w-full">
             <i-heroicons-information-circle class="size-5 mr-1" />
             <span>{{ $t('home.learnMore') }}</span>

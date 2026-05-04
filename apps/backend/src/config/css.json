@@ -1,0 +1,4 @@
+{
+  "@context": "https://linkedsoftwaredependencies.org/bundles/npm/@solid/community-server/^7.0.0/components/context.jsonld",
+  "import": ["css:config/file.json"]
+}

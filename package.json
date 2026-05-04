@@ -1,15 +1,15 @@
 {
   "scripts": {
-    "dev": "concurrently \"pnpm dev:serve-pod\" \"pnpm --filter @anima/backend dev\" \"pnpm --filter @anima/frontend dev\"",
-    "dev:e2e": "pnpm --filter @anima/e2e dev",
+    "dev": "concurrently \"vp run dev:serve-pod\" \"vp run --filter @anima/backend dev\" \"vp run --filter @anima/frontend dev\"",
+    "dev:e2e": "vp run --filter @anima/e2e dev",
     "dev:serve-pod": "community-solid-server -c @css:config/file.json -f ./solid",
-    "dev:spa": "concurrently \"pnpm dev:serve-pod\" \"pnpm --filter @anima/frontend dev:spa\"",
-    "e2e": "pnpm --filter @anima/e2e test",
-    "e2e:serve": "concurrently \"pnpm e2e:serve-pod\" \"E2E=true pnpm --filter @anima/backend dev\" \"pnpm --filter @anima/frontend dev\"",
+    "dev:spa": "concurrently \"vp run dev:serve-pod\" \"vp run --filter @anima/frontend dev:spa\"",
+    "e2e": "vp run --filter @anima/e2e test",
+    "e2e:serve": "concurrently \"vp run e2e:serve-pod\" \"E2E=true vp run --filter @anima/backend dev\" \"vp run --filter @anima/frontend dev\"",
     "e2e:serve-pod": "community-solid-server -l warn"
   },
   "devDependencies": {
-    "@solid/community-server": "^7.1.8",
+    "@solid/community-server": "catalog:",
     "@types/bun": "latest",
     "@types/node": "^24.10.13",
     "concurrently": "^9.2.1",

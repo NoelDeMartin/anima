@@ -4,6 +4,7 @@ home:
   learnMore: Learn more
   sourceCode: Source code
   logInWithSolid: Log in with Solid
+  register: Register
   logInCancel: cancel
 
 chat:

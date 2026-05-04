@@ -13,6 +13,7 @@
     "@noeldemartin/solid-utils": "catalog:",
     "@noeldemartin/utils": "catalog:",
     "@sinclair/typebox": "^0.34.0",
+    "@solid/community-server": "catalog:",
     "ai": "catalog:",
     "elysia": "^1.4.25",
     "soukai-bis": "catalog:",

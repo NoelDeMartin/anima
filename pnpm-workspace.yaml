@@ -6,6 +6,7 @@ packages:
 catalog:
   '@noeldemartin/solid-utils': next
   '@noeldemartin/utils': next
+  '@solid/community-server': ^7.1.8
   '@tailwindcss/vite': ^4.1.18
   '@vitejs/plugin-vue': ^6.0.4
   ai: ^6.0.100
@@ -31,6 +32,7 @@ overrides:
   '@vue/runtime-vapor': beta
   '@vue/server-renderer': beta
   '@vue/shared': beta
+  componentsjs: ^6.4.0
   oxfmt: 0.40.0
   vue: beta
   vite: 'catalog:'
