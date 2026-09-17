@@ -7,7 +7,7 @@ export default defineConfig({
     experimentalSortPackageJson: {
       sortScripts: true,
     },
-    experimentalSortImports: {},
+    sortImports: {},
   },
   lint: {
     plugins: ['eslint', 'typescript', 'unicorn', 'oxc'],

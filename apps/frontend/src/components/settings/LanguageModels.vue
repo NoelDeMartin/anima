@@ -22,7 +22,7 @@
           v-if="showBrowserInstall"
           variant="secondary"
           class="w-full"
-          @click="browserProviderId && $ai.installModel(browserProviderId, $browser.getModelName())"
+          @click="browserProviderId && $ai.installModel(browserProviderId, $browserAPIs.getBuiltInModelName())"
         >
           {{ $t('settings.models.installBuiltIn') }}
         </Button>
@@ -40,14 +40,14 @@ import { computed, onUnmounted, watchEffect } from 'vue';
 import CreateModelModal from '@/components/modals/CreateModelModal.vue';
 import CreateProviderModal from '@/components/modals/CreateProviderModal.vue';
 import AI from '@/services/AI';
-import Browser from '@/services/Browser';
+import BrowserAPIs from '@/services/BrowserAPIs';
 
 let pollingIntervalId: NodeJS.Timeout | null = null;
 const browserProviderId = computed(() => AI.providersList.find((p) => p.type === 'browser')?.id);
 const showBrowserInstall = computed(
   () =>
     browserProviderId.value &&
-    Browser.promptAPIAvailability === 'available' &&
+    BrowserAPIs.promptAPIAvailability === 'available' &&
     !AI.modelsList.some((model) => model.providerId === browserProviderId.value),
 );
 

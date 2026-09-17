@@ -1,9 +1,9 @@
 import AI from './AI';
-import Browser from './Browser';
+import BrowserAPIs from './BrowserAPIs';
 
 export const services = {
   $ai: AI,
-  $browser: Browser,
+  $browserAPIs: BrowserAPIs,
 };
 
 export type AppServices = typeof services;

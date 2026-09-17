@@ -1,10 +1,13 @@
 {
   "name": "@anima/e2e",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "playwright test --ui",
+    "dev:external": "UI=true playwright test --ui",
+    "dev:managed": "UI=true MANAGED_POD=true playwright test --ui",
     "install-deps": "playwright install --with-deps",
-    "test": "playwright test --workers 1"
+    "test:external": "playwright test --workers 1",
+    "test:managed": "MANAGED_POD=true playwright test --workers 1"
   },
   "devDependencies": {
     "@anima/config": "workspace:*",

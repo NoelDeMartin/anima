@@ -1,3 +1,4 @@
+import { env } from '@aerogel/core';
 import { BindingNotFound, defineRouteBindings, defineRoutes, Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import { type AnimaChat } from '@anima/core';
@@ -7,6 +8,7 @@ import { chatRoute } from '@/utils/chats';
 
 import Chat from './chat/Chat.vue';
 import Home from './home/Home.vue';
+import Register from './register/Register.vue';
 
 export const bindings = defineRouteBindings({
   chat(slug) {
@@ -26,6 +28,12 @@ export const routes = defineRoutes([
       void (
         Solid.isLoggedIn() && Router.push(AI.chatsList[0] ? chatRoute(AI.chatsList[0].url) : { name: 'chats.index' })
       ),
+  },
+  {
+    name: 'register',
+    path: '/register',
+    component: Register,
+    beforeEnter: () => void ((!env('VITE_MANAGED_POD') || Solid.isLoggedIn()) && Router.push({ name: 'home' })),
   },
   {
     name: 'chats.index',

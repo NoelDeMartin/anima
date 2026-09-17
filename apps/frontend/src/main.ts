@@ -8,10 +8,12 @@ import soukai from '@aerogel/plugin-soukai';
 import App from './App.vue';
 import { authenticators, defaultAuthenticator } from './auth';
 import { settings } from './components';
+import env from './lib/env';
 import { bindings, routes } from './pages';
 import { services } from './services';
 
 await bootstrap(App, {
+  env,
   services,
   settings,
   plugins: [

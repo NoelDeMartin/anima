@@ -4,13 +4,13 @@ export default {
   app: {
     name: 'anima',
     identifier: 'com.noeldemartin.anima',
+    version: '0.0.0',
   },
   build: {
     copy: {
       'src/assets': 'views/assets',
       'bin/backend': 'bin/backend',
     },
-    watchIgnore: ['dist/**'],
     mac: {
       bundleCEF: false,
     },

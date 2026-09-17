@@ -1,23 +1,28 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { solidLogin, solidReset } from 'playwright-solid';
 
 import { animaReset } from '@/helpers';
+
+async function login(page: Page) {
+  await page.getByRole('button', { name: 'Log in' }).click();
+  await page.getByRole('button', { name: 'Log in to dev server' }).click();
+  await solidLogin(page);
+}
 
 test.beforeEach(async ({ page }) => {
   await solidReset();
   await animaReset();
   await page.goto('/');
-
-  await page.getByRole('button', { name: 'Log in with Solid' }).click();
-  await page.getByRole('button', { name: 'Log in to dev server' }).click();
-  await solidLogin(page);
 });
 
 test('login', async ({ page }) => {
+  await login(page);
   await expect(page.getByText('how can I help you today?')).toBeVisible();
 });
 
 test('chats', async ({ page }) => {
+  await login(page);
+
   await page.getByRole('textbox', { name: 'Message' }).fill('Hello, world!');
   await page.getByRole('button', { name: 'Send' }).click();
 
@@ -34,6 +39,8 @@ test('chats', async ({ page }) => {
 });
 
 test('install models', async ({ page }) => {
+  await login(page);
+
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Add Model' }).click();
   await page.getByRole('textbox', { name: 'Name' }).fill('qwen3:4b');

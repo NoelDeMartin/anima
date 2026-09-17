@@ -1,6 +1,5 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, readdir, writeFile, rm } from 'node:fs/promises';
-import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 
 import {
@@ -17,17 +16,12 @@ import {
 import { isTruthy } from '@noeldemartin/utils';
 import type z from 'zod';
 
+import { ROOT_STORAGE } from '../lib/constants';
 import Auth from '../services/Auth';
 
 const CHUNK_SIZE = 10;
 
 export default class FilesystemModelsStorageProvider implements ModelsStorageProvider {
-  private rootStorage: string;
-
-  constructor(root?: string) {
-    this.rootStorage = root ?? join(homedir(), '.anima');
-  }
-
   async getModel(id: ModelId): Promise<InstalledModel | null> {
     return this.readJson(InstalledModelSchema, `/models/${id}.json`);
   }
@@ -92,7 +86,7 @@ export default class FilesystemModelsStorageProvider implements ModelsStoragePro
 
   private getStoragePath(path: string): string {
     const { user } = Auth.requireContextSession();
-    const userRoot = join(this.rootStorage, encodeURIComponent(user.webId));
+    const userRoot = join(ROOT_STORAGE, encodeURIComponent(user.webId));
     const resolved = join(userRoot, path);
 
     if (!resolved.startsWith(userRoot + '/')) {

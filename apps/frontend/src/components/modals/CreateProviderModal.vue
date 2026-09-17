@@ -51,11 +51,11 @@ import {
   requiredStringInput,
   translateWithDefault,
   useModal,
+  env,
 } from '@aerogel/core';
 import { stringToStudlyCase } from '@noeldemartin/utils';
 import { computed, watch } from 'vue';
 
-import { env } from '@/lib/env';
 import AI from '@/services/AI';
 
 const { close } = useModal();

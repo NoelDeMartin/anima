@@ -32,7 +32,7 @@ export default class OllamaModelsProviderFactory implements ModelsProviderFactor
   public async getInstallingModels(provider: AIProvider): Promise<InstallingModel[]> {
     return objectEntries(this.ongoingInstalls)
       .filter(([key]) => key.startsWith(`${provider.id}-`))
-      .map(([_, install]) => install.model);
+      .map(([, install]) => install.model);
   }
 
   public async installModel(

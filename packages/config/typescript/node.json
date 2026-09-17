@@ -1,4 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": ["./base.json", "@tsconfig/node24/tsconfig.json"]
+  "extends": ["@tsconfig/node24/tsconfig.json", "./base.json"],
+  "compilerOptions": {
+    "types": ["node"]
+  }
 }

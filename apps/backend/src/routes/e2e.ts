@@ -2,6 +2,7 @@ import { ModelsManager, type ProviderType } from '@anima/core';
 import Elysia, { status } from 'elysia';
 
 import Auth from '../services/Auth';
+import SolidServer from '../services/SolidServer';
 
 export default new Elysia().group(
   '__e2e__',
@@ -18,6 +19,7 @@ export default new Elysia().group(
     app.post('reset', async () => {
       Auth.reset();
 
+      await SolidServer.restart();
       await ModelsManager.clear();
       await ModelsManager.createProvider({ type: 'testing' as ProviderType, name: 'Testing' });
     }),

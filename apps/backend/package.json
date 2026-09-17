@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "bun build ./src/index.ts --compile --outfile ../native/bin/backend",
-    "dev": "bun --watch src/index.ts"
+    "dev:external": "bun --watch src/index.ts",
+    "dev:managed": "MANAGED_POD=true bun --watch src/index.ts"
   },
   "dependencies": {
     "@anima/core": "workspace:*",

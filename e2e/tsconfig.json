@@ -1,9 +1,9 @@
 {
-  "extends": "@anima/config/typescript/base.json",
+  "extends": "@anima/config/typescript/node.json",
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "specs"]
+  "include": ["src", "specs", "playwright.config.ts"]
 }

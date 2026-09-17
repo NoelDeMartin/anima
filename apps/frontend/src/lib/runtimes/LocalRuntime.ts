@@ -34,7 +34,7 @@ import BrowserModelsProviderFactory from '@/lib/providers/BrowserModelsProviderF
 import IndexedDBModelsStorageProvider from '@/lib/providers/IndexedDBModelsStorageProvider';
 import SolidAuthProvider from '@/lib/providers/SolidAuthProvider';
 import AI from '@/services/AI';
-import Browser from '@/services/Browser';
+import BrowserAPIs from '@/services/BrowserAPIs';
 
 import type Runtime from './Runtime';
 
@@ -45,7 +45,7 @@ export default class LocalRuntime implements Runtime {
     providers: AIProvider[];
     factories: AIProviderFactory[];
   }> {
-    await Browser.booted;
+    await BrowserAPIs.booted;
     await Solid.booted;
 
     const browserFactory = new BrowserModelsProviderFactory();

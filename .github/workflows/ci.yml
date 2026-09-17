@@ -24,6 +24,10 @@ jobs:
       - run: vp run build -r
 
   e2e:
+    strategy:
+      matrix:
+        mode: [external, managed, spa]
+        browser: [chromium, firefox, webkit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -32,12 +36,12 @@ jobs:
           node-version-file: '.node-version'
           cache: true
       - uses: oven-sh/setup-bun@v2
-      - run: vp run e2e#install-deps
-      - run: vp run e2e
+      - run: vp run e2e#install-deps -- ${{ matrix.browser }}
+      - run: vp run e2e:${{ matrix.mode }} -- --project ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() && failure() }}
         with:
-          name: test-results
+          name: test-results-${{ matrix.mode }}-${{ matrix.browser }}
           path: e2e/test-results/
           retention-days: 30
 

@@ -1,19 +1,15 @@
-import { fail, parseBoolean } from '@noeldemartin/utils';
-import z from 'zod';
+import { defineEnv } from '@aerogel/core';
+import { parseBoolean } from '@noeldemartin/utils';
+import { z } from 'zod';
 
 const EnvSchema = z.object({
   VITE_API_DOMAIN: z.string().optional(),
   VITE_SPA_MODE: z.string().optional().transform(parseBoolean),
+  VITE_MANAGED_POD: z.string().optional().transform(parseBoolean),
 });
 
-type Env = z.infer<typeof EnvSchema>;
+export default defineEnv(import.meta.env, EnvSchema);
 
-const parsedEnv = EnvSchema.parse(import.meta.env);
-
-export function env<T extends keyof Env>(key: T): Env[T] {
-  return parsedEnv[key];
-}
-
-export function requireEnv<T extends keyof Env>(key: T): NonNullable<Env[T]> {
-  return env(key) ?? fail(`Environment variable ${key} is required`);
+declare module '@aerogel/core' {
+  interface Env extends z.infer<typeof EnvSchema> {}
 }

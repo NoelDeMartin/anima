@@ -1,12 +1,14 @@
-import { env } from '@/lib/env';
+import { env } from '@aerogel/core';
 
-import AnimaAuthenticator from './AnimaAuthenticator';
+import AnimaExternalAuthenticator from './AnimaExternalAuthenticator';
+import AnimaManagedAuthenticator from './AnimaManagedAuthenticator';
 
 export const authenticators = {
-  anima: new AnimaAuthenticator(),
+  'anima-external': new AnimaExternalAuthenticator(),
+  'anima-managed': new AnimaManagedAuthenticator(),
 };
 
-export const defaultAuthenticator = env('VITE_SPA_MODE') ? 'inrupt' : 'anima';
+export const defaultAuthenticator = () => (env('VITE_SPA_MODE') ? 'inrupt' : 'anima-external');
 
 export type AppAuthenticators = typeof authenticators;
 

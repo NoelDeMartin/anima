@@ -1,4 +1,5 @@
 import { Events } from '@aerogel/core';
+import { env } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import type {
@@ -13,7 +14,6 @@ import type {
 import { facade, fail, objectFromEntries, objectKeys } from '@noeldemartin/utils';
 import { markRaw, watchEffect } from 'vue';
 
-import { env } from '@/lib/env';
 import type Runtime from '@/lib/runtimes/Runtime';
 
 import Service from './AI.state';

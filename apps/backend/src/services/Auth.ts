@@ -3,23 +3,37 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { EVENTS, Session } from '@inrupt/solid-client-authn-node';
 import type { AuthorizationRequestState, SessionTokenSet } from '@inrupt/solid-client-authn-node';
 import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
-import { facade, isDevelopment, PromisedValue } from '@noeldemartin/utils';
+import { facade, isDevelopment, PromisedValue, uuid } from '@noeldemartin/utils';
 import { status } from 'elysia';
 import { runWithEngine, SolidEngine } from 'soukai-bis';
 
-import { PORT } from '../lib/constants';
+import { BACKEND_URL, CLIENT_ID } from '../lib/constants';
+import SolidServer, { type LoginOptions, type SolidCredentials } from './SolidServer';
 
 const SESSION_HEADER = 'X-Anima-Session-Id';
 
 function isActiveSession(value: unknown): value is ActiveSession {
-  return typeof value === 'object' && value !== null && 'tokenSet' in value;
+  return typeof value === 'object' && value !== null && ('credentials' in value || 'tokenSet' in value);
+}
+
+function isManagedSession(value: ActiveSession): value is ManagedSession {
+  return 'instance' in value;
 }
 
 function isAuthorizationRequestState(value: unknown): value is AuthorizationRequestState {
   return typeof value === 'object' && value !== null && 'state' in value;
 }
 
-type ActiveSession = { tokenSet: SessionTokenSet };
+export interface ManagedSession {
+  credentials: SolidCredentials;
+  instance: Session;
+}
+
+export interface OidcSession {
+  tokenSet: SessionTokenSet;
+}
+
+export type ActiveSession = ManagedSession | OidcSession;
 
 export interface AuthSession {
   sessionId: string;
@@ -45,7 +59,7 @@ export class AuthService {
   public async runForRequest<T>(request: Request, callback: () => T | Promise<T>): Promise<T> {
     const session = await this.requireSession(request);
 
-    return this.context.run(session, () => runWithEngine(new SolidEngine(session.fetch), callback));
+    return this.context.run(session, () => runWithEngine(new SolidEngine({ fetch: session.fetch }), callback));
   }
 
   public requireContextSession(): AuthSession {
@@ -66,8 +80,10 @@ export class AuthService {
       return null;
     }
 
-    const session = await Session.fromTokens(activeSession.tokenSet);
-    const webId = session?.info.webId;
+    const session = isManagedSession(activeSession)
+      ? activeSession.instance
+      : await Session.fromTokens(activeSession.tokenSet);
+    const webId = isManagedSession(activeSession) ? activeSession.credentials.webId : session.info.webId;
     const profile = webId && (await this.profile(webId, session));
 
     if (!profile) {
@@ -99,7 +115,29 @@ export class AuthService {
     return session;
   }
 
-  public async login(oidcIssuer: string): Promise<{ sessionId: string; redirectUrl: string }> {
+  public async loginWithManagedSession(options: LoginOptions): Promise<{ sessionId: string; user: SolidUserProfile }> {
+    const credentials = await SolidServer.login(options);
+    const session = new Session({ keepAlive: false });
+    const sessionId = uuid();
+
+    await session.login({
+      clientId: credentials.clientId,
+      clientSecret: credentials.clientSecret,
+      oidcIssuer: credentials.oidcIssuer,
+    });
+
+    this.sessions[sessionId] = { credentials, instance: session };
+
+    const profile = await this.profile(credentials.webId, session);
+
+    if (!profile) {
+      throw new Error(`Failed to fetch user profile for ${credentials.webId}`);
+    }
+
+    return { sessionId, user: profile };
+  }
+
+  public async loginWithOidc(oidcIssuer: string): Promise<{ sessionId: string; redirectUrl: string }> {
     const session = new Session({ keepAlive: false });
     const promisedResult = new PromisedValue<{ redirectUrl: string } | { error: string }>();
 
@@ -114,8 +152,8 @@ export class AuthService {
     await session
       .login({
         oidcIssuer,
-        clientId: `http://localhost:${PORT}/clientid.jsonld`,
-        redirectUrl: `http://localhost:${PORT}/oidc/redirect`,
+        clientId: CLIENT_ID,
+        redirectUrl: `${BACKEND_URL}/oidc/redirect`,
         handleRedirect: (redirectUrl) => promisedResult.resolve({ redirectUrl }),
       })
       .then(() => {
@@ -180,8 +218,9 @@ export class AuthService {
     const activeSession = this.sessions[sessionId];
 
     if (isActiveSession(activeSession)) {
-      const session = await Session.fromTokens(activeSession.tokenSet);
-      const webId = session.info.webId;
+      const webId = isManagedSession(activeSession)
+        ? activeSession.credentials.webId
+        : (await Session.fromTokens(activeSession.tokenSet))?.info.webId;
 
       webId && delete this.profiles[webId];
     }

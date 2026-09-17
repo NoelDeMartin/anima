@@ -1,3 +1,4 @@
+import { requireEnv } from '@aerogel/core';
 import { Chat } from '@ai-sdk/vue';
 import type { ApiAnimaChat } from '@anima/backend';
 import {
@@ -18,8 +19,7 @@ import { required } from '@noeldemartin/utils';
 import { DefaultChatTransport } from 'ai';
 
 import { getSessionId } from '@/auth/session';
-import api from '@/lib/api';
-import { requireEnv } from '@/lib/env';
+import api, { initialize as initializeAPI } from '@/lib/api';
 import AI from '@/services/AI';
 
 import type Runtime from './Runtime';
@@ -39,6 +39,8 @@ export default class RemoteRuntime implements Runtime {
     providers: AIProvider[];
     factories: AIProviderFactory[];
   }> {
+    await initializeAPI();
+
     const sessionId = getSessionId();
 
     if (!sessionId) {

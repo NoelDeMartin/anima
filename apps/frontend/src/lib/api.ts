@@ -1,15 +1,30 @@
-import type { Api } from '@anima/backend';
-import { treaty } from '@elysiajs/eden';
-import { objectWithoutEmpty } from '@noeldemartin/utils';
+import { requireEnv } from '@aerogel/core';
 
-import { getSessionId } from '@/auth/session';
-import { requireEnv } from '@/lib/env';
+import type lazyApi from './api.lazy';
 
-export const api: ReturnType<typeof treaty<typeof Api>> = treaty<typeof Api>(requireEnv('VITE_API_DOMAIN'), {
-  headers: () =>
-    objectWithoutEmpty({
-      'X-Anima-Session-Id': getSessionId(),
-    }),
-});
+let instance: ReturnType<typeof lazyApi> | null = null;
+
+const api = new Proxy(
+  {},
+  {
+    get(_, prop) {
+      if (!instance) {
+        throw new Error('API not initialized');
+      }
+
+      return Reflect.get(instance, prop);
+    },
+  },
+) as ReturnType<typeof lazyApi>;
+
+export async function initialize(): Promise<void> {
+  if (instance) {
+    return;
+  }
+
+  const { default: lazyApi } = await import('./api.lazy');
+
+  instance = lazyApi(requireEnv('VITE_API_DOMAIN'));
+}
 
 export default api;

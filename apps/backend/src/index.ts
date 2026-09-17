@@ -10,6 +10,7 @@ import { registerProviders } from './providers';
 import ai from './routes/ai';
 import auth from './routes/auth';
 import e2e from './routes/e2e';
+import solid from './routes/solid';
 
 export type { ApiAnimaChat } from './routes/ai/chats';
 
@@ -18,6 +19,7 @@ export const Api = new Elysia({ serve: { idleTimeout: 255 } })
   .use(auth)
   .use(ai)
   .use(e2e)
+  .use(solid)
   .onStart(async () => {
     bootCoreModels();
     bootAnimaModels();

@@ -2,7 +2,7 @@ import type { ModelsProviderFactory, InstallingModel, AIProvider, ModelId, Provi
 import { uuid } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
 
-import Browser from '@/services/Browser';
+import BrowserAPIs from '@/services/BrowserAPIs';
 
 export default class BrowserModelsProviderFactory implements ModelsProviderFactory {
   private model: InstallingModel | { name: string; status: 'installed' } | null = null;
@@ -14,16 +14,16 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
   }
 
   async getAvailability(): Promise<'available' | 'unavailable' | 'unsupported'> {
-    return Browser.getPromptAPIAvailability();
+    return BrowserAPIs.getPromptAPIAvailability();
   }
 
   async getPreinstalledModels(): Promise<string[]> {
     const availability = await LanguageModel.availability();
 
     if (availability === 'available') {
-      this.model = { name: Browser.getModelName(), status: 'installed' };
+      this.model = { name: BrowserAPIs.getBuiltInModelName(), status: 'installed' };
 
-      return [Browser.getModelName()];
+      return [BrowserAPIs.getBuiltInModelName()];
     }
 
     return [];
@@ -37,7 +37,12 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
     const availability = await LanguageModel.availability();
 
     if (availability === 'downloading') {
-      this.model = { id: uuid() as ModelId, providerId: provider.id, name: Browser.getModelName(), progress: 0 };
+      this.model = {
+        id: uuid() as ModelId,
+        providerId: provider.id,
+        name: BrowserAPIs.getBuiltInModelName(),
+        progress: 0,
+      };
 
       await this.watchInstallProgress();
 
@@ -53,7 +58,7 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
     name: string,
     options: { onInstalled: () => Promise<void> },
   ): Promise<InstallingModel> {
-    if (name !== Browser.getModelName()) {
+    if (name !== BrowserAPIs.getBuiltInModelName()) {
       throw new Error(`Model '${name}' not available in the browser.`);
     }
 
@@ -115,7 +120,7 @@ export default class BrowserModelsProviderFactory implements ModelsProviderFacto
   private onDownloadProgress(current: number, total: number, onInstalled?: () => Promise<void>): void {
     if (current === total) {
       this.model = {
-        name: Browser.getModelName(),
+        name: BrowserAPIs.getBuiltInModelName(),
         status: 'installed' as const,
       };
 
