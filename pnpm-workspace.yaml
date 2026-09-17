@@ -17,7 +17,7 @@ catalog:
   tailwindcss: ^4.1.18
   typescript: ~5.9.3
   vite: npm:@voidzero-dev/vite-plus-core@latest
-  vite-plus: ^0.3.2
+  vite-plus: latest
   vitest: latest
   vue: ^3.5.28
   zod: ^4.3.6

@@ -25,7 +25,7 @@ catalogs:
       specifier: ~5.9.3
       version: 5.9.3
     vite-plus:
-      specifier: ^0.3.2
+      specifier: latest
       version: 0.3.2
     zod:
       specifier: ^4.3.6
