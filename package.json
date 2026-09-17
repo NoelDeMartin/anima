@@ -7,10 +7,10 @@
     "e2e:dev:external": "E2E=true concurrently --kill-others --success command-2 \"vp run --filter @anima/backend dev:external\" \"vp run --filter @anima/frontend dev:external\" \"vp run --filter @anima/e2e dev:external specs/external.spec.ts\"",
     "e2e:dev:managed": "E2E=true concurrently --kill-others --success command-2 \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\" \"vp run --filter @anima/e2e dev:managed specs/managed.spec.ts\"",
     "e2e:dev:spa": "concurrently --kill-others --success command-1 \"vp run --filter @anima/frontend dev:spa\" \"vp run --filter @anima/e2e dev:external specs/spa.spec.ts\"",
-    "e2e:external": "E2E=true concurrently -P --kill-others --success command-2 \"vp run --filter @anima/backend dev:external\" \"vp run --filter @anima/frontend dev:external\" \"vp run --filter @anima/e2e test:external specs/external.spec.ts {@}\"",
-    "e2e:managed": "E2E=true concurrently -P --kill-others --success command-2 \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\" \"vp run --filter @anima/e2e test:managed specs/managed.spec.ts {@}\"",
+    "e2e:external": "E2E=true concurrently -P --raw --kill-others --success command-2 \"vp run --filter @anima/backend dev:external\" \"vp run --filter @anima/frontend dev:external\" \"vp run --filter @anima/e2e test:external specs/external.spec.ts {@}\"",
+    "e2e:managed": "E2E=true concurrently -P --raw --kill-others --success command-2 \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\" \"vp run --filter @anima/e2e test:managed specs/managed.spec.ts {@}\"",
     "e2e:serve-pod": "community-solid-server -l warn",
-    "e2e:spa": "concurrently -P --kill-others --success command-1 \"vp run --filter @anima/frontend dev:spa\" \"vp run --filter @anima/e2e test:external specs/spa.spec.ts {@}\""
+    "e2e:spa": "concurrently -P --raw --kill-others --success command-1 \"vp run --filter @anima/frontend dev:spa\" \"vp run --filter @anima/e2e test:external specs/spa.spec.ts {@}\""
   },
   "devDependencies": {
     "@solid/community-server": "^7.1.8",

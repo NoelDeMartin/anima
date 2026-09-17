@@ -21,7 +21,7 @@ jobs:
           cache: true
       - uses: oven-sh/setup-bun@v2
       - run: vp check
-      - run: vp run build -r
+      - run: vp run -r build
 
   e2e:
     strategy:
