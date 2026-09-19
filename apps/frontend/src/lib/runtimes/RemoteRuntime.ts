@@ -1,4 +1,4 @@
-import { requireEnv } from '@aerogel/core';
+import { env } from '@aerogel/core';
 import { Chat } from '@ai-sdk/vue';
 import type { ApiAnimaChat } from '@anima/backend';
 import {
@@ -99,7 +99,7 @@ export default class RemoteRuntime implements Runtime {
       messages,
       generateId: messagesIdGenerator(chat.url),
       transport: new DefaultChatTransport({
-        api: `${window.location.protocol}//${requireEnv('VITE_API_DOMAIN')}/ai/chats/${encodeURIComponent(chat.url)}/messages`,
+        api: `${env('VITE_BACKEND_URL')}/api/ai/chats/${encodeURIComponent(chat.url)}/messages`,
         headers: { 'X-Anima-Session-Id': required(getSessionId()) },
         prepareSendMessagesRequest({ messages, body }) {
           return { body: { message: messages[messages.length - 1], ...body } };

@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { Errors, requiredStringInput, requireEnv, useForm } from '@aerogel/core';
+import { Errors, env, requiredStringInput, useForm } from '@aerogel/core';
 import { translate } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
@@ -78,7 +78,7 @@ async function submit() {
       return;
     }
 
-    await Solid.login(requireEnv('VITE_API_DOMAIN'), {
+    await Solid.login(env('VITE_BACKEND_URL'), {
       skipProfile: true,
       authenticator: 'anima-managed',
       extra: { email: form.email, password: form.password },

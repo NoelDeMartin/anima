@@ -10,6 +10,21 @@ This repository contains the monorepo for Ànima, a personal AI assistant built 
 - `e2e/`: Playwright tests.
 - `packages/*/`: Shared libraries.
 
+## Architecture
+
+- **Frontend modes**:
+  - _Default mode_: Communicates with `@anima/backend` for LLM orchestration and Solid operations.
+  - _SPA mode_ (`VITE_SPA_MODE=true`): Runs entirely client-side in the browser without requiring a backend.
+- **Backend modes**:
+  - _Default mode_: Connects to an external Solid POD server provided by the user.
+  - _Managed POD_ (`MANAGED_POD=true` / `VITE_MANAGED_POD=true`): Backend runs an internal Community Solid Server (CSS) instance providing a local managed POD for the user.
+- **Frontend serving & API URL**:
+  - _Development_: The frontend runs on its own dev server (e.g. `http://localhost:5173`) and makes requests to an external API URL (`http://localhost:1191`).
+  - _Production / Bundled_: The backend serves the built frontend statically from the same URL/origin (`http://localhost:1191`), avoiding CORS issues.
+- **Native application (`apps/native`)**:
+  - Runs the managed version of the backend as an embedded Node.js sidecar.
+  - Uses the default version of the frontend served directly from the same backend URL.
+
 ## Tooling
 
 This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`.

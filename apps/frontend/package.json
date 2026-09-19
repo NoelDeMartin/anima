@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "vp build",
+    "build:native": "PWA=false vp build",
     "deploy": "noeldemartin-deploy-app anima.noeldemartin.com",
     "dev:external": "vp dev",
     "dev:managed": "VITE_MANAGED_POD=true vp dev",

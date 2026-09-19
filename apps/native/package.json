@@ -3,16 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "electrobun build --env=canary",
-    "dev": "electrobun dev --watch"
-  },
-  "dependencies": {
-    "@noeldemartin/utils": "catalog:",
-    "electrobun": "1.15.1"
+    "build": "tauri build",
+    "build:debug": "cargo build --manifest-path src-tauri/Cargo.toml",
+    "dev": "tauri dev",
+    "tauri:prepare": "bash scripts/prepare.sh"
   },
   "devDependencies": {
-    "@anima/config": "workspace:*",
-    "@types/three": "^0.183.1",
-    "typescript": "catalog:"
+    "@tauri-apps/cli": "^2.11.4"
   }
 }

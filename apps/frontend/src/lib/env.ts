@@ -3,7 +3,11 @@ import { parseBoolean } from '@noeldemartin/utils';
 import { z } from 'zod';
 
 const EnvSchema = z.object({
-  VITE_API_DOMAIN: z.string().optional(),
+  VITE_BACKEND_URL: z
+    .string()
+    .optional()
+    .default(location.origin)
+    .transform((value) => value.replace(/\/+$/, '')),
   VITE_SPA_MODE: z.string().optional().transform(parseBoolean),
   VITE_MANAGED_POD: z.string().optional().transform(parseBoolean),
 });

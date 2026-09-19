@@ -1,5 +1,3 @@
-import { requireEnv } from '@aerogel/core';
-
 import type lazyApi from './api.lazy';
 
 let instance: ReturnType<typeof lazyApi> | null = null;
@@ -24,7 +22,7 @@ export async function initialize(): Promise<void> {
 
   const { default: lazyApi } = await import('./api.lazy');
 
-  instance = lazyApi(requireEnv('VITE_API_DOMAIN'));
+  instance = lazyApi();
 }
 
 export default api;

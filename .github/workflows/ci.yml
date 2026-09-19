@@ -3,8 +3,6 @@ name: CI
 on:
   pull_request:
   push:
-    branches:
-      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,9 +17,11 @@ jobs:
         with:
           node-version-file: '.node-version'
           cache: true
-      - uses: oven-sh/setup-bun@v2
+      - uses: luizm/action-sh-checker@v0.9.0
+        with:
+          sh_checker_exclude: 'node_modules'
       - run: vp check
-      - run: vp run -r build
+      - run: vp run --filter '!@anima/native' build
 
   e2e:
     strategy:
@@ -35,7 +35,6 @@ jobs:
         with:
           node-version-file: '.node-version'
           cache: true
-      - uses: oven-sh/setup-bun@v2
       - run: vp run e2e#install-deps -- ${{ matrix.browser }}
       - run: vp run e2e:${{ matrix.mode }} -- --project ${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
@@ -45,10 +44,55 @@ jobs:
           path: e2e/test-results/
           retention-days: 30
 
+  native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup VP
+        uses: voidzero-dev/setup-vp@v1.20.0
+        with:
+          node-version-file: '.node-version'
+          cache: true
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Setup Rust caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/native/src-tauri
+      - name: Setup Rust dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev xvfb
+      - name: Setup E2E
+        run: vp run e2e#install-deps -- chromium
+      - name: Prepare
+        run: vp run --filter @anima/native tauri:prepare
+      - name: Lint
+        run: |
+          cargo fmt --manifest-path apps/native/src-tauri/Cargo.toml --check
+          cargo clippy --manifest-path apps/native/src-tauri/Cargo.toml -- -D warnings
+      - name: Build
+        run: vp run --filter @anima/native build:debug
+      - name: Run E2E
+        run: xvfb-run -a vp run e2e:native -- --project chromium
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && failure() }}
+        with:
+          name: test-results-native-chromium
+          path: e2e/test-results/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && !failure() }}
+        with:
+          name: native-binaries
+          path: apps/native/src-tauri/target/debug/anima
+
   deploy:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: [ci, e2e]
+    needs: [ci, e2e, native]
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ORIGIN_TRIALS: ${{ secrets.ORIGIN_TRIALS }}
@@ -61,5 +105,4 @@ jobs:
         with:
           node-version-file: '.node-version'
           cache: true
-      - uses: oven-sh/setup-bun@v2
       - run: vp run frontend#deploy

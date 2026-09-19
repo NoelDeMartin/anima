@@ -1,25 +1,23 @@
 import './lib/soukai-bis';
 import { bootAnimaModels } from '@anima/core';
 import { cors } from '@elysiajs/cors';
+import { node } from '@elysiajs/node';
 import { isDevelopment } from '@noeldemartin/utils';
 import { Elysia } from 'elysia';
 import { bootCoreModels } from 'soukai-bis';
 
 import { PORT } from './lib/constants';
 import { registerProviders } from './providers';
-import ai from './routes/ai';
-import auth from './routes/auth';
-import e2e from './routes/e2e';
-import solid from './routes/solid';
+import { useRoutes } from './routes';
 
-export type { ApiAnimaChat } from './routes/ai/chats';
+export type { Api } from './routes';
+export type { ApiAnimaChat } from './routes/api/ai/chats';
 
-export const Api = new Elysia({ serve: { idleTimeout: 255 } })
-  .use(cors())
-  .use(auth)
-  .use(ai)
-  .use(e2e)
-  .use(solid)
+const app = new Elysia({ adapter: node() }).use(cors());
+
+useRoutes(app);
+
+app
   .onStart(async () => {
     bootCoreModels();
     bootAnimaModels();
@@ -41,8 +39,6 @@ export const Api = new Elysia({ serve: { idleTimeout: 255 } })
       errorStack && console.error('Stack:', errorStack);
       errorCause && console.error('Cause:', errorCause);
     }
-
-    return error;
   })
   .listen(PORT, ({ hostname, port }) => {
     console.log(`🟢 Server running at http://${hostname}:${port}`);

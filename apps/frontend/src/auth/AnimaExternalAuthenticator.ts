@@ -9,7 +9,7 @@ import AnimaAuthenticator from './AnimaAuthenticator';
 export default class AnimaExternalAuthenticator extends AnimaAuthenticator {
   async login(loginUrl: string, { user }: AuthenticatorLoginOptions = {}): Promise<AuthSession> {
     const oidcIssuer = user?.oidcIssuerUrl ?? urlRoot(user?.webId ?? loginUrl);
-    const { data } = await api.oidc.login.post({ oidcIssuer });
+    const { data } = await api.auth.login.post({ oidcIssuer });
 
     if (data?.sessionId) {
       setSessionId(data.sessionId);
@@ -19,7 +19,7 @@ export default class AnimaExternalAuthenticator extends AnimaAuthenticator {
       throw new Error('Missing redirect URL');
     }
 
-    window.location.href = data.redirectUrl;
+    location.href = data.redirectUrl;
 
     await sleep(5000);
 

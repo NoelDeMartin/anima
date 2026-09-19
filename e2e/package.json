@@ -3,11 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev:external": "UI=true playwright test --ui",
-    "dev:managed": "UI=true MANAGED_POD=true playwright test --ui",
+    "dev:external": "PLAYWRIGHT_MODE=external  UI=true playwright test --ui",
+    "dev:managed": "UI=true playwright test --ui",
+    "dev:native": "UI=true PLAYWRIGHT_MODE=native PLAYWRIGHT_FRONTEND_URL=http://localhost:1191 playwright test --ui",
     "install-deps": "playwright install --with-deps",
-    "test:external": "playwright test --workers 1",
-    "test:managed": "MANAGED_POD=true playwright test --workers 1"
+    "test:external": "PLAYWRIGHT_MODE=external playwright test --workers 1",
+    "test:managed": "playwright test --workers 1",
+    "test:native": "PLAYWRIGHT_MODE=native PLAYWRIGHT_FRONTEND_URL=http://localhost:1191 playwright test --workers 1"
   },
   "devDependencies": {
     "@anima/config": "workspace:*",
