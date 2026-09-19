@@ -2,7 +2,7 @@ import { AIModelSchema, InstalledModelEditableFieldsSchema, ModelsManager } from
 import Elysia from 'elysia';
 import z from 'zod';
 
-import Auth from '../../services/Auth';
+import Auth from '../../../services/Auth';
 
 export default new Elysia().group('models', (app) =>
   app

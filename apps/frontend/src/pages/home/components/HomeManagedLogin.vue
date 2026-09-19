@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { useForm, requiredStringInput, requireEnv } from '@aerogel/core';
+import { env, requiredStringInput, useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import { ref } from 'vue';
@@ -54,7 +54,7 @@ async function submit() {
     loading.value = true;
     errorMessage.value = null;
 
-    await Solid.login(requireEnv('VITE_API_DOMAIN'), {
+    await Solid.login(env('VITE_BACKEND_URL'), {
       skipProfile: true,
       authenticator: 'anima-managed',
       extra: { email: form.email, password: form.password },

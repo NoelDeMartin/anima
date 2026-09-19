@@ -14,7 +14,7 @@ import { convertToModelMessages, stepCountIs, streamText } from 'ai';
 import Elysia, { status } from 'elysia';
 import z from 'zod';
 
-import Auth from '../../services/Auth';
+import Auth from '../../../services/Auth';
 
 function mapChat(chat: AnimaChat): ApiAnimaChat {
   return {

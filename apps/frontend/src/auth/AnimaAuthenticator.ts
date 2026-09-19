@@ -1,4 +1,4 @@
-import { requireEnv } from '@aerogel/core';
+import { env } from '@aerogel/core';
 import { Authenticator, type AuthSession } from '@aerogel/plugin-solid';
 import type { SolidUserProfile } from '@noeldemartin/solid-utils';
 import { objectWithoutEmpty } from '@noeldemartin/utils';
@@ -12,7 +12,7 @@ export default abstract class AnimaAuthenticator extends Authenticator {
 
     removeSessionId();
 
-    await api.oidc.logout.post({ headers: objectWithoutEmpty({ 'X-Anima-Session-Id': sessionId }) });
+    await api.auth.logout.post({ headers: objectWithoutEmpty({ 'X-Anima-Session-Id': sessionId }) });
     await this.endSession();
   }
 
@@ -25,7 +25,7 @@ export default abstract class AnimaAuthenticator extends Authenticator {
       return;
     }
 
-    const { data } = await api.oidc.session.get({ headers: { 'X-Anima-Session-Id': sessionId } });
+    const { data } = await api.auth.session.get({ headers: { 'X-Anima-Session-Id': sessionId } });
 
     if (data) {
       await this.initSession(sessionId, data.user);
@@ -34,7 +34,7 @@ export default abstract class AnimaAuthenticator extends Authenticator {
 
   protected async initSession(sessionId: string, user: SolidUserProfile): Promise<AuthSession> {
     await this.initAuthenticatedFetch(async (input: RequestInfo | URL, init: RequestInit) =>
-      fetch(`${location.protocol}//${requireEnv('VITE_API_DOMAIN')}/solid-proxy`, {
+      fetch(`${env('VITE_BACKEND_URL')}/api/auth/proxy`, {
         method: 'POST',
         body: JSON.stringify({ input, init }),
         headers: {

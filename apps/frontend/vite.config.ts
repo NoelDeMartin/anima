@@ -7,12 +7,16 @@ import Icons from 'unplugin-icons/vite';
 import Components from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vite-plus';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
-    Aerogel({ name: 'Ànima', baseUrl: 'https://anima.noeldemartin.com' }),
+    Aerogel({
+      name: 'Ànima',
+      baseUrl: 'https://anima.noeldemartin.com',
+      pwa: process.env.PWA === 'false' ? false : undefined,
+    }),
     Components({
       deep: true,
-      dts: 'src/types/components.d.ts',
+      dts: command === 'build' ? false : 'src/types/components.d.ts',
       dirs: ['src/components', 'src/pages'],
       resolvers: [AerogelResolver(), IconsResolver()],
     }),
@@ -28,4 +32,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-});
+}));

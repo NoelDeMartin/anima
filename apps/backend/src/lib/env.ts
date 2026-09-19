@@ -4,6 +4,7 @@ import z from 'zod';
 const EnvSchema = z.object({
   E2E: z.string().optional().transform(parseBoolean),
   MANAGED_POD: z.string().optional().transform(parseBoolean),
+  SERVE_FRONTEND: z.string().optional().transform(parseBoolean),
 });
 
 type Env = z.infer<typeof EnvSchema>;

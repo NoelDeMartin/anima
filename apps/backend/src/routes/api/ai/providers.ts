@@ -2,7 +2,7 @@ import { AIProviderEditableFieldsSchema, AIProviderFactorySchema, AIProviderSche
 import Elysia from 'elysia';
 import z from 'zod';
 
-import Auth from '../../services/Auth';
+import Auth from '../../../services/Auth';
 
 export default new Elysia().group('providers', (app) =>
   app

@@ -4,20 +4,22 @@
     "dev:managed": "concurrently \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\"",
     "dev:serve-pod": "community-solid-server -c @css:config/file.json -f ./solid",
     "dev:spa": "concurrently \"vp run dev:serve-pod\" \"vp run --filter @anima/frontend dev:spa\"",
+    "e2e:all": "vp run e2e:spa && vp run e2e:external && vp run e2e:managed && vp run e2e:native",
     "e2e:dev:external": "E2E=true concurrently --kill-others --success command-2 \"vp run --filter @anima/backend dev:external\" \"vp run --filter @anima/frontend dev:external\" \"vp run --filter @anima/e2e dev:external specs/external.spec.ts\"",
     "e2e:dev:managed": "E2E=true concurrently --kill-others --success command-2 \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\" \"vp run --filter @anima/e2e dev:managed specs/managed.spec.ts\"",
+    "e2e:dev:native": "concurrently -P --raw \"vp run native#tauri:prepare && vp run --filter @anima/e2e dev:native specs/managed.spec.ts {@}\"",
     "e2e:dev:spa": "concurrently --kill-others --success command-1 \"vp run --filter @anima/frontend dev:spa\" \"vp run --filter @anima/e2e dev:external specs/spa.spec.ts\"",
     "e2e:external": "E2E=true concurrently -P --raw --kill-others --success command-2 \"vp run --filter @anima/backend dev:external\" \"vp run --filter @anima/frontend dev:external\" \"vp run --filter @anima/e2e test:external specs/external.spec.ts {@}\"",
     "e2e:managed": "E2E=true concurrently -P --raw --kill-others --success command-2 \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\" \"vp run --filter @anima/e2e test:managed specs/managed.spec.ts {@}\"",
+    "e2e:native": "concurrently -P --raw \"vp run native#tauri:prepare && vp run --filter @anima/e2e test:native specs/managed.spec.ts {@}\"",
     "e2e:serve-pod": "community-solid-server -l warn",
     "e2e:spa": "concurrently -P --raw --kill-others --success command-1 \"vp run --filter @anima/frontend dev:spa\" \"vp run --filter @anima/e2e test:external specs/spa.spec.ts {@}\""
   },
   "devDependencies": {
-    "@solid/community-server": "^7.1.8",
-    "@types/bun": "latest",
+    "@solid/community-server": "catalog:",
     "@types/node": "^24.10.13",
     "concurrently": "^9.2.1",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@10.32.1"
+  "packageManager": "pnpm@12.4.2"
 }

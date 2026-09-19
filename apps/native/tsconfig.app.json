@@ -1,7 +1,0 @@
-{
-  "extends": "@anima/config/typescript/base.json",
-  "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo"
-  },
-  "include": ["src/**/*"]
-}

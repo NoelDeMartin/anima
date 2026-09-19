@@ -1,0 +1,132 @@
+diff --git a/dist/cjs/handle.js b/dist/cjs/handle.js
+index b1b7c635f5a8f3c26d57225be632b0247749c9f5..7fe224a8d1a5153528d02b3cf3e5622fbebf3738 100644
+--- a/dist/cjs/handle.js
++++ b/dist/cjs/handle.js
+@@ -39,12 +39,14 @@ var handleFile = (response, set2) => {
+     return response.then((res) => handleFile(res, set2));
+   const size = response.size;
+   const immutable = set2 && (set2.status === 206 || set2.status === 304 || set2.status === 412 || set2.status === 416);
+-  const defaultHeader = immutable ? {
++  // Omit Transfer-Encoding: chunked when size or Content-Length is known (RFC 9112 §6.2)
++  // https://github.com/elysiajs/node/pull/64
++  const hasContentLength = set2?.headers && (set2.headers instanceof Headers ? set2.headers.has("content-length") : "content-length" in set2.headers || "Content-Length" in set2.headers);
++  const defaultHeader = immutable || size === undefined && !hasContentLength ? {
+     "transfer-encoding": "chunked"
+   } : {
+     "accept-ranges": "bytes",
+-    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0,
+-    "transfer-encoding": "chunked"
++    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0
+   };
+   if (!set2 && !size) return new import_srvx.FastResponse(response);
+   if (!set2)
+diff --git a/dist/cjs/index.js b/dist/cjs/index.js
+index e87389ca5e266b5320b3b0448429a73c996a233f..ee538bd9cc7b6a1803b32247c7e88665588db9e6 100644
+--- a/dist/cjs/index.js
++++ b/dist/cjs/index.js
+@@ -256,12 +256,14 @@ var handleFile = (response, set2) => {
+     return response.then((res) => handleFile(res, set2));
+   const size = response.size;
+   const immutable = set2 && (set2.status === 206 || set2.status === 304 || set2.status === 412 || set2.status === 416);
+-  const defaultHeader = immutable ? {
++  // Omit Transfer-Encoding: chunked when size or Content-Length is known (RFC 9112 §6.2)
++  // https://github.com/elysiajs/node/pull/64
++  const hasContentLength = set2?.headers && (set2.headers instanceof Headers ? set2.headers.has("content-length") : "content-length" in set2.headers || "Content-Length" in set2.headers);
++  const defaultHeader = immutable || size === undefined && !hasContentLength ? {
+     "transfer-encoding": "chunked"
+   } : {
+     "accept-ranges": "bytes",
+-    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0,
+-    "transfer-encoding": "chunked"
++    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0
+   };
+   if (!set2 && !size) return new import_srvx.FastResponse(response);
+   if (!set2)
+diff --git a/dist/cjs/utils.js b/dist/cjs/utils.js
+index fc5573e50b92eb8d05628d15dfb212b49ae418fb..0eaeb4d26c22aab604015d85421ccc9131a23bf2 100644
+--- a/dist/cjs/utils.js
++++ b/dist/cjs/utils.js
+@@ -34,12 +34,14 @@ var handleFile = (response, set) => {
+     return response.then((res) => handleFile(res, set));
+   const size = response.size;
+   const immutable = set && (set.status === 206 || set.status === 304 || set.status === 412 || set.status === 416);
+-  const defaultHeader = immutable ? {
++  // Omit Transfer-Encoding: chunked when size or Content-Length is known (RFC 9112 §6.2)
++  // https://github.com/elysiajs/node/pull/64
++  const hasContentLength = set?.headers && (set.headers instanceof Headers ? set.headers.has("content-length") : "content-length" in set.headers || "Content-Length" in set.headers);
++  const defaultHeader = immutable || size === undefined && !hasContentLength ? {
+     "transfer-encoding": "chunked"
+   } : {
+     "accept-ranges": "bytes",
+-    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0,
+-    "transfer-encoding": "chunked"
++    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0
+   };
+   if (!set && !size) return new import_srvx.FastResponse(response);
+   if (!set)
+diff --git a/dist/handle.mjs b/dist/handle.mjs
+index 9af84d7b55dcee51b3ef1eee6a6dc9ae2fb7918e..92efbc98cf2d2d4aa5c6f210a3c9673dd034d78e 100644
+--- a/dist/handle.mjs
++++ b/dist/handle.mjs
+@@ -20,12 +20,14 @@ var handleFile = (response, set2) => {
+     return response.then((res) => handleFile(res, set2));
+   const size = response.size;
+   const immutable = set2 && (set2.status === 206 || set2.status === 304 || set2.status === 412 || set2.status === 416);
+-  const defaultHeader = immutable ? {
++  // Omit Transfer-Encoding: chunked when size or Content-Length is known (RFC 9112 §6.2)
++  // https://github.com/elysiajs/node/pull/64
++  const hasContentLength = set2?.headers && (set2.headers instanceof Headers ? set2.headers.has("content-length") : "content-length" in set2.headers || "Content-Length" in set2.headers);
++  const defaultHeader = immutable || size === undefined && !hasContentLength ? {
+     "transfer-encoding": "chunked"
+   } : {
+     "accept-ranges": "bytes",
+-    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0,
+-    "transfer-encoding": "chunked"
++    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0
+   };
+   if (!set2 && !size) return new Response(response);
+   if (!set2)
+diff --git a/dist/index.mjs b/dist/index.mjs
+index 9f35dbbaf4cc606cdc0efb915958adfa5f4a7e38..e707a716bc434b782f1eac12c848a117d9bc36cc 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -248,12 +248,14 @@ var handleFile = (response, set2) => {
+     return response.then((res) => handleFile(res, set2));
+   const size = response.size;
+   const immutable = set2 && (set2.status === 206 || set2.status === 304 || set2.status === 412 || set2.status === 416);
+-  const defaultHeader = immutable ? {
++  // Omit Transfer-Encoding: chunked when size or Content-Length is known (RFC 9112 §6.2)
++  // https://github.com/elysiajs/node/pull/64
++  const hasContentLength = set2?.headers && (set2.headers instanceof Headers ? set2.headers.has("content-length") : "content-length" in set2.headers || "Content-Length" in set2.headers);
++  const defaultHeader = immutable || size === undefined && !hasContentLength ? {
+     "transfer-encoding": "chunked"
+   } : {
+     "accept-ranges": "bytes",
+-    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0,
+-    "transfer-encoding": "chunked"
++    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0
+   };
+   if (!set2 && !size) return new Response(response);
+   if (!set2)
+diff --git a/dist/utils.mjs b/dist/utils.mjs
+index 8e6a8c75fdc7c0b3b75e558ba881e2d90158e700..8452faa0dc71fcb1d5735449ba7d69bb99e59286 100644
+--- a/dist/utils.mjs
++++ b/dist/utils.mjs
+@@ -11,12 +11,14 @@ var handleFile = (response, set) => {
+     return response.then((res) => handleFile(res, set));
+   const size = response.size;
+   const immutable = set && (set.status === 206 || set.status === 304 || set.status === 412 || set.status === 416);
+-  const defaultHeader = immutable ? {
++  // Omit Transfer-Encoding: chunked when size or Content-Length is known (RFC 9112 §6.2)
++  // https://github.com/elysiajs/node/pull/64
++  const hasContentLength = set?.headers && (set.headers instanceof Headers ? set.headers.has("content-length") : "content-length" in set.headers || "Content-Length" in set.headers);
++  const defaultHeader = immutable || size === undefined && !hasContentLength ? {
+     "transfer-encoding": "chunked"
+   } : {
+     "accept-ranges": "bytes",
+-    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0,
+-    "transfer-encoding": "chunked"
++    "content-range": size ? `bytes 0-${size - 1}/${size}` : void 0
+   };
+   if (!set && !size) return new Response(response);
+   if (!set)

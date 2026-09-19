@@ -1,6 +1,6 @@
 import Elysia from 'elysia';
 
-import Auth from '../../services/Auth';
+import Auth from '../../../services/Auth';
 import chats from './chats';
 import models from './models';
 import providers from './providers';

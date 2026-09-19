@@ -1,8 +1,9 @@
+import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 
-import { facade, sleep } from '@noeldemartin/utils';
-import type { Subprocess } from 'bun';
+import { facade, PromisedValue, sleep } from '@noeldemartin/utils';
 import { status } from 'elysia';
 
 import CommunityServerControls from '../lib/CommunityServerControls';
@@ -10,6 +11,7 @@ import { ROOT_STORAGE } from '../lib/constants';
 import { env } from '../lib/env';
 import { SolidServerError } from '../lib/errors/SolidServerError';
 
+const require = createRequire(import.meta.url);
 const GUARDED_PATHS = ['/idp/register/', '/pod/create/'];
 const ROOT_URL = 'http://localhost:3000';
 const READY_POLL_MS = 100;
@@ -35,7 +37,7 @@ export interface SolidCredentials {
 }
 
 export class SolidServerService {
-  private process: Subprocess | null = null;
+  private process: ChildProcess | null = null;
   public readonly cssControls = new CommunityServerControls(ROOT_URL);
 
   public isEnabled(): boolean {
@@ -43,22 +45,12 @@ export class SolidServerService {
   }
 
   public async restart(): Promise<void> {
-    if (!this.isEnabled() || !this.process) {
-      return;
-    }
-
-    const process = this.process;
-
-    this.process = null;
-
-    process.kill();
-
-    await process.exited;
+    await this.stop();
     await this.start();
   }
 
   public async start(): Promise<void> {
-    if (!this.isEnabled() || this.process) {
+    if (this.process) {
       return;
     }
 
@@ -66,20 +58,45 @@ export class SolidServerService {
       mkdirSync(join(ROOT_STORAGE, 'data'), { recursive: true });
     }
 
-    const args = env('E2E')
-      ? ['community-solid-server', '-l', 'warn']
-      : ['community-solid-server', '-c', '@css:config/file.json', '-f', join(ROOT_STORAGE, 'data')];
+    const serverScript = require.resolve('@solid/community-server/bin/server.js');
+    const cmdArgs = env('E2E')
+      ? [serverScript, '-l', 'warn']
+      : [serverScript, '-c', '@css:config/file.json', '-f', join(ROOT_STORAGE, 'data')];
 
-    this.process = Bun.spawn(args, {
-      stdin: 'inherit',
-      stdout: 'inherit',
+    const childProcess = spawn(process.execPath, cmdArgs, {
+      stdio: 'inherit',
     });
 
-    await this.waitReady(this.process);
+    this.process = childProcess;
+
+    await this.waitReady(childProcess);
+  }
+
+  public async stop(): Promise<void> {
+    if (!this.process) {
+      return;
+    }
+
+    const process = this.process;
+    const exited = new PromisedValue<void>();
+    const listener = () => exited.resolve();
+
+    this.process = null;
+
+    if (process.exitCode !== null) {
+      exited.resolve();
+    } else {
+      process.on('exit', listener);
+      process.kill();
+    }
+
+    await exited;
+
+    process.off('exit', listener);
   }
 
   public guard(request: Request): void {
-    const requestPath = new URL(request.url).pathname;
+    const requestPath = new URL(request.url).pathname.replace(/^\/pod/, '') || '/';
 
     if (!GUARDED_PATHS.some((path) => requestPath.startsWith(path))) {
       return;
@@ -90,8 +107,9 @@ export class SolidServerService {
 
   public async proxy(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    const pathname = url.pathname.replace(/^\/pod/, '') || '/';
 
-    return fetch(`${ROOT_URL}${url.pathname}${url.search}`, {
+    return fetch(`${ROOT_URL}${pathname}${url.search}`, {
       method: request.method,
       headers: request.headers,
       body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
@@ -100,27 +118,19 @@ export class SolidServerService {
   }
 
   public async createAccount(options: CreateAccountOptions): Promise<void> {
-    if (!this.isEnabled()) {
-      throw new SolidServerError(400, 'Managed POD is disabled');
-    }
-
     await this.cssControls.createAccount(options);
   }
 
   public async login(options: LoginOptions): Promise<SolidCredentials> {
-    if (!this.isEnabled()) {
-      throw new SolidServerError(400, 'Managed POD is disabled');
-    }
-
     return this.cssControls.login(options);
   }
 
-  private async waitReady(subprocess: Subprocess): Promise<void> {
+  private async waitReady(process: ChildProcess): Promise<void> {
     const deadline = Date.now() + READY_TIMEOUT_MS;
 
     while (Date.now() < deadline) {
-      if (subprocess.exitCode !== null) {
-        throw new SolidServerError(500, `Solid server exited before being ready (code ${subprocess.exitCode}).`);
+      if (process.exitCode !== null) {
+        throw new SolidServerError(500, `Solid server exited before being ready (code ${process.exitCode}).`);
       }
 
       try {
