@@ -1,6 +1,6 @@
 <template>
   <Button @click="$emit('login')" class="w-full">
-    {{ $t('home.logIn') }}
+    {{ env('VITE_MANAGED_POD') ? $t('home.logIn') : $t('home.logInWithSolid') }}
   </Button>
   <Button v-if="env('VITE_MANAGED_POD')" variant="secondary" route="register" class="w-full">
     {{ $t('home.register') }}
