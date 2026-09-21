@@ -6,13 +6,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "windows": [
-      {
-        "title": "Ànima",
-        "visible": false,
-        "skipTaskbar": true
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }

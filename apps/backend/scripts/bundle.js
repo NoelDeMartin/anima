@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +20,7 @@ try {
   execSync('vp build', { cwd: backendDir, stdio: 'inherit' });
 
   // 2. Deploy production dependencies
-  execSync(`pnpm --filter=@anima/backend deploy "${tmpDir}" --prod --legacy --config.node-linker=hoisted`, {
+  execSync(`pnpm --filter=@anima/backend deploy "${tmpDir}" --prod --config.node-linker=hoisted`, {
     cwd: repoRoot,
     stdio: 'inherit',
   });
@@ -39,7 +39,22 @@ try {
     rmSync(join(tmpDir, name), { recursive: true, force: true });
   }
 
-  // 6. Replace dist with complete bundle
+  // 6. Remove .bin directories containing CLI symlinks which point to the temporary deploy path
+  const removeBinDirs = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === '.bin') {
+          rmSync(fullPath, { recursive: true, force: true });
+        } else {
+          removeBinDirs(fullPath);
+        }
+      }
+    }
+  };
+  removeBinDirs(join(tmpDir, 'node_modules'));
+
+  // 7. Replace dist with complete bundle
   rmSync(distDir, { recursive: true, force: true });
   mkdirSync(distDir, { recursive: true });
   cpSync(tmpDir, distDir, { recursive: true });
