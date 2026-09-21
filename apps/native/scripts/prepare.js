@@ -29,49 +29,51 @@ mkdirSync(binariesDir, { recursive: true });
 if (!existsSync(sidecarPath)) {
   console.log(`📥 Downloading Node.js (${NODE_VERSION}) for ${hostTriple}...`);
 
-  let arch;
-  let nodeArchive;
-  let binarySubpath;
+  const arch = hostTriple.includes('aarch64') ? 'arm64' : 'x64';
 
-  if (hostTriple.includes('linux')) {
-    arch = hostTriple.includes('aarch64') ? 'arm64' : 'x64';
-    nodeArchive = `node-v${NODE_VERSION}-linux-${arch}.tar.gz`;
-    binarySubpath = `node-v${NODE_VERSION}-linux-${arch}/bin/node`;
-  } else if (hostTriple.includes('darwin')) {
-    arch = hostTriple.includes('aarch64') ? 'arm64' : 'x64';
-    nodeArchive = `node-v${NODE_VERSION}-darwin-${arch}.tar.gz`;
-    binarySubpath = `node-v${NODE_VERSION}-darwin-${arch}/bin/node`;
-  } else if (hostTriple.includes('windows')) {
-    arch = hostTriple.includes('aarch64') ? 'arm64' : 'x64';
-    nodeArchive = `node-v${NODE_VERSION}-win-${arch}.zip`;
-    binarySubpath = `node-v${NODE_VERSION}-win-${arch}/node.exe`;
-  } else {
-    console.error(`❌ Unsupported target triple: ${hostTriple}`);
-    process.exit(1);
-  }
-
-  const tmpDir = mkdtempSync(join(tmpdir(), 'anima-node-'));
-  try {
-    const url = `https://nodejs.org/dist/v${NODE_VERSION}/${nodeArchive}`;
+  if (isWindows) {
+    const url = `https://nodejs.org/dist/v${NODE_VERSION}/win-${arch}/node.exe`;
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`Failed to download Node.js from ${url}: ${res.statusText}`);
     }
     const arrayBuffer = await res.arrayBuffer();
-    const archivePath = join(tmpDir, nodeArchive);
-    writeFileSync(archivePath, Buffer.from(arrayBuffer));
+    writeFileSync(sidecarPath, Buffer.from(arrayBuffer));
+    console.log(`✅ Sidecar binary saved: ${sidecarPath}`);
+  } else {
+    let nodeArchive;
+    let binarySubpath;
 
-    if (nodeArchive.endsWith('.zip')) {
-      execSync(`tar -xf "${archivePath}" -C "${tmpDir}"`, { stdio: 'inherit' });
+    if (hostTriple.includes('linux')) {
+      nodeArchive = `node-v${NODE_VERSION}-linux-${arch}.tar.gz`;
+      binarySubpath = `node-v${NODE_VERSION}-linux-${arch}/bin/node`;
+    } else if (hostTriple.includes('darwin')) {
+      nodeArchive = `node-v${NODE_VERSION}-darwin-${arch}.tar.gz`;
+      binarySubpath = `node-v${NODE_VERSION}-darwin-${arch}/bin/node`;
     } else {
-      execSync(`tar -xzf "${archivePath}" -C "${tmpDir}"`, { stdio: 'inherit' });
+      console.error(`❌ Unsupported target triple: ${hostTriple}`);
+      process.exit(1);
     }
 
-    cpSync(join(tmpDir, binarySubpath), sidecarPath);
-    chmodSync(sidecarPath, 0o755);
-    console.log(`✅ Sidecar binary saved: ${sidecarPath}`);
-  } finally {
-    rmSync(tmpDir, { recursive: true, force: true });
+    const tmpDir = mkdtempSync(join(tmpdir(), 'anima-node-'));
+    try {
+      const url = `https://nodejs.org/dist/v${NODE_VERSION}/${nodeArchive}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        throw new Error(`Failed to download Node.js from ${url}: ${res.statusText}`);
+      }
+      const arrayBuffer = await res.arrayBuffer();
+      const archivePath = join(tmpDir, nodeArchive);
+      writeFileSync(archivePath, Buffer.from(arrayBuffer));
+
+      execSync(`tar -xzf "${archivePath}" -C "${tmpDir}"`, { stdio: 'inherit' });
+
+      cpSync(join(tmpDir, binarySubpath), sidecarPath);
+      chmodSync(sidecarPath, 0o755);
+      console.log(`✅ Sidecar binary saved: ${sidecarPath}`);
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
   }
 }
 

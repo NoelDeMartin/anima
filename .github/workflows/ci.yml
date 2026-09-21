@@ -83,7 +83,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev xvfb
-      - name: Setup E2E
+      - name: Setup E2E dependencies
         run: vp run e2e#install-deps -- chromium
       - name: Prepare
         run: vp run --filter @anima/native tauri:prepare
