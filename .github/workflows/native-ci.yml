@@ -1,0 +1,45 @@
+name: Native CI
+
+on:
+  workflow_call:
+
+jobs:
+  native-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup VP
+        uses: voidzero-dev/setup-vp@v1.20.0
+        with:
+          node-version-file: '.node-version'
+          cache: true
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Setup Rust caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/native/src-tauri
+      - name: Setup Rust dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev xvfb
+      - name: Setup E2E dependencies
+        run: vp run e2e#install-deps -- chromium
+      - name: Prepare
+        run: vp run --filter @anima/native tauri:prepare
+      - name: Lint
+        run: |
+          cargo fmt --manifest-path apps/native/src-tauri/Cargo.toml --check
+          cargo clippy --manifest-path apps/native/src-tauri/Cargo.toml -- -D warnings
+      - name: Build
+        run: vp run --filter @anima/native build:debug
+      - name: Run E2E
+        run: xvfb-run -a vp run e2e:native -- --project chromium
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && failure() }}
+        with:
+          name: test-results-native-chromium
+          path: e2e/test-results/
+          retention-days: 30
