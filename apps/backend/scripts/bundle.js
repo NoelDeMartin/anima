@@ -1,6 +1,5 @@
 import { execSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -8,9 +7,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const backendDir = resolve(__dirname, '..');
 const repoRoot = resolve(backendDir, '../..');
 const distDir = join(backendDir, 'dist');
-const tmpDir = mkdtempSync(join(tmpdir(), 'anima-backend-bundle-'));
+const tmpDir = mkdtempSync(join(backendDir, '.bundle-tmp-'));
 
 if (!process.env.VP_RUN) {
+  rmSync(tmpDir, { recursive: true, force: true });
   console.error("❌ Error: bundle.js must be invoked via 'vp run'");
   process.exit(1);
 }
