@@ -91,6 +91,8 @@ jobs:
         run: |
           cargo fmt --manifest-path apps/native/src-tauri/Cargo.toml --check
           cargo clippy --manifest-path apps/native/src-tauri/Cargo.toml -- -D warnings
+      - name: Build
+        run: vp run --filter @anima/native build:debug
       - name: Run E2E
         run: xvfb-run -a vp run e2e:native -- --project chromium
       - uses: actions/upload-artifact@v7
