@@ -106,6 +106,15 @@ fn spawn_backend(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let serve_frontend = std::env::var("SERVE_FRONTEND").unwrap_or_else(|_| "true".to_string());
     command = command.env("SERVE_FRONTEND", serve_frontend);
 
+    let node_env = std::env::var("NODE_ENV").unwrap_or_else(|_| {
+        if tauri::is_dev() {
+            "development".to_string()
+        } else {
+            "production".to_string()
+        }
+    });
+    command = command.env("NODE_ENV", node_env);
+
     if let Ok(val) = std::env::var("E2E") {
         command = command.env("E2E", val);
     }

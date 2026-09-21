@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "vp build",
-    "dev:external": "tsx --watch src/index.ts",
-    "dev:managed": "MANAGED_POD=true tsx --watch src/index.ts"
+    "dev:external": "NODE_ENV=development tsx --watch src/index.ts",
+    "dev:managed": "NODE_ENV=development MANAGED_POD=true tsx --watch src/index.ts"
   },
   "dependencies": {
     "@anima/core": "workspace:*",
