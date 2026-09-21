@@ -16,7 +16,11 @@ else
 	HOST_TRIPLE="${TAURI_TARGET_TRIPLE}"
 fi
 
-SIDECAR_PATH="${BINARIES_DIR}/node-${HOST_TRIPLE}"
+if [[ "${HOST_TRIPLE}" == *"windows"* ]]; then
+	SIDECAR_PATH="${BINARIES_DIR}/node-${HOST_TRIPLE}.exe"
+else
+	SIDECAR_PATH="${BINARIES_DIR}/node-${HOST_TRIPLE}"
+fi
 mkdir -p "${BINARIES_DIR}"
 
 # 2. Download standalone Node.js if missing
@@ -39,13 +43,26 @@ if [ ! -f "${SIDECAR_PATH}" ]; then
 		fi
 		NODE_ARCHIVE="node-v${NODE_VERSION}-darwin-${ARCH}.tar.gz"
 		BINARY_SUBPATH="node-v${NODE_VERSION}-darwin-${ARCH}/bin/node"
+	elif [[ "${HOST_TRIPLE}" == *"windows"* ]]; then
+		if [[ "${HOST_TRIPLE}" == *"aarch64"* ]]; then
+			ARCH="arm64"
+		else
+			ARCH="x64"
+		fi
+		NODE_ARCHIVE="node-v${NODE_VERSION}-win-${ARCH}.zip"
+		BINARY_SUBPATH="node-v${NODE_VERSION}-win-${ARCH}/node.exe"
 	else
 		echo "Unsupported target triple: ${HOST_TRIPLE}" >&2
 		exit 1
 	fi
 
 	TMP_DIR="$(mktemp -d)"
-	curl -sSL "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}" | tar -xz -C "${TMP_DIR}"
+	if [[ "${NODE_ARCHIVE}" == *.zip ]]; then
+		curl -sSL "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}" -o "${TMP_DIR}/${NODE_ARCHIVE}"
+		unzip -q "${TMP_DIR}/${NODE_ARCHIVE}" -d "${TMP_DIR}"
+	else
+		curl -sSL "https://nodejs.org/dist/v${NODE_VERSION}/${NODE_ARCHIVE}" | tar -xz -C "${TMP_DIR}"
+	fi
 	cp "${TMP_DIR}/${BINARY_SUBPATH}" "${SIDECAR_PATH}"
 	rm -rf "${TMP_DIR}"
 	chmod 755 "${SIDECAR_PATH}"

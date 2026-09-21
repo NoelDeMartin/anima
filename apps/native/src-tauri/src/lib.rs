@@ -58,22 +58,26 @@ fn hide_dock_icon(app: &App) {
 #[cfg(not(target_os = "macos"))]
 fn hide_dock_icon(_app: &App) {}
 
-fn resolve_backend_dir(app: &App) -> PathBuf {
-    #[cfg(debug_assertions)]
-    {
+fn resolve_backend_dir(app: &App) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    if let Ok(custom_dir) = std::env::var("ANIMA_BACKEND_DIR") {
+        return Ok(PathBuf::from(custom_dir));
+    }
+
+    if tauri::is_dev() {
         let dev_path = PathBuf::from("resources/backend");
         if dev_path.join("index.js").exists() {
-            return dev_path.canonicalize().unwrap_or(dev_path);
+            return Ok(dev_path.canonicalize().unwrap_or(dev_path));
         }
     }
 
-    app.path()
-        .resolve("resources/backend", BaseDirectory::Resource)
-        .unwrap_or_else(|_| PathBuf::from("resources/backend"))
+    let resource_path = app
+        .path()
+        .resolve("resources/backend", BaseDirectory::Resource)?;
+    Ok(resource_path)
 }
 
 fn spawn_backend(app: &App) -> Result<(), Box<dyn std::error::Error>> {
-    let backend_dir = resolve_backend_dir(app);
+    let backend_dir = resolve_backend_dir(app)?;
     let entry_file = backend_dir.join("index.js");
 
     #[cfg(debug_assertions)]
@@ -86,11 +90,15 @@ fn spawn_backend(app: &App) -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
+    if !entry_file.exists() {
+        return Err(format!("Backend entry file not found at {:?}", entry_file).into());
+    }
+
     let mut command = app
         .shell()
         .sidecar("node")?
         .current_dir(&backend_dir)
-        .args([entry_file.to_string_lossy().as_ref()]);
+        .args(["index.js"]);
 
     let managed_pod = std::env::var("MANAGED_POD").unwrap_or_else(|_| "true".to_string());
     command = command.env("MANAGED_POD", managed_pod);
@@ -110,7 +118,6 @@ fn spawn_backend(app: &App) -> Result<(), Box<dyn std::error::Error>> {
 
     // Drain stdout/stderr asynchronously to avoid pipe backpressure blocking
     tauri::async_runtime::spawn(async move {
-        #[cfg(debug_assertions)]
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => {
@@ -119,11 +126,12 @@ fn spawn_backend(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                 CommandEvent::Stderr(line) => {
                     eprintln!("[node] {}", String::from_utf8_lossy(&line))
                 }
+                CommandEvent::Terminated(payload) => {
+                    eprintln!("[node] Process terminated with code: {:?}", payload.code)
+                }
                 _ => {}
             }
         }
-        #[cfg(not(debug_assertions))]
-        while rx.recv().await.is_some() {}
     });
 
     Ok(())
@@ -140,10 +148,13 @@ fn setup_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
 
     let mut tray_builder = TrayIconBuilder::new()
         .menu(&menu)
+        .tooltip("Ànima")
         .show_menu_on_left_click(true)
         .on_menu_event(|app, event| match event.id.as_ref() {
             "open" => {
-                let _ = app.opener().open_url(BACKEND_URL, None::<&str>);
+                if let Err(err) = app.opener().open_url(BACKEND_URL, None::<&str>) {
+                    eprintln!("[native] Failed to open URL: {err}");
+                }
             }
             "quit" => {
                 kill_backend(app);
