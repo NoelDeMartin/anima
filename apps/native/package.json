@@ -6,7 +6,7 @@
     "build": "tauri build",
     "build:debug": "cargo build --manifest-path src-tauri/Cargo.toml",
     "dev": "tauri dev",
-    "tauri:prepare": "bash scripts/prepare.sh"
+    "tauri:prepare": "node scripts/prepare.js"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.4"

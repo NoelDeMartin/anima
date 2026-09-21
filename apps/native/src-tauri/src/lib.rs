@@ -51,12 +51,12 @@ fn kill_backend(app: &AppHandle) {
 }
 
 #[cfg(target_os = "macos")]
-fn hide_dock_icon(app: &App) {
+fn hide_dock_icon(app: &mut App) {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 }
 
 #[cfg(not(target_os = "macos"))]
-fn hide_dock_icon(_app: &App) {}
+fn hide_dock_icon(_app: &mut App) {}
 
 fn resolve_backend_dir(app: &App) -> Result<PathBuf, Box<dyn std::error::Error>> {
     if let Ok(custom_dir) = std::env::var("ANIMA_BACKEND_DIR") {

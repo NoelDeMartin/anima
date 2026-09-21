@@ -8,7 +8,7 @@ export default defineConfig({
   run: {
     tasks: {
       'build:native': {
-        command: 'bash scripts/bundle.sh',
+        command: 'node scripts/bundle.js',
         dependsOn: ['@anima/frontend#build:native'],
       },
     },
