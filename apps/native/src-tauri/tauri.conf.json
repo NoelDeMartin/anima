@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "anima",
+  "productName": "Ànima",
   "identifier": "com.noeldemartin.anima",
   "build": {
     "frontendDist": "../dist"
