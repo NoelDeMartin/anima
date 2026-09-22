@@ -7,6 +7,10 @@ on:
         description: 'Build Linux (AppImage)'
         type: boolean
         default: true
+      linux-legacy:
+        description: 'Build Linux legacy (AppImage, glibc 2.35 / Ubuntu 22.04)'
+        type: boolean
+        default: true
       macos:
         description: 'Build macOS (DMG)'
         type: boolean
@@ -30,6 +34,7 @@ jobs:
         run: |
           TARGETS=()
           [ "${{ inputs.linux }}" = "true" ] && TARGETS+=('{"os":"ubuntu-latest","platform":"linux","artifact_path":"apps/native/src-tauri/target/release/bundle/appimage/*.AppImage"}')
+          [ "${{ inputs.linux-legacy }}" = "true" ] && TARGETS+=('{"os":"ubuntu-22.04","platform":"linux-legacy","artifact_path":"apps/native/src-tauri/target/release/bundle/appimage/*.AppImage"}')
           [ "${{ inputs.macos }}" = "true" ] && TARGETS+=('{"os":"macos-latest","platform":"macos","artifact_path":"apps/native/src-tauri/target/release/bundle/dmg/*.dmg"}')
           [ "${{ inputs.windows }}" = "true" ] && TARGETS+=('{"os":"windows-latest","platform":"windows","artifact_path":"apps/native/src-tauri/target/release/bundle/nsis/*.exe"}')
 
@@ -65,8 +70,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/native/src-tauri
+          key: ${{ matrix.platform }}
       - name: Setup Rust dependencies
-        if: matrix.platform == 'linux'
+        if: startsWith(matrix.platform, 'linux')
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
