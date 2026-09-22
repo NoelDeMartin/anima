@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, rmdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { isAbsolute, join } from 'node:path';
 
-import { facade, PromisedValue, sleep } from '@noeldemartin/utils';
+import { facade, isDevelopment, PromisedValue, sleep } from '@noeldemartin/utils';
 import { status } from 'elysia';
 import { z } from 'zod';
 
@@ -26,7 +26,7 @@ function cssConfigPath(): string {
 export const CreateAccountOptionsSchema = z.object({
   email: z.email(),
   username: z.string().regex(/^[a-z0-9]+$/i),
-  password: z.string().min(8),
+  password: isDevelopment() ? z.string() : z.string().min(8),
   storageRoot: z
     .string()
     .optional()

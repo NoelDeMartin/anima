@@ -34,7 +34,12 @@ pub fn start_ipc_server(app: AppHandle) -> Result<u16, Box<dyn std::error::Error
 }
 
 fn handle_request(app: &AppHandle, stream: &mut TcpStream, request: &str) {
-    let route = request.lines().next().unwrap_or("").rsplit_once(' ').map_or("", |(r, _)| r);
+    let route = request
+        .lines()
+        .next()
+        .unwrap_or("")
+        .rsplit_once(' ')
+        .map_or("", |(r, _)| r);
 
     let (status, body) = match route {
         "POST /pick-folder" => handle_pick_folder(app),
@@ -50,7 +55,10 @@ fn handle_pick_folder(app: &AppHandle) -> (u16, String) {
         Some(file_path) => {
             let path_str = file_path.as_path().map(|p| p.to_string_lossy().to_string());
             match path_str {
-                Some(s) => format!("{{\"path\":{}}}", serde_json::to_string(&s).unwrap_or_default()),
+                Some(s) => format!(
+                    "{{\"path\":{}}}",
+                    serde_json::to_string(&s).unwrap_or_default()
+                ),
                 None => "{\"path\":null}".to_string(),
             }
         }
