@@ -1,5 +1,4 @@
 import { Events } from '@aerogel/core';
-import { env } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import type {
@@ -11,16 +10,14 @@ import type {
   AnimaChatEditableFields,
   InstalledModelEditableFields,
 } from '@anima/core';
-import { facade, fail, objectFromEntries, objectKeys } from '@noeldemartin/utils';
+import { facade, objectFromEntries, objectKeys } from '@noeldemartin/utils';
 import { markRaw, watchEffect } from 'vue';
 
-import type Runtime from '@/lib/runtimes/Runtime';
+import { getRuntime, requireRuntime } from '@/lib/runtime';
 
 import Service from './AI.state';
 
 export class AIService extends Service {
-  public _runtime: Runtime | null = null;
-
   public async updateChat(chatUrl: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const originalChat = this.chats[chatUrl];
 
@@ -34,7 +31,7 @@ export class AIService extends Service {
         anima: { ...originalChat.anima, ...updates, updatedAt: new Date() },
       };
 
-      await this.requiredRuntime().updateChat(chatUrl, updates);
+      await requireRuntime().updateChat(chatUrl, updates);
     } catch (error) {
       this.chats[chatUrl] = originalChat;
 
@@ -49,12 +46,12 @@ export class AIService extends Service {
       throw new Error(`Chat ${chatUrl} not found`);
     }
 
-    await this.requiredRuntime().sendMessage(aiChat, message);
+    await requireRuntime().sendMessage(aiChat, message);
   }
 
   public async createChat(attributes: AnimaChatEditableFields): Promise<AnimaChat> {
-    const animaChat = await this.requiredRuntime().createAnimaChat(attributes);
-    const aiChat = await this.requiredRuntime().createAIChat(animaChat, { loadMessages: false });
+    const animaChat = await requireRuntime().createAnimaChat(attributes);
+    const aiChat = await requireRuntime().createAIChat(animaChat, { loadMessages: false });
 
     this.chats[animaChat.url] = { anima: animaChat, ai: markRaw(aiChat) };
 
@@ -66,13 +63,13 @@ export class AIService extends Service {
     name: string,
     data: InstalledModelEditableFields = { enabled: true, alias: null },
   ): Promise<void> {
-    const model = await this.requiredRuntime().installModel(providerId, name, data);
+    const model = await requireRuntime().installModel(providerId, name, data);
 
     this.models[model.id] = model;
   }
 
   async refreshModels(): Promise<void> {
-    const models = await this.requiredRuntime().getModels();
+    const models = await requireRuntime().getModels();
 
     this.models = objectFromEntries(models.map((model) => [model.id, model]));
   }
@@ -87,7 +84,7 @@ export class AIService extends Service {
     try {
       this.models[id] = { ...originalModel, ...updates };
 
-      await this.requiredRuntime().updateModel(id, updates);
+      await requireRuntime().updateModel(id, updates);
     } catch (error) {
       this.models[id] = originalModel;
 
@@ -105,7 +102,7 @@ export class AIService extends Service {
     try {
       delete this.models[id];
 
-      await this.requiredRuntime().deleteModel(id);
+      await requireRuntime().deleteModel(id);
     } catch (error) {
       this.models[id] = originalModel;
 
@@ -114,14 +111,14 @@ export class AIService extends Service {
   }
 
   async cancelInstallation(providerId: ProviderId, id: ModelId): Promise<void> {
-    await this.requiredRuntime().cancelModelInstallation(providerId, id);
+    await requireRuntime().cancelModelInstallation(providerId, id);
   }
 
   async createProvider(provider: Omit<AIProvider, 'id'>): Promise<void> {
-    await this.requiredRuntime().createProvider(provider);
+    await requireRuntime().createProvider(provider);
 
-    const providersList = await this.requiredRuntime().getProviders();
-    const models = await this.requiredRuntime().getModels();
+    const providersList = await requireRuntime().getProviders();
+    const models = await requireRuntime().getModels();
 
     this.setState({
       providersList,
@@ -130,16 +127,16 @@ export class AIService extends Service {
   }
 
   async updateProvider(id: ProviderId, updates: Partial<AIProviderEditableFields>): Promise<void> {
-    await this.requiredRuntime().updateProvider(id, updates);
+    await requireRuntime().updateProvider(id, updates);
 
-    this.providersList = await this.requiredRuntime().getProviders();
+    this.providersList = await requireRuntime().getProviders();
   }
 
   async deleteProvider(id: ProviderId): Promise<void> {
-    await this.requiredRuntime().deleteProvider(id);
+    await requireRuntime().deleteProvider(id);
 
-    const providers = await this.requiredRuntime().getProviders();
-    const models = await this.requiredRuntime().getModels();
+    const providers = await requireRuntime().getProviders();
+    const models = await requireRuntime().getModels();
 
     this.setState({
       providersList: providers,
@@ -156,13 +153,8 @@ export class AIService extends Service {
   }
 
   protected async initializeRuntime(): Promise<void> {
-    const { default: Runtime } = env('VITE_SPA_MODE')
-      ? await import('@/lib/runtimes/LocalRuntime')
-      : await import('@/lib/runtimes/RemoteRuntime');
-
-    this._runtime = new Runtime();
-
-    const { chats, models, providers, factories } = await this._runtime.initialize();
+    const runtime = await getRuntime({ skipInitialization: true });
+    const { chats, models, providers, factories } = await runtime.initialize();
 
     this.setState({
       chats: objectFromEntries(chats.map((chat) => [chat.url, { anima: chat }])),
@@ -180,7 +172,7 @@ export class AIService extends Service {
         return;
       }
 
-      const aiChat = await this.requiredRuntime().createAIChat(selectedChat.anima, { loadMessages: true });
+      const aiChat = await requireRuntime().createAIChat(selectedChat.anima, { loadMessages: true });
 
       this.chats[selectedChat.anima.url] = { ...selectedChat, ai: markRaw(aiChat) };
     });
@@ -198,10 +190,6 @@ export class AIService extends Service {
 
   protected async watchLogout(): Promise<void> {
     Events.on('auth:logout', () => Router.push({ name: 'home' }));
-  }
-
-  protected requiredRuntime(): Runtime {
-    return this._runtime ?? fail('Runtime not initialized');
   }
 }
 

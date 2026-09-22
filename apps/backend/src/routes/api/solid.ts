@@ -3,7 +3,7 @@ import z from 'zod';
 
 import { SolidServerError } from '../../lib/errors/SolidServerError';
 import Auth from '../../services/Auth';
-import SolidServer from '../../services/SolidServer';
+import SolidServer, { CreateAccountOptionsSchema } from '../../services/SolidServer';
 
 export default new Elysia()
   .error({ SolidServerError })
@@ -23,16 +23,10 @@ export default new Elysia()
   })
   .post(
     '/signup',
-    async ({ body: { email, username, password } }) => {
-      await SolidServer.createAccount({ email, username, password });
+    async ({ body: { email, username, password, storageRoot } }) => {
+      await SolidServer.createAccount({ email, username, password, storageRoot });
     },
-    {
-      body: z.object({
-        email: z.email(),
-        username: z.string(),
-        password: z.string(),
-      }),
-    },
+    { body: CreateAccountOptionsSchema },
   )
   .post(
     '/login',

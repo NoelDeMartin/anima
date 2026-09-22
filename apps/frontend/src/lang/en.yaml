@@ -12,6 +12,9 @@ home:
   email: Email
   username: Username
   password: Password
+  storageRoot: Storage folder
+  storageRootPlaceholder: Storage folder (optional)
+  browse: Browse
 
 chat:
   greeting: Hello {name}, how can I help you today?

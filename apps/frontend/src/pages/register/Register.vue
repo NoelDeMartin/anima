@@ -30,6 +30,18 @@
             :placeholder="$t('home.password')"
             class="w-full"
           />
+          <div v-if="$anima.native" class="flex w-full gap-2 items-center">
+            <Input
+              name="storageRoot"
+              :label="$t('home.storageRoot')"
+              label-class="sr-only"
+              :placeholder="$t('home.storageRootPlaceholder')"
+              class="w-full flex-1"
+            />
+            <Button type="button" variant="secondary" class="shrink-0" :disabled="pickingFolder" @click="pickFolder">
+              {{ $t('home.browse') }}
+            </Button>
+          </div>
           <p v-if="errorMessage" class="text-xs text-red-500 text-center">
             {{ errorMessage }}
           </p>
@@ -43,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { Errors, env, requiredStringInput, useForm } from '@aerogel/core';
+import { Errors, env, requiredStringInput, stringInput, useForm } from '@aerogel/core';
 import { translate } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
@@ -51,16 +63,40 @@ import { ref } from 'vue';
 
 import api from '@/lib/api';
 import AI from '@/services/AI';
+import Anima from '@/services/Anima';
 import { chatRoute } from '@/utils/chats';
 
 const form = useForm({
   email: requiredStringInput(),
   username: requiredStringInput(),
   password: requiredStringInput(),
+  storageRoot: stringInput(),
 });
 
+const pickingFolder = ref(false);
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
+
+async function pickFolder() {
+  try {
+    pickingFolder.value = true;
+    const { data, error } = await api.native['pick-folder'].post();
+
+    if (error) {
+      errorMessage.value = error.value?.message ?? translate('home.registerFailed');
+
+      return;
+    }
+
+    if (data?.path) {
+      form.storageRoot = data.path;
+    }
+  } catch (error) {
+    Errors.report(error);
+  } finally {
+    pickingFolder.value = false;
+  }
+}
 
 async function submit() {
   try {
@@ -70,6 +106,7 @@ async function submit() {
       email: form.email,
       username: form.username,
       password: form.password,
+      storageRoot: Anima.native && form.storageRoot ? form.storageRoot : undefined,
     });
 
     if (error) {

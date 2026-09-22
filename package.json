@@ -2,6 +2,7 @@
   "scripts": {
     "dev:external": "concurrently \"vp run dev:serve-pod\" \"vp run --filter @anima/backend dev:external\" \"vp run --filter @anima/frontend dev:external\"",
     "dev:managed": "concurrently \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\"",
+    "dev:native": "vp run native#tauri:prepare && vp run --filter @anima/native dev",
     "dev:serve-pod": "community-solid-server -c @css:config/file.json -f ./solid",
     "dev:spa": "concurrently \"vp run dev:serve-pod\" \"vp run --filter @anima/frontend dev:spa\"",
     "e2e:all": "vp run e2e:spa && vp run e2e:external && vp run e2e:managed && vp run e2e:native",

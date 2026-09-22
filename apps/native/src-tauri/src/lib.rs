@@ -12,6 +12,8 @@ use tauri_plugin_shell::{
     ShellExt,
 };
 
+mod ipc;
+
 const BACKEND_URL: &str = "http://localhost:1191";
 
 pub struct BackendState {
@@ -76,7 +78,7 @@ fn resolve_backend_dir(app: &App) -> Result<PathBuf, Box<dyn std::error::Error>>
     Ok(resource_path)
 }
 
-fn spawn_backend(app: &App) -> Result<(), Box<dyn std::error::Error>> {
+fn spawn_backend(app: &App, ipc_port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let backend_dir = resolve_backend_dir(app)?;
     let entry_file = backend_dir.join("index.js");
 
@@ -105,6 +107,9 @@ fn spawn_backend(app: &App) -> Result<(), Box<dyn std::error::Error>> {
 
     let serve_frontend = std::env::var("SERVE_FRONTEND").unwrap_or_else(|_| "true".to_string());
     command = command.env("SERVE_FRONTEND", serve_frontend);
+
+    command = command.env("ANIMA_NATIVE", "true");
+    command = command.env("ANIMA_NATIVE_IPC_PORT", ipc_port.to_string());
 
     let node_env = std::env::var("NODE_ENV").unwrap_or_else(|_| {
         if tauri::is_dev() {
@@ -185,9 +190,12 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            let ipc_port = ipc::start_ipc_server(app.handle().clone())?;
+
             hide_dock_icon(app);
-            spawn_backend(app)?;
+            spawn_backend(app, ipc_port)?;
             setup_tray(app)?;
 
             Ok(())

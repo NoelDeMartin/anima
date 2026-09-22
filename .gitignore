@@ -1,3 +1,4 @@
 node_modules
 /solid/
+/solid-*/
 .bundle-tmp*

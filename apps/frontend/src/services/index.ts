@@ -1,8 +1,10 @@
 import AI from './AI';
+import Anima from './Anima';
 import BrowserAPIs from './BrowserAPIs';
 
 export const services = {
   $ai: AI,
+  $anima: Anima,
   $browserAPIs: BrowserAPIs,
 };
 

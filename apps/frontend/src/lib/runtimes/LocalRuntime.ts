@@ -23,7 +23,6 @@ import {
   type ProviderId,
   type InstalledModelEditableFields,
   type AIProviderEditableFields,
-  type AIProviderFactory,
   OtherModelsProviderFactory,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
@@ -36,56 +35,12 @@ import SolidAuthProvider from '@/lib/providers/SolidAuthProvider';
 import AI from '@/services/AI';
 import BrowserAPIs from '@/services/BrowserAPIs';
 
-import type Runtime from './Runtime';
+import type { RuntimeInitializeResult } from './Runtime';
+import Runtime from './Runtime';
 
-export default class LocalRuntime implements Runtime {
-  async initialize(): Promise<{
-    chats: AnimaChat[];
-    models: AIModel[];
-    providers: AIProvider[];
-    factories: AIProviderFactory[];
-  }> {
-    await BrowserAPIs.booted;
-    await Solid.booted;
-
-    const browserFactory = new BrowserModelsProviderFactory();
-
-    Events.on('auth:logout', () => ModelsManager.clear());
-
-    bootAnimaModels();
-    setAuthProvider(new SolidAuthProvider());
-
-    ModelsManager.setStorageProvider(new IndexedDBModelsStorageProvider());
-    ModelsManager.registerFactory('browser' as ProviderType, browserFactory);
-    ModelsManager.registerFactory('ollama' as ProviderType, new OllamaModelsProviderFactory('browser'));
-    ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory('browser'));
-    ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory('browser'));
-    ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory('browser'));
-    ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
-
-    if (!Solid.isLoggedIn()) {
-      return { chats: [], models: [], providers: [], factories: [] };
-    }
-
-    const browserAvailability = await browserFactory.getAvailability();
-    const result = {
-      chats: await this.getChats(),
-      models: await this.getModels(),
-      providers: await this.getProviders(),
-      factories: await ModelsManager.getProviderFactories(),
-    };
-
-    if (browserAvailability === 'available' && !result.providers.some((provider) => provider.type === 'browser')) {
-      await this.createProvider({
-        type: 'browser' as ProviderType,
-        name: 'Browser',
-      });
-
-      result.models = await this.getModels();
-      result.providers = await this.getProviders();
-    }
-
-    return result;
+export default class LocalRuntime extends Runtime {
+  async isNative(): Promise<boolean> {
+    return false;
   }
 
   async getChats(): Promise<AnimaChat[]> {
@@ -213,5 +168,49 @@ export default class LocalRuntime implements Runtime {
 
   async deleteProvider(id: ProviderId): Promise<void> {
     await ModelsManager.deleteProvider(id);
+  }
+
+  protected async performInitialize(): Promise<RuntimeInitializeResult> {
+    await BrowserAPIs.booted;
+    await Solid.booted;
+
+    const browserFactory = new BrowserModelsProviderFactory();
+
+    Events.on('auth:logout', () => ModelsManager.clear());
+
+    bootAnimaModels();
+    setAuthProvider(new SolidAuthProvider());
+
+    ModelsManager.setStorageProvider(new IndexedDBModelsStorageProvider());
+    ModelsManager.registerFactory('browser' as ProviderType, browserFactory);
+    ModelsManager.registerFactory('ollama' as ProviderType, new OllamaModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
+
+    if (!Solid.isLoggedIn()) {
+      return { chats: [], models: [], providers: [], factories: [] };
+    }
+
+    const browserAvailability = await browserFactory.getAvailability();
+    const result = {
+      chats: await this.getChats(),
+      models: await this.getModels(),
+      providers: await this.getProviders(),
+      factories: await ModelsManager.getProviderFactories(),
+    };
+
+    if (browserAvailability === 'available' && !result.providers.some((provider) => provider.type === 'browser')) {
+      await this.createProvider({
+        type: 'browser' as ProviderType,
+        name: 'Browser',
+      });
+
+      result.models = await this.getModels();
+      result.providers = await this.getProviders();
+    }
+
+    return result;
   }
 }

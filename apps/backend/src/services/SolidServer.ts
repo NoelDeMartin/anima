@@ -1,11 +1,13 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import { facade, PromisedValue, sleep } from '@noeldemartin/utils';
 import { status } from 'elysia';
+import { z } from 'zod';
 
+import CommunityServerConfig from '../lib/CommunityServerConfig';
 import CommunityServerControls from '../lib/CommunityServerControls';
 import { ROOT_STORAGE } from '../lib/constants';
 import { env } from '../lib/env';
@@ -17,11 +19,21 @@ const ROOT_URL = 'http://localhost:3000';
 const READY_POLL_MS = 100;
 const READY_TIMEOUT_MS = 30_000;
 
-export interface CreateAccountOptions {
-  email: string;
-  username: string;
-  password: string;
+function cssConfigPath(): string {
+  return join(ROOT_STORAGE, 'css-config.json');
 }
+
+export const CreateAccountOptionsSchema = z.object({
+  email: z.email(),
+  username: z.string().regex(/^[a-z0-9]+$/i),
+  password: z.string().min(8),
+  storageRoot: z
+    .string()
+    .optional()
+    .refine((value) => !value || isAbsolute(value), {
+      message: 'The selected storage folder is not an absolute path.',
+    }),
+});
 
 export interface LoginOptions {
   email: string;
@@ -36,9 +48,20 @@ export interface SolidCredentials {
   oidcIssuer: string;
 }
 
+export type CreateAccountOptions = z.infer<typeof CreateAccountOptionsSchema>;
+
 export class SolidServerService {
   private process: ChildProcess | null = null;
-  public readonly cssControls = new CommunityServerControls(ROOT_URL);
+  private cssConfig: CommunityServerConfig | null = null;
+  private cssControls = new CommunityServerControls(ROOT_URL);
+
+  constructor() {
+    const configPath = cssConfigPath();
+
+    if (existsSync(configPath)) {
+      this.cssConfig = new CommunityServerConfig(configPath);
+    }
+  }
 
   public isEnabled(): boolean {
     return env('MANAGED_POD');
@@ -54,14 +77,22 @@ export class SolidServerService {
       return;
     }
 
+    const internalPath = join(ROOT_STORAGE, 'data');
+    const configPath = cssConfigPath();
+
     if (!env('E2E')) {
-      mkdirSync(join(ROOT_STORAGE, 'data'), { recursive: true });
+      mkdirSync(internalPath, { recursive: true });
+
+      this.cssConfig ??= existsSync(configPath)
+        ? new CommunityServerConfig(configPath)
+        : CommunityServerConfig.create(configPath, {
+            internalPath,
+            baseUrl: ROOT_URL,
+          });
     }
 
     const serverScript = require.resolve('@solid/community-server/bin/server.js');
-    const cmdArgs = env('E2E')
-      ? [serverScript, '-l', 'warn']
-      : [serverScript, '-c', '@css:config/file.json', '-f', join(ROOT_STORAGE, 'data')];
+    const cmdArgs = env('E2E') ? [serverScript, '-l', 'warn'] : [serverScript, '-c', configPath, '-f', internalPath];
 
     const childProcess = spawn(process.execPath, cmdArgs, {
       stdio: 'inherit',
@@ -118,7 +149,38 @@ export class SolidServerService {
   }
 
   public async createAccount(options: CreateAccountOptions): Promise<void> {
+    if (options.storageRoot) {
+      await this.prepareStorageRoot(options.username, options.storageRoot);
+    }
+
     await this.cssControls.createAccount(options);
+  }
+
+  private async prepareStorageRoot(username: string, storageRoot: string): Promise<void> {
+    if (existsSync(storageRoot)) {
+      const files = readdirSync(storageRoot);
+
+      if (files.length > 0) {
+        throw new SolidServerError(400, 'The selected storage folder is not empty. Please select an empty folder.');
+      }
+
+      rmdirSync(storageRoot);
+    }
+
+    const configPath = cssConfigPath();
+
+    this.cssConfig ??= existsSync(configPath)
+      ? new CommunityServerConfig(configPath)
+      : CommunityServerConfig.create(configPath, {
+          internalPath: join(ROOT_STORAGE, 'data'),
+          baseUrl: ROOT_URL,
+        });
+
+    if (storageRoot !== this.cssConfig.getUserPodStorageRoot(username)) {
+      this.cssConfig.setUserPodStorageRoot(username, storageRoot, { baseUrl: ROOT_URL });
+
+      await this.restart();
+    }
   }
 
   public async login(options: LoginOptions): Promise<SolidCredentials> {

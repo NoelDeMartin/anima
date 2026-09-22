@@ -55,7 +55,7 @@ const ClientCredentialsResponseSchema = z.object({
 export type GuestControls = z.infer<typeof GuestControlsResponseSchema>['controls'];
 export type AccountControls = z.infer<typeof AccountControlsResponseSchema>['controls'];
 
-export class CommunityServerControls {
+export default class CommunityServerControls {
   private baseUrl: string;
   private guestControls: GuestControls | null = null;
 
@@ -161,7 +161,7 @@ export class CommunityServerControls {
     return deepGet(this.guestControls, key);
   }
 
-  private async request<T extends z.ZodSchema = z.ZodVoid>(
+  private async request<T extends z.ZodType = z.ZodVoid>(
     url: string,
     options: {
       authorization?: string;
@@ -211,5 +211,3 @@ export class CommunityServerControls {
     return options.response.parse(json);
   }
 }
-
-export default CommunityServerControls;

@@ -12,7 +12,6 @@ import {
   type InstalledModelEditableFields,
   type AnimaChatEditableFields,
   messagesIdGenerator,
-  type AIProviderFactory,
 } from '@anima/core';
 import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
@@ -22,7 +21,8 @@ import { getSessionId } from '@/auth/session';
 import api, { initialize as initializeAPI } from '@/lib/api';
 import AI from '@/services/AI';
 
-import type Runtime from './Runtime';
+import type { RuntimeInitializeResult } from './Runtime';
+import Runtime from './Runtime';
 
 function mapChat(chat: ApiAnimaChat): AnimaChat {
   return {
@@ -32,33 +32,11 @@ function mapChat(chat: ApiAnimaChat): AnimaChat {
   };
 }
 
-export default class RemoteRuntime implements Runtime {
-  async initialize(): Promise<{
-    chats: AnimaChat[];
-    models: AIModel[];
-    providers: AIProvider[];
-    factories: AIProviderFactory[];
-  }> {
-    await initializeAPI();
+export default class RemoteRuntime extends Runtime {
+  async isNative(): Promise<boolean> {
+    const { data } = await api.native.get();
 
-    const sessionId = getSessionId();
-
-    if (!sessionId) {
-      return { chats: [], models: [], providers: [], factories: [] };
-    }
-
-    const headers = { 'X-Anima-Session-Id': sessionId };
-    const chats = await this.treatyResponse(api['ai'].chats.get({ headers }), []);
-    const models = await this.treatyResponse(api['ai'].models.get({ headers }), []);
-    const providers = await this.treatyResponse(api['ai'].providers.get({ headers }), []);
-    const factories = await this.treatyResponse(api['ai'].providers.factories.get({ headers }), []);
-
-    return {
-      chats: chats.map(mapChat),
-      models,
-      providers,
-      factories,
-    };
+    return data?.available ?? false;
   }
 
   async getChats(): Promise<AnimaChat[]> {
@@ -179,6 +157,29 @@ export default class RemoteRuntime implements Runtime {
     if (error) {
       throw error;
     }
+  }
+
+  protected async performInitialize(): Promise<RuntimeInitializeResult> {
+    await initializeAPI();
+
+    const sessionId = getSessionId();
+
+    if (!sessionId) {
+      return { chats: [], models: [], providers: [], factories: [] };
+    }
+
+    const headers = { 'X-Anima-Session-Id': sessionId };
+    const chats = await this.treatyResponse(api['ai'].chats.get({ headers }), []);
+    const models = await this.treatyResponse(api['ai'].models.get({ headers }), []);
+    const providers = await this.treatyResponse(api['ai'].providers.get({ headers }), []);
+    const factories = await this.treatyResponse(api['ai'].providers.factories.get({ headers }), []);
+
+    return {
+      chats: chats.map(mapChat),
+      models,
+      providers,
+      factories,
+    };
   }
 
   private async treatyResponse<T extends Record<number, unknown>, TResponse extends Treaty.TreatyResponse<T>>(
