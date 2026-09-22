@@ -22,12 +22,14 @@
     <Button submit :disabled="loading" class="w-full">
       {{ $t('home.logIn') }}
     </Button>
-    <Button variant="link" @click="$emit('cancel')" class="w-full">
-      {{ $t('home.logInCancel') }}
-    </Button>
-    <Button variant="link" @click="$emit('loginExternal')" class="w-full">
-      {{ $t('home.logInExternal') }}
-    </Button>
+    <div class="flex flex-col">
+      <Button variant="link" @click="$emit('loginExternal')" class="w-full">
+        {{ $t('home.logInExternal') }}
+      </Button>
+      <Button variant="link" @click="$emit('cancel')" class="w-full">
+        {{ $t('home.logInCancel') }}
+      </Button>
+    </div>
   </Form>
 </template>
 

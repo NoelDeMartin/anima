@@ -15,7 +15,10 @@
             <i-tabler-layout-sidebar-filled class="size-6" />
             <span class="sr-only">{{ $t('sidebar.toggle') }}</span>
           </Button>
-          <h1 class="font-bold tracking-tight leading-tight text-primary text-2xl">Ànima</h1>
+          <h1 class="font-bold tracking-tight leading-tight text-primary text-2xl">
+            <span class="sr-only">{{ $t('app.name') }}</span>
+            <i-app-anima-icon class="block size-12" />
+          </h1>
         </div>
       </header>
       <ChatConversation :chat />

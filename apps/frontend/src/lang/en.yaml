@@ -1,5 +1,7 @@
+app:
+  name: Ànima
+
 home:
-  title: Ànima
   workInProgress: 🛠️ Work in progress
   learnMore: Learn more
   sourceCode: Source code
@@ -8,10 +10,12 @@ home:
   logInExternal: Log in with external POD
   register: Register
   registerFailed: Something went wrong during sign up.
+  registerPasswordsDontMatch: Passwords do not match.
   logInCancel: cancel
   email: Email
   username: Username
   password: Password
+  confirmPassword: Confirm password
   storageRoot: Storage folder
   storageRootPlaceholder: Storage folder (optional)
   browse: Browse
@@ -115,3 +119,6 @@ settings:
     modelsTitle: Models
     installBuiltIn: Install built-in model
     add: Add model
+
+ui:
+  cancel: Cancel
