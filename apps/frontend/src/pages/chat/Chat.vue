@@ -1,6 +1,6 @@
 <template>
-  <div class="flex grow isolate">
-    <ChatSettings />
+  <div class="flex grow isolate bg-background">
+    <ChatActions />
     <ChatSideBar />
     <div class="flex flex-col grow h-screen overflow-hidden">
       <header>

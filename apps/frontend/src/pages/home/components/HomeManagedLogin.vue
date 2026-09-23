@@ -27,7 +27,7 @@
         {{ $t('home.logInExternal') }}
       </Button>
       <Button variant="link" @click="$emit('cancel')" class="w-full">
-        {{ $t('home.logInCancel') }}
+        {{ $t('ui.cancel') }}
       </Button>
     </div>
   </Form>
