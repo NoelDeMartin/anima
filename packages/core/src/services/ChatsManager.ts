@@ -1,7 +1,7 @@
 import type { MessagePart } from '@anima/core';
 import { auth, Chat, Message, type AnimaUIMessage } from '@anima/core';
 import { facade, Semaphore, tap, uuid } from '@noeldemartin/utils';
-import { isStaticToolUIPart } from 'ai';
+import { isToolUIPart } from 'ai';
 import { Person, Container, TypeIndex, type GetModelAttributes } from 'soukai-bis';
 import z from 'zod';
 
@@ -165,7 +165,7 @@ export class ChatsManagerService {
   private toMessagePartAttributes(
     part: AnimaUIMessage['parts'][number],
   ): Omit<GetModelAttributes<MessagePart>, 'position'> | null {
-    if (isStaticToolUIPart(part)) {
+    if (isToolUIPart(part)) {
       return { toolCall: JSON.stringify(part) };
     }
 

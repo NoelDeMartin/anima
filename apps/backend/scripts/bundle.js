@@ -9,7 +9,7 @@ const repoRoot = resolve(backendDir, '../..');
 const distDir = join(backendDir, 'dist');
 const tmpDir = mkdtempSync(join(backendDir, '.bundle-tmp-'));
 
-if (!process.env.VP_RUN) {
+if (!process.env.VP_RUN && process.env.VP_COMMAND !== 'run') {
   rmSync(tmpDir, { recursive: true, force: true });
   console.error("❌ Error: bundle.js must be invoked via 'vp run'");
   process.exit(1);

@@ -15,7 +15,7 @@ catalog:
   '@solid/community-server': ^7.2.0
   '@tailwindcss/vite': ^4.1.18
   '@vitejs/plugin-vue': ^6.0.4
-  ai: ^6.0.100
+  ai: ^7.0.0
   soukai-bis: next
   tailwindcss: ^4.1.18
   typescript: ~5.9.3
@@ -28,8 +28,10 @@ catalog:
 minimumReleaseAgeExclude:
   - '@aerogel/*'
   - '@noeldemartin/*'
+  - '@voidzero-dev/*'
   - playwright-solid
   - soukai-bis
+  - vite-plus
 
 overrides:
   '@vue/compat': beta
