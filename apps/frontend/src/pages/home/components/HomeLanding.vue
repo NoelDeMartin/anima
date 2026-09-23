@@ -5,6 +5,15 @@
   <Button v-if="env('VITE_MANAGED_POD')" variant="secondary" route="register" class="w-full">
     {{ $t('home.register') }}
   </Button>
+  <Button
+    v-if="env('VITE_SPA_MODE')"
+    variant="secondary"
+    class="w-full"
+    href="https://github.com/noeldemartin/anima/releases"
+  >
+    <i-ic-outline-install-desktop class="size-4 mr-1" />
+    <span>{{ $t('home.install') }}</span>
+  </Button>
   <Button variant="secondary" href="https://noeldemartin.com/tasks/raising-an-agent" class="w-full">
     <i-heroicons-information-circle class="size-5 mr-1" />
     <span>{{ $t('home.learnMore') }}</span>

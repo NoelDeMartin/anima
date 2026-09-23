@@ -11,7 +11,7 @@ home:
   register: Register
   registerFailed: Something went wrong during sign up.
   registerPasswordsDontMatch: Passwords do not match.
-  logInCancel: cancel
+  install: Download Desktop App
   email: Email
   username: Username
   password: Password
