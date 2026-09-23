@@ -66,10 +66,12 @@ providers:
   names:
     browser: Browser (local)
     openai: OpenAI
+    opencode-go: OpenCode Go
   instructions:
     anthropic: You can get your API Key in [Anthropic's Claude Console](https://platform.claude.com/settings/keys).
     openai: You can get your API Key in [OpenAI's Platform](https://platform.openai.com/api-keys).
     google: You can get your API Key in [Google's AI Studio](https://aistudio.google.com/app/api-keys).
+    opencode-go: You can get your API Key in [OpenCode Zen](https://opencode.ai/auth).
     ollama: |
       If you want to access a local Ollama instance from the browser, you'll need to [configure CORS origins](https://docs.ollama.com/faq#how-can-i-allow-additional-web-origins-to-access-ollama)
       and probably serve Ollama behind a tunnel (such as [ngrok](https://docs.ollama.com/faq#how-can-i-use-ollama-with-ngrok) or [Cloudfare Tunnel](https://docs.ollama.com/faq#how-can-i-use-ollama-with-cloudflare-tunnel))

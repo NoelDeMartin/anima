@@ -4,6 +4,7 @@ import {
   ModelsManager,
   OllamaModelsProviderFactory,
   OpenAIModelsProviderFactory,
+  OpenCodeGoModelsProviderFactory,
   OtherModelsProviderFactory,
   setAuthProvider,
   TestingModelsProviderFactory,
@@ -30,5 +31,6 @@ export async function registerProviders() {
   ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory('server'));
   ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory('server'));
   ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory('server'));
+  ModelsManager.registerFactory('opencode-go' as ProviderType, new OpenCodeGoModelsProviderFactory('server'));
   ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
 }

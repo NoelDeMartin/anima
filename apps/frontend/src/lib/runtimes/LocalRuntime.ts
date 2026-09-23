@@ -19,6 +19,7 @@ import {
   AnthropicModelsProviderFactory,
   GoogleModelsProviderFactory,
   OpenAIModelsProviderFactory,
+  OpenCodeGoModelsProviderFactory,
   OllamaModelsProviderFactory,
   type AIProvider,
   type ModelId,
@@ -217,6 +218,7 @@ export default class LocalRuntime extends Runtime {
     ModelsManager.registerFactory('anthropic' as ProviderType, new AnthropicModelsProviderFactory('browser'));
     ModelsManager.registerFactory('google' as ProviderType, new GoogleModelsProviderFactory('browser'));
     ModelsManager.registerFactory('openai' as ProviderType, new OpenAIModelsProviderFactory('browser'));
+    ModelsManager.registerFactory('opencode-go' as ProviderType, new OpenCodeGoModelsProviderFactory('browser'));
     ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
 
     if (!Solid.isLoggedIn()) {
