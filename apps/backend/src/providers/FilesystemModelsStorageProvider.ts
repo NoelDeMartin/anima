@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, readdir, writeFile, rm } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, join, sep } from 'node:path';
 
 import {
   AIProviderSchema,
@@ -89,7 +89,7 @@ export default class FilesystemModelsStorageProvider implements ModelsStoragePro
     const userRoot = join(ROOT_STORAGE, encodeURIComponent(user.webId));
     const resolved = join(userRoot, path);
 
-    if (!resolved.startsWith(userRoot + '/')) {
+    if (!resolved.startsWith(userRoot + sep)) {
       throw new Error('Invalid storage path');
     }
 
