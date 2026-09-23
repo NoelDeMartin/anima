@@ -6,6 +6,7 @@
     "build": "tauri build",
     "build:debug": "cargo build --manifest-path src-tauri/Cargo.toml",
     "dev": "tauri dev",
+    "tauri:format-bundles": "node scripts/format-bundles.js",
     "tauri:prepare": "node scripts/prepare.js"
   },
   "devDependencies": {

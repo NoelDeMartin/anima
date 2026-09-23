@@ -83,6 +83,8 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN: 1
           NO_STRIP: 'true'
         run: vp run --filter @anima/native build
+      - name: Format bundles
+        run: vp run --filter @anima/native tauri:format-bundles
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() && !failure() }}
         with:
