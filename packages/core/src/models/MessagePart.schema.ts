@@ -7,6 +7,7 @@ export default defineSchema({
   timestamps: false,
   fields: {
     position: z.number(),
+    error: z.string().optional(),
     text: z.string().optional(),
     toolCall: z.string().optional(),
   },

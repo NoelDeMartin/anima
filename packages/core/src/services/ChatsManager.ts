@@ -159,6 +159,13 @@ export class ChatsManagerService {
       return JSON.parse(part.toolCall);
     }
 
+    if (part.error) {
+      return {
+        type: 'data-error',
+        data: part.error,
+      };
+    }
+
     throw new Error(`Unsupported message part: ${part.url}`);
   }
 
@@ -174,6 +181,8 @@ export class ChatsManagerService {
         return part.text.trim().length === 0 ? null : { text: part.text };
       case 'step-start':
         return null;
+      case 'data-error':
+        return { error: part.data };
     }
 
     throw new Error(`Unsupported message part: ${part.type}`);

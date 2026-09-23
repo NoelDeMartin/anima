@@ -51,10 +51,11 @@
               "
               :part
             />
+            <p v-else-if="part.type === 'data-error'" class="text-red-500">{{ part.data }}</p>
             <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
           </template>
         </li>
-        <li v-if="aiChat?.error" class="text-red-500">{{ aiChat.error.message }}</li>
+        <li v-if="aiChat?.error && !lastMessageHasError" class="text-red-500">{{ aiChat.error.message }}</li>
       </ul>
       <i-svg-spinners-3-dots-bounce
         v-if="aiChat && aiChat.status !== 'ready' && aiChat.status !== 'error'"
@@ -107,7 +108,7 @@
 import { stringInput, translate } from '@aerogel/core';
 import { useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
-import { type AnimaTools, type ModelId, type AnimaChat } from '@anima/core';
+import { type AnimaTools, type ModelId, type AnimaChat, isDataErrorPart } from '@anima/core';
 import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
@@ -123,6 +124,11 @@ const models = computed(() =>
   AI.modelsList.filter((model) => model.status === 'installed' && model.enabled).map((model) => model.id),
 );
 const messages = computed(() => arraySorted(aiChat.value?.messages ?? [], 'metadata.createdAt'));
+const lastMessageHasError = computed(() => {
+  const lastMessage = messages.value[messages.value.length - 1];
+
+  return lastMessage?.parts.some(isDataErrorPart);
+});
 
 function renderModel(modelId: ModelId | null) {
   const model = modelId && AI.models[modelId];

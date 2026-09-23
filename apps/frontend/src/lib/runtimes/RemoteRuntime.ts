@@ -12,6 +12,8 @@ import {
   type InstalledModelEditableFields,
   type AnimaChatEditableFields,
   messagesIdGenerator,
+  getAIErrorMessage,
+  isDataErrorPart,
 } from '@anima/core';
 import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
@@ -72,7 +74,7 @@ export default class RemoteRuntime extends Runtime {
       throw error ?? new Error('Failed to get chat messages');
     }
 
-    return new Chat<AnimaUIMessage>({
+    const chatInstance = new Chat<AnimaUIMessage>({
       id: chat.url,
       messages,
       generateId: messagesIdGenerator(chat.url),
@@ -83,7 +85,32 @@ export default class RemoteRuntime extends Runtime {
           return { body: { message: messages[messages.length - 1], ...body } };
         },
       }),
+      onFinish({ message, isError }) {
+        if (!isError || message.parts.some(isDataErrorPart)) {
+          return;
+        }
+
+        const model = AI.selectedModel;
+        const provider = model ? AI.providers[model.providerId] : null;
+
+        message.metadata ??= {
+          model: model?.name,
+          provider: provider?.type,
+          createdAt: new Date(),
+        };
+
+        message.parts.push({
+          type: 'data-error',
+          data: getAIErrorMessage(chatInstance.error),
+        });
+
+        if (!chatInstance.messages.some((existingMessage) => existingMessage.id === message.id)) {
+          chatInstance.messages.push(message);
+        }
+      },
     });
+
+    return chatInstance;
   }
 
   async updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {

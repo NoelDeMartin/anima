@@ -13,6 +13,8 @@ import {
   ChatsManager,
   bootAnimaModels,
   messagesIdGenerator,
+  getAIErrorMessage,
+  isDataErrorPart,
   type ProviderType,
   AnthropicModelsProviderFactory,
   GoogleModelsProviderFactory,
@@ -26,9 +28,10 @@ import {
   OtherModelsProviderFactory,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
-import { DirectChatTransport, stepCountIs, ToolLoopAgent, type Tool } from 'ai';
+import { stepCountIs, ToolLoopAgent, type Tool } from 'ai';
 import { toRaw } from 'vue';
 
+import AnimaDirectChatTransport from '@/lib/ai/AnimaDirectChatTransport';
 import BrowserModelsProviderFactory from '@/lib/providers/BrowserModelsProviderFactory';
 import IndexedDBModelsStorageProvider from '@/lib/providers/IndexedDBModelsStorageProvider';
 import SolidAuthProvider from '@/lib/providers/SolidAuthProvider';
@@ -91,14 +94,15 @@ export default class LocalRuntime extends Runtime {
       },
     });
 
-    return new Chat<AnimaUIMessage>({
+    const chatInstance = new Chat<AnimaUIMessage>({
       id: chat.url,
       messages,
       generateId: messagesIdGenerator(chat.url),
-      transport: new DirectChatTransport({
+      transport: new AnimaDirectChatTransport({
         agent,
         originalMessages: messages,
         generateMessageId: messagesIdGenerator(chat.url),
+        onError: (error) => getAIErrorMessage(error),
         messageMetadata({ part }) {
           if (part.type !== 'start') {
             return;
@@ -111,8 +115,32 @@ export default class LocalRuntime extends Runtime {
           };
         },
       }),
-      async onFinish({ messages: allMessages }) {
-        const newMessages = allMessages.filter((message) => !messagesMap.has(message.id));
+      async onFinish({ message, messages: allMessages, isError }) {
+        if (isError && !message.parts.some(isDataErrorPart)) {
+          const model = AI.selectedModel;
+          const provider = model && AI.providers[model.providerId];
+
+          message.metadata ??= {
+            model: model?.name,
+            provider: provider?.type,
+            createdAt: new Date(),
+          };
+
+          message.parts.push({
+            type: 'data-error',
+            data: getAIErrorMessage(chatInstance.error),
+          });
+
+          if (!chatInstance.messages.some((existingMessage) => existingMessage.id === message.id)) {
+            chatInstance.messages.push(message);
+          }
+        }
+
+        const newMessages = (
+          isError && !allMessages.some((existingMessage) => existingMessage.id === message.id)
+            ? [...allMessages, message]
+            : allMessages
+        ).filter((message) => !messagesMap.has(message.id));
 
         await Promise.all(
           newMessages.map(async (message) => {
@@ -125,6 +153,8 @@ export default class LocalRuntime extends Runtime {
         await ChatsManager.updateChat(chat.url, {});
       },
     });
+
+    return chatInstance;
   }
 
   updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {

@@ -7,7 +7,10 @@ import {
   AnimaChatEditableFieldsSchema,
   type AnimaChat,
   ChatsManager,
+  getAIErrorMessage,
+  isDataErrorPart,
   messagesIdGenerator,
+  prepareMessagesForModel,
 } from '@anima/core';
 import { objectKeys, required } from '@noeldemartin/utils';
 import { convertToModelMessages, stepCountIs, streamText } from 'ai';
@@ -118,12 +121,14 @@ export default new Elysia().group('chats', (app) =>
 
           await ChatsManager.storeChatMessage(message);
 
+          let errorMessage: string | null = null;
+
           const result = streamText({
             tools,
             providerOptions,
             model: languageModel,
             activeTools: model.supportsTools ? objectKeys(tools) : [],
-            messages: await convertToModelMessages(originalMessages),
+            messages: await convertToModelMessages(prepareMessagesForModel(originalMessages)),
             system: systemPrompt({ user: session.user, supportsTools: model.supportsTools }),
             stopWhen: stepCountIs(10),
           });
@@ -144,7 +149,25 @@ export default new Elysia().group('chats', (app) =>
                 createdAt: new Date(),
               };
             },
-            async onFinish({ messages }) {
+            onError(error) {
+              errorMessage = getAIErrorMessage(error);
+
+              return errorMessage;
+            },
+            async onFinish({ messages, responseMessage, outcome }) {
+              if ((outcome.status === 'failed' || errorMessage) && !responseMessage.parts.some(isDataErrorPart)) {
+                responseMessage.metadata ??= {
+                  model: modelId,
+                  provider: provider.type,
+                  createdAt: new Date(),
+                };
+
+                responseMessage.parts.push({
+                  type: 'data-error',
+                  data: errorMessage ?? getAIErrorMessage(outcome.status === 'failed' ? outcome.error : null),
+                });
+              }
+
               await Promise.all(messages.map((message) => ChatsManager.storeChatMessage(message)));
               await ChatsManager.updateChat(chat.url, {}); // touch timestamps
             },
