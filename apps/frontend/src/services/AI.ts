@@ -149,6 +149,7 @@ export class AIService extends Service {
     await this.initializeRuntime();
     await this.watchSelectedChat();
     await this.watchSelectedModel();
+    await this.watchLogin();
     await this.watchLogout();
   }
 
@@ -185,6 +186,16 @@ export class AIService extends Service {
       }
 
       this.selectedModelKey = objectKeys(this.models)[0] ?? this.selectedModelKey;
+    });
+  }
+
+  protected async watchLogin(): Promise<void> {
+    Events.on('auth:login', async () => {
+      if (this.providersList.length > 0) {
+        return;
+      }
+
+      await this.initializeRuntime();
     });
   }
 
