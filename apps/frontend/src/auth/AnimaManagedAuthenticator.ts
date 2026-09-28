@@ -24,7 +24,7 @@ export default class AnimaManagedAuthenticator extends AnimaAuthenticator {
       );
     }
 
-    const { data, error } = await api.login.post({ email, password });
+    const { data, error } = await api.auth.login.post({ email, password });
 
     if (error || !data?.sessionId) {
       const errorValue = error?.value as { message?: string } | string | undefined;

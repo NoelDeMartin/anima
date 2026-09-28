@@ -6,8 +6,10 @@ import { type AnimaChat } from '@anima/core';
 import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
 
+import Authorize from './authorize/Authorize.vue';
 import Chat from './chat/Chat.vue';
 import Home from './home/Home.vue';
+import Pod from './pod/Pod.vue';
 import Register from './register/Register.vue';
 
 export const bindings = defineRouteBindings({
@@ -34,6 +36,17 @@ export const routes = defineRoutes([
     path: '/register',
     component: Register,
     beforeEnter: () => void ((!env('VITE_MANAGED_POD') || Solid.isLoggedIn()) && Router.push({ name: 'home' })),
+  },
+  {
+    name: 'pod',
+    path: '/pod/',
+    component: Pod,
+    beforeEnter: () => void (env('VITE_MANAGED_POD') || Router.push({ name: 'home' })),
+  },
+  {
+    name: 'authorize',
+    path: '/authorize/',
+    component: Authorize,
   },
   {
     name: 'chats.index',

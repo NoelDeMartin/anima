@@ -8,7 +8,8 @@
     "deploy": "noeldemartin-deploy-app anima.noeldemartin.com",
     "dev:external": "vp dev",
     "dev:managed": "VITE_MANAGED_POD=true vp dev",
-    "dev:spa": "VITE_SPA_MODE=true vp dev"
+    "dev:spa": "VITE_SPA_MODE=true vp dev",
+    "type-check": "vue-tsc --build --force"
   },
   "dependencies": {
     "@aerogel/core": "next",
@@ -43,6 +44,7 @@
     "typescript": "catalog:",
     "unplugin-icons": "^23.0.1",
     "unplugin-vue-components": "^31.0.0",
-    "vite-plus": "catalog:"
+    "vite-plus": "catalog:",
+    "vue-tsc": "catalog:"
   }
 }

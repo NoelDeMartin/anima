@@ -137,6 +137,27 @@ export class AuthService {
     return { sessionId, user: profile };
   }
 
+  public managedCredentials(request: Request): SolidCredentials | null {
+    const sessionId = request.headers.get(SESSION_HEADER);
+    const activeSession = sessionId && this.sessions[sessionId];
+
+    if (!sessionId || !isActiveSession(activeSession) || !isManagedSession(activeSession)) {
+      return null;
+    }
+
+    return activeSession.credentials;
+  }
+
+  public requireManagedCredentials(request: Request): SolidCredentials {
+    const credentials = this.managedCredentials(request);
+
+    if (!credentials) {
+      throw status(401, 'Unauthorized');
+    }
+
+    return credentials;
+  }
+
   public async loginWithOidc(oidcIssuer: string): Promise<{ sessionId: string; redirectUrl: string }> {
     const session = new Session({ keepAlive: false });
     const promisedResult = new PromisedValue<{ redirectUrl: string } | { error: string }>();
@@ -217,15 +238,21 @@ export class AuthService {
 
     const activeSession = this.sessions[sessionId];
 
+    delete this.sessions[sessionId];
+
     if (isActiveSession(activeSession)) {
+      if (isManagedSession(activeSession)) {
+        await SolidServer.logout(activeSession.credentials).catch((error) =>
+          console.error('Failed to log out from the managed POD', error),
+        );
+      }
+
       const webId = isManagedSession(activeSession)
         ? activeSession.credentials.webId
         : (await Session.fromTokens(activeSession.tokenSet))?.info.webId;
 
       webId && delete this.profiles[webId];
     }
-
-    delete this.sessions[sessionId];
   }
 
   private async profile(webId: string, session: Session): Promise<SolidUserProfile | null> {

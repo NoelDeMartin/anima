@@ -1,5 +1,5 @@
 diff --git a/dist/cjs/handle.js b/dist/cjs/handle.js
-index b1b7c635f5a8f3c26d57225be632b0247749c9f5..7fe224a8d1a5153528d02b3cf3e5622fbebf3738 100644
+index b1b7c635f5a8f3c26d57225be632b0247749c9f5..4c100d0137e96e1ea2f8d07d39aca634773883af 100644
 --- a/dist/cjs/handle.js
 +++ b/dist/cjs/handle.js
 @@ -39,12 +39,14 @@ var handleFile = (response, set2) => {
@@ -20,8 +20,19 @@ index b1b7c635f5a8f3c26d57225be632b0247749c9f5..7fe224a8d1a5153528d02b3cf3e5622f
    };
    if (!set2 && !size) return new import_srvx.FastResponse(response);
    if (!set2)
+@@ -76,7 +78,9 @@ var handleFile = (response, set2) => {
+   });
+ };
+ function mergeHeaders(responseHeaders, setHeaders) {
+-  const headers = new Headers(Object.fromEntries(responseHeaders.entries()));
++  // Keep repeated headers such as Set-Cookie
++  // https://github.com/elysiajs/node/pull/60
++  const headers = new Headers(responseHeaders);
+   if (setHeaders instanceof Headers)
+     for (const key of setHeaders.keys()) {
+       if (key === "set-cookie") {
 diff --git a/dist/cjs/index.js b/dist/cjs/index.js
-index e87389ca5e266b5320b3b0448429a73c996a233f..ee538bd9cc7b6a1803b32247c7e88665588db9e6 100644
+index e87389ca5e266b5320b3b0448429a73c996a233f..b2f6f6be6a33acb9bc6ad4095bff345f826a09ca 100644
 --- a/dist/cjs/index.js
 +++ b/dist/cjs/index.js
 @@ -256,12 +256,14 @@ var handleFile = (response, set2) => {
@@ -42,8 +53,19 @@ index e87389ca5e266b5320b3b0448429a73c996a233f..ee538bd9cc7b6a1803b32247c7e88665
    };
    if (!set2 && !size) return new import_srvx.FastResponse(response);
    if (!set2)
+@@ -293,7 +295,9 @@ var handleFile = (response, set2) => {
+   });
+ };
+ function mergeHeaders(responseHeaders, setHeaders) {
+-  const headers = new Headers(Object.fromEntries(responseHeaders.entries()));
++  // Keep repeated headers such as Set-Cookie
++  // https://github.com/elysiajs/node/pull/60
++  const headers = new Headers(responseHeaders);
+   if (setHeaders instanceof Headers)
+     for (const key of setHeaders.keys()) {
+       if (key === "set-cookie") {
 diff --git a/dist/cjs/utils.js b/dist/cjs/utils.js
-index fc5573e50b92eb8d05628d15dfb212b49ae418fb..0eaeb4d26c22aab604015d85421ccc9131a23bf2 100644
+index fc5573e50b92eb8d05628d15dfb212b49ae418fb..f0e6102f7430e2223f4b46bce9e7e2b465a2f4a0 100644
 --- a/dist/cjs/utils.js
 +++ b/dist/cjs/utils.js
 @@ -34,12 +34,14 @@ var handleFile = (response, set) => {
@@ -64,8 +86,19 @@ index fc5573e50b92eb8d05628d15dfb212b49ae418fb..0eaeb4d26c22aab604015d85421ccc91
    };
    if (!set && !size) return new import_srvx.FastResponse(response);
    if (!set)
+@@ -71,7 +73,9 @@ var handleFile = (response, set) => {
+   });
+ };
+ function mergeHeaders(responseHeaders, setHeaders) {
+-  const headers = new Headers(Object.fromEntries(responseHeaders.entries()));
++  // Keep repeated headers such as Set-Cookie
++  // https://github.com/elysiajs/node/pull/60
++  const headers = new Headers(responseHeaders);
+   if (setHeaders instanceof Headers)
+     for (const key of setHeaders.keys()) {
+       if (key === "set-cookie") {
 diff --git a/dist/handle.mjs b/dist/handle.mjs
-index 9af84d7b55dcee51b3ef1eee6a6dc9ae2fb7918e..92efbc98cf2d2d4aa5c6f210a3c9673dd034d78e 100644
+index 9af84d7b55dcee51b3ef1eee6a6dc9ae2fb7918e..c6ecf5dfb408b94e11042795c7a70ea1a0450b90 100644
 --- a/dist/handle.mjs
 +++ b/dist/handle.mjs
 @@ -20,12 +20,14 @@ var handleFile = (response, set2) => {
@@ -86,8 +119,19 @@ index 9af84d7b55dcee51b3ef1eee6a6dc9ae2fb7918e..92efbc98cf2d2d4aa5c6f210a3c9673d
    };
    if (!set2 && !size) return new Response(response);
    if (!set2)
+@@ -57,7 +59,9 @@ var handleFile = (response, set2) => {
+   });
+ };
+ function mergeHeaders(responseHeaders, setHeaders) {
+-  const headers = new Headers(Object.fromEntries(responseHeaders.entries()));
++  // Keep repeated headers such as Set-Cookie
++  // https://github.com/elysiajs/node/pull/60
++  const headers = new Headers(responseHeaders);
+   if (setHeaders instanceof Headers)
+     for (const key of setHeaders.keys()) {
+       if (key === "set-cookie") {
 diff --git a/dist/index.mjs b/dist/index.mjs
-index 9f35dbbaf4cc606cdc0efb915958adfa5f4a7e38..e707a716bc434b782f1eac12c848a117d9bc36cc 100644
+index 9f35dbbaf4cc606cdc0efb915958adfa5f4a7e38..32e94536d6aefd7b585a7cdd0eb569b5d4c53075 100644
 --- a/dist/index.mjs
 +++ b/dist/index.mjs
 @@ -248,12 +248,14 @@ var handleFile = (response, set2) => {
@@ -108,8 +152,19 @@ index 9f35dbbaf4cc606cdc0efb915958adfa5f4a7e38..e707a716bc434b782f1eac12c848a117
    };
    if (!set2 && !size) return new Response(response);
    if (!set2)
+@@ -285,7 +287,9 @@ var handleFile = (response, set2) => {
+   });
+ };
+ function mergeHeaders(responseHeaders, setHeaders) {
+-  const headers = new Headers(Object.fromEntries(responseHeaders.entries()));
++  // Keep repeated headers such as Set-Cookie
++  // https://github.com/elysiajs/node/pull/60
++  const headers = new Headers(responseHeaders);
+   if (setHeaders instanceof Headers)
+     for (const key of setHeaders.keys()) {
+       if (key === "set-cookie") {
 diff --git a/dist/utils.mjs b/dist/utils.mjs
-index 8e6a8c75fdc7c0b3b75e558ba881e2d90158e700..8452faa0dc71fcb1d5735449ba7d69bb99e59286 100644
+index 8e6a8c75fdc7c0b3b75e558ba881e2d90158e700..da8f6e5171d898cced3ee2fde4493a9b8c65d33a 100644
 --- a/dist/utils.mjs
 +++ b/dist/utils.mjs
 @@ -11,12 +11,14 @@ var handleFile = (response, set) => {
@@ -130,3 +185,14 @@ index 8e6a8c75fdc7c0b3b75e558ba881e2d90158e700..8452faa0dc71fcb1d5735449ba7d69bb
    };
    if (!set && !size) return new Response(response);
    if (!set)
+@@ -48,7 +50,9 @@ var handleFile = (response, set) => {
+   });
+ };
+ function mergeHeaders(responseHeaders, setHeaders) {
+-  const headers = new Headers(Object.fromEntries(responseHeaders.entries()));
++  // Keep repeated headers such as Set-Cookie
++  // https://github.com/elysiajs/node/pull/60
++  const headers = new Headers(responseHeaders);
+   if (setHeaders instanceof Headers)
+     for (const key of setHeaders.keys()) {
+       if (key === "set-cookie") {

@@ -20,6 +20,22 @@ home:
   storageRootPlaceholder: Storage folder (optional)
   browse: Browse
 
+pod:
+  title: Your Solid POD
+  description: This Solid POD is managed by Ànima. You can use it to log in to other Solid apps with this URL.
+  open: Open Ànima
+
+authorize:
+  loading: Loading…
+  request: wants to access your Solid POD.
+  unknownApp: An unknown app
+  logIn: Log in to continue
+  loginFailed: Something went wrong during log in.
+  unknownError: Something went wrong.
+  allow: Allow
+  deny: Deny
+  goHome: Go to Ànima
+
 chat:
   greeting: Hello {name}, how can I help you today?
   message: Message

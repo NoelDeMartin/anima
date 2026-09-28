@@ -105,13 +105,13 @@
 </template>
 
 <script setup lang="ts">
-import { stringInput, translate } from '@aerogel/core';
-import { useForm } from '@aerogel/core';
+import { translate, useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { type AnimaTools, type ModelId, type AnimaChat, isDataErrorPart } from '@anima/core';
 import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
 import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
+import { z } from 'zod';
 
 import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
@@ -119,7 +119,7 @@ import { chatRoute } from '@/utils/chats';
 const { chat } = defineProps<{ chat?: AnimaChat }>();
 const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);
 const $scroll = useTemplateRef('$scroll');
-const form = useForm({ message: stringInput('') });
+const form = useForm({ message: z.string().nullable() });
 const models = computed(() =>
   AI.modelsList.filter((model) => model.status === 'installed' && model.enabled).map((model) => model.id),
 );

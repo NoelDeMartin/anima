@@ -34,10 +34,11 @@
 </template>
 
 <script setup lang="ts">
-import { env, requiredStringInput, useForm } from '@aerogel/core';
+import { env, useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import { ref } from 'vue';
+import { z } from 'zod';
 
 import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
@@ -47,8 +48,8 @@ defineEmits<{ loginExternal: []; cancel: [] }>();
 const loading = ref(false);
 const errorMessage = ref<string | null>(null);
 const form = useForm({
-  email: requiredStringInput(''),
-  password: requiredStringInput(''),
+  email: z.string(),
+  password: z.string(),
 });
 
 async function submit() {

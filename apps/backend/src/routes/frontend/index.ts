@@ -3,14 +3,14 @@ import { join } from 'node:path';
 import staticPlugin from '@elysia/static';
 import { Elysia, file } from 'elysia';
 
-const assets = join(import.meta.dirname, 'public');
+import { FRONTEND_ASSETS } from '../../lib/constants';
 
 export default new Elysia()
   .use(
     await staticPlugin({
-      assets,
+      assets: FRONTEND_ASSETS,
       prefix: '/',
       alwaysStatic: true,
     }),
   )
-  .get('*', () => file(join(assets, 'index.html')));
+  .get('*', () => file(join(FRONTEND_ASSETS, 'index.html')));

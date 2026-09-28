@@ -5,13 +5,14 @@ import api from './api';
 import e2e from './e2e';
 import frontend from './frontend';
 import oidc, { getClientIdDocument } from './oidc';
-import pod from './pod';
+import pod, { getOpenIdConfiguration } from './pod';
 
 export type Api = typeof api;
 
 export function useRoutes(instance: Elysia) {
   instance
     .use(new Elysia().get('/clientid.jsonld', getClientIdDocument))
+    .use(new Elysia().get('/.well-known/openid-configuration', getOpenIdConfiguration))
     .use(new Elysia({ prefix: '/oidc' }).use(oidc))
     .use(new Elysia({ prefix: '/pod' }).use(pod))
     .use(new Elysia({ prefix: '/api' }).use(api));

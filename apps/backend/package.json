@@ -21,6 +21,7 @@
     "elysia": "^1.4.25",
     "soukai-bis": "catalog:",
     "typescript": "catalog:",
+    "undici": "^7.29.1",
     "zod": "catalog:"
   },
   "devDependencies": {

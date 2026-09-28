@@ -15,10 +15,6 @@ export default defineConfig(({ command }) => ({
       name: 'Ànima',
       baseUrl: 'https://anima.noeldemartin.com',
       pwa: process.env.PWA === 'false' ? false : undefined,
-      icons: {
-        '192x192': 'android-chrome-192x192.png',
-        '512x512': 'android-chrome-512x512.png',
-      },
     }),
     Components({
       deep: true,

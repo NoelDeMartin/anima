@@ -7,6 +7,7 @@ import { getSessionId } from '@/auth/session';
 
 export default function (): ReturnType<typeof treaty<Api>> {
   return treaty<Api>(`${env('VITE_BACKEND_URL')}/api`, {
+    fetch: { credentials: 'include' },
     headers: () =>
       objectWithoutEmpty({
         'X-Anima-Session-Id': getSessionId(),

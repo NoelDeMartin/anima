@@ -22,7 +22,8 @@ The `@anima/backend` package is the web server for Ànima.
   - `GET /oidc/logout` — OIDC post-logout callback.
 - **API Auth** (`src/routes/api/auth.ts`):
   - `GET /api/auth/session` — Get current user session profile.
-  - `POST /api/auth/login` — Initiate external OIDC login flow.
+  - `POST /api/auth/login` — Log in with `{ oidcIssuer }` (external POD, returns a `redirectUrl`) or `{ email, password }` (managed POD only).
+  - `POST /api/auth/signup` — Create a managed POD account (managed POD only).
   - `POST /api/auth/logout` — Terminate session.
   - `POST /api/auth/proxy` — Authenticated Solid fetch proxy.
 - **AI Endpoints** (`src/routes/api/ai/index.ts`) _(requires active session)_:
@@ -34,11 +35,22 @@ The `@anima/backend` package is the web server for Ànima.
 
 _Endpoints return `404` when managed POD is disabled._
 
-- **Solid Auth** (`src/routes/api/solid.ts`):
-  - `POST /api/signup` — Create CSS POD account.
-  - `POST /api/login` — Login to managed CSS POD.
+- **Authorization of third-party apps** (`src/routes/api/pod/authorize.ts`):
+  - CSS sends browsers straight to the frontend's `/authorize/` page. The request in progress is identified by CSS's interaction cookies, which the proxy scopes to `/api/pod/authorize`.
+  - `GET /api/pod/authorize` — Get the pending authorization request (prompt, client, login status).
+  - `POST /api/pod/authorize/login` — Log in to the POD using the current session.
+  - `POST /api/pod/authorize/consent`, `POST /api/pod/authorize/cancel` — Grant or deny access.
+  - All of them return the `location` the browser should go to next.
 - **POD Proxy** (`src/routes/pod/index.ts`):
-  - `ALL /pod/*` — Proxies unauthenticated requests to the internal CSS instance (`:3000`), blocking guarded paths (`/idp/register/`, `/pod/create/`).
+  - `GET /pod/` — Frontend's POD home page (the POD root is meant for browsers, not RDF clients). Page loads are served directly when `SERVE_FRONTEND=true` and redirected to the frontend dev server otherwise; other requests (e.g. apps fetching RDF) get `404`. Other methods return `405`, except `OPTIONS`.
+  - `ALL /pod/.account/*` — Blocked with `403` (the account API is only used internally).
+  - `/pod/.well-known/css/*`, `/pod/favicon.ico` — Blocked with `404` (CSS's own static files, unused since pages are served by the frontend).
+  - `ALL /pod/*` — Proxies requests to the internal CSS instance, which listens on a private socket and uses `/pod/` as its base URL.
+- **POD discovery** (`getOpenIdConfiguration` in `src/routes/pod/index.ts`):
+  - `GET /.well-known/openid-configuration` — The POD's OIDC configuration, also served at the root because some apps look for it there.
+- **CSS configs** (stored in `~/.anima`, or `~/.anima-dev` in development):
+  - `css-storage.json` — Main config, including where each POD is stored (created on first start).
+  - `css-interaction.json` — Sends authorization requests to the frontend's `/authorize/` page (rewritten on every start).
 
 ### E2E Testing (`E2E=true`)
 

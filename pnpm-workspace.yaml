@@ -23,6 +23,7 @@ catalog:
   vite-plus: latest
   vitest: latest
   vue: ^3.5.28
+  vue-tsc: ^3.3.11
   zod: ^4.3.6
 
 minimumReleaseAgeExclude:

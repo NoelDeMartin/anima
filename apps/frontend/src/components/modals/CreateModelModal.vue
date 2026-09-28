@@ -27,20 +27,20 @@
 </template>
 
 <script setup lang="ts">
-import { requiredEnumInput, requiredStringInput, useModal } from '@aerogel/core';
-import { stringInput } from '@aerogel/core';
-import { useForm } from '@aerogel/core';
+import { useModal, useForm } from '@aerogel/core';
 import type { ProviderId } from '@anima/core';
 import { computed } from 'vue';
+import { z } from 'zod';
 
 import AI from '@/services/AI';
 
 const { close } = useModal();
 const providerIds = AI.providersList.map((provider) => provider.id);
+const defaultProviderId = providerIds[0];
 const form = useForm({
-  provider: requiredEnumInput(providerIds, providerIds[0]),
-  name: requiredStringInput(''),
-  alias: stringInput(''),
+  provider: defaultProviderId ? z.enum(providerIds).default(defaultProviderId) : z.enum(providerIds),
+  name: z.string(),
+  alias: z.string().nullable(),
 });
 const selectedProvider = computed(() => AI.providers[form.provider]);
 const selectedProviderFactory = computed(

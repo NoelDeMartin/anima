@@ -59,11 +59,12 @@
 </template>
 
 <script setup lang="ts">
-import { Errors, env, requiredStringInput, stringInput, useForm } from '@aerogel/core';
+import { Errors, env, useForm } from '@aerogel/core';
 import { translate } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
 import { ref } from 'vue';
+import { z } from 'zod';
 
 import api from '@/lib/api';
 import AI from '@/services/AI';
@@ -71,11 +72,11 @@ import Anima from '@/services/Anima';
 import { chatRoute } from '@/utils/chats';
 
 const form = useForm({
-  email: requiredStringInput(),
-  username: requiredStringInput(),
-  password: requiredStringInput(),
-  confirmPassword: requiredStringInput(),
-  storageRoot: stringInput(),
+  email: z.string(),
+  username: z.string(),
+  password: z.string(),
+  confirmPassword: z.string(),
+  storageRoot: z.string().nullable(),
 });
 
 const pickingFolder = ref(false);
@@ -111,7 +112,7 @@ async function submit() {
   try {
     loading.value = true;
     errorMessage.value = null;
-    const { error } = await api.signup.post({
+    const { error } = await api.auth.signup.post({
       email: form.email,
       username: form.username,
       password: form.password,

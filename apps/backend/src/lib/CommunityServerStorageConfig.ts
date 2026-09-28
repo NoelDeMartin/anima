@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-function buildData(options: CreateCommunityServerConfigOptions): Record<string, unknown> {
+function buildData(options: CreateCommunityServerStorageConfigOptions): Record<string, unknown> {
   const userRoots = options.userRoots ?? {};
   const baseUrl = options.baseUrl;
   const internalPath = options.internalPath;
@@ -10,7 +10,7 @@ function buildData(options: CreateCommunityServerConfigOptions): Record<string, 
 
   for (const [username, podPath] of Object.entries(userRoots)) {
     const storeId = `urn:solid-server:anima:UserStore_${username}`;
-    const userBaseUrl = `${baseUrl}/${username}/`;
+    const userBaseUrl = new URL(`${username}/`, baseUrl).href;
 
     userRules.push({
       '@type': 'RegexRule',
@@ -133,18 +133,18 @@ function buildData(options: CreateCommunityServerConfigOptions): Record<string, 
   };
 }
 
-export interface CreateCommunityServerConfigOptions {
+export interface CreateCommunityServerStorageConfigOptions {
   baseUrl: string;
   internalPath: string;
   userRoots?: Record<string, string>;
 }
 
-export default class CommunityServerConfig {
-  public static create(path: string, options: CreateCommunityServerConfigOptions): CommunityServerConfig {
+export default class CommunityServerStorageConfig {
+  public static create(path: string, options: CreateCommunityServerStorageConfigOptions): CommunityServerStorageConfig {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(buildData(options), null, 2), 'utf8');
 
-    return new CommunityServerConfig(path);
+    return new CommunityServerStorageConfig(path);
   }
 
   public readonly path: string;
@@ -152,7 +152,7 @@ export default class CommunityServerConfig {
 
   constructor(path: string) {
     if (!existsSync(path)) {
-      throw new Error(`CommunityServerConfig file not found at: ${path}`);
+      throw new Error(`CommunityServerStorageConfig file not found at: ${path}`);
     }
 
     this.path = path;
@@ -184,18 +184,20 @@ export default class CommunityServerConfig {
     return this.getUserPodStorageRoots()[username] ?? null;
   }
 
-  public setUserPodStorageRoot(username: string, storageRoot: string, options: { baseUrl: string }): void {
+  public setUserPodStorageRoot(
+    username: string,
+    storageRoot: string,
+    options: Omit<CreateCommunityServerStorageConfigOptions, 'internalPath' | 'userRoots'>,
+  ): void {
     const userRoots = this.getUserPodStorageRoots();
+    const internalPath = this.getInternalPath();
 
     userRoots[username] = storageRoot;
 
-    const internalPath = this.getInternalPath();
-    const baseUrl = this.getBaseUrl() ?? options.baseUrl;
-
     this.data = buildData({
+      ...options,
       internalPath,
       userRoots,
-      baseUrl,
     });
 
     this.save();
@@ -207,24 +209,6 @@ export default class CommunityServerConfig {
     const accessor = internalStore?.accessor as { resourceMapper?: { rootFilepath?: string } } | undefined;
 
     return accessor?.resourceMapper?.rootFilepath ?? '';
-  }
-
-  private getBaseUrl(): string | null {
-    const graph = (this.data['@graph'] as Array<Record<string, unknown>>) ?? [];
-
-    for (const node of graph) {
-      const id = typeof node['@id'] === 'string' ? node['@id'] : '';
-
-      if (id.startsWith('urn:solid-server:anima:UserStore_')) {
-        const identifierStrategy = node.identifierStrategy as { baseUrl?: string } | undefined;
-
-        if (identifierStrategy?.baseUrl) {
-          return identifierStrategy.baseUrl.replace(/\/?[^/]+\/?$/, '');
-        }
-      }
-    }
-
-    return null;
   }
 
   private save(): void {

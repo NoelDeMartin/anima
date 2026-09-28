@@ -29,17 +29,24 @@
 </template>
 
 <script setup lang="ts">
-import { stringInput, useForm, requiredStringInput, translate, UI, useModal } from '@aerogel/core';
+import { useForm, translate, UI, useModal } from '@aerogel/core';
 import type { AIProvider } from '@anima/core';
+import { z } from 'zod';
 
 import AI from '@/services/AI';
 
 const { provider } = defineProps<{ provider: AIProvider }>();
 const { close } = useModal();
 const form = useForm({
-  name: requiredStringInput(provider.name),
-  apiKey: stringInput(provider.apiKey ?? ''),
-  url: stringInput(provider.url ?? ''),
+  name: z.string().default(provider.name),
+  apiKey: z
+    .string()
+    .nullable()
+    .default(provider.apiKey ?? ''),
+  url: z
+    .string()
+    .nullable()
+    .default(provider.url ?? ''),
 });
 
 async function deleteProvider() {

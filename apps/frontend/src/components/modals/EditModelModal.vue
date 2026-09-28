@@ -22,18 +22,20 @@
 </template>
 
 <script setup lang="ts">
-import { Form, translate, UI, useModal } from '@aerogel/core';
-import { stringInput } from '@aerogel/core';
-import { useForm } from '@aerogel/core';
+import { Form, translate, UI, useForm, useModal } from '@aerogel/core';
 import type { AIModel } from '@anima/core';
 import { computed } from 'vue';
+import { z } from 'zod';
 
 import AI from '@/services/AI';
 
 const { model } = defineProps<{ model: AIModel }>();
 const { close } = useModal();
 const form = useForm({
-  alias: stringInput((model.status === 'installed' && model.alias) || ''),
+  alias: z
+    .string()
+    .nullable()
+    .default((model.status === 'installed' && model.alias) || ''),
 });
 const providerType = computed(() => AI.providers[model.providerId]?.type);
 const installingModel = computed(() => {

@@ -43,6 +43,50 @@ const LoginResponseSchema = z.object({
   authorization: z.string(),
 });
 
+const InteractionControlsResponseSchema = z.object({
+  controls: z.object({
+    oidc: z
+      .object({
+        prompt: z.string(),
+        webId: z.string(),
+        consent: z.string(),
+        cancel: z.string(),
+      })
+      .optional(),
+  }),
+});
+
+const PromptResponseSchema = z.object({
+  prompt: z.string(),
+});
+
+const ClientResponseSchema = z.object({
+  client: z
+    .object({
+      client_id: z.string().optional(),
+      client_name: z.string().optional(),
+      client_uri: z.string().optional(),
+      logo_uri: z.string().optional(),
+    })
+    .loose(),
+});
+
+const PickWebIdResponseSchema = z.object({
+  webIds: z.array(z.string()),
+});
+
+const LocationResponseSchema = z.object({
+  location: z.string(),
+});
+
+const LogoutControlsResponseSchema = z.object({
+  controls: z.object({
+    account: z.object({
+      logout: z.string().optional(),
+    }),
+  }),
+});
+
 const WebIdsResponseSchema = z.object({
   webIdLinks: z.record(z.string(), z.string()),
 });
@@ -52,15 +96,30 @@ const ClientCredentialsResponseSchema = z.object({
   secret: z.string(),
 });
 
+export interface Interaction {
+  prompt: InteractionPrompt;
+  client: InteractionClient;
+}
+
+export interface InteractionOptions {
+  cookies: string;
+  authorization?: string;
+}
+
+export type InteractionPrompt = 'login' | 'consent';
+export type InteractionClient = z.infer<typeof ClientResponseSchema>['client'];
 export type GuestControls = z.infer<typeof GuestControlsResponseSchema>['controls'];
 export type AccountControls = z.infer<typeof AccountControlsResponseSchema>['controls'];
+export type InteractionControls = NonNullable<z.infer<typeof InteractionControlsResponseSchema>['controls']['oidc']>;
 
 export default class CommunityServerControls {
   private baseUrl: string;
+  private fetch: typeof globalThis.fetch;
   private guestControls: GuestControls | null = null;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, fetch: typeof globalThis.fetch) {
     this.baseUrl = baseUrl;
+    this.fetch = fetch;
   }
 
   public async createAccount({ email, username, password }: CreateAccountOptions): Promise<void> {
@@ -138,8 +197,85 @@ export default class CommunityServerControls {
     };
   }
 
+  public async logout(authorization: string): Promise<void> {
+    const { controls } = await this.request(this.accountUrl(), {
+      authorization,
+      response: LogoutControlsResponseSchema,
+    });
+
+    if (!controls.account.logout) {
+      return;
+    }
+
+    await this.request(controls.account.logout, { method: 'POST', authorization });
+  }
+
+  public async getInteraction(options: InteractionOptions): Promise<Interaction> {
+    const controls = await this.getInteractionControls(options);
+    const [{ prompt }, { client }] = await Promise.all([
+      this.request(controls.prompt, { ...options, response: PromptResponseSchema }),
+      this.request(controls.consent, { ...options, response: ClientResponseSchema }),
+    ]);
+
+    return { prompt: prompt === 'consent' ? 'consent' : 'login', client };
+  }
+
+  public async pickInteractionWebId(webId: string, options: Required<InteractionOptions>): Promise<string> {
+    const controls = await this.getInteractionControls(options);
+    const { webIds } = await this.request(controls.webId, { ...options, response: PickWebIdResponseSchema });
+
+    if (!webIds.includes(webId)) {
+      throw new SolidServerError(403, 'The WebID does not belong to this account.');
+    }
+
+    const { location } = await this.request(controls.webId, {
+      ...options,
+      method: 'POST',
+      body: { webId, remember: true },
+      response: LocationResponseSchema,
+    });
+
+    return location;
+  }
+
+  public async consentInteraction(options: InteractionOptions): Promise<string> {
+    const controls = await this.getInteractionControls(options);
+    const { location } = await this.request(controls.consent, {
+      ...options,
+      method: 'POST',
+      body: { remember: true },
+      response: LocationResponseSchema,
+    });
+
+    return location;
+  }
+
+  public async cancelInteraction(options: InteractionOptions): Promise<string> {
+    const controls = await this.getInteractionControls(options);
+    const { location } = await this.request(controls.cancel, {
+      ...options,
+      method: 'POST',
+      response: LocationResponseSchema,
+    });
+
+    return location;
+  }
+
+  private async getInteractionControls(options: InteractionOptions): Promise<InteractionControls> {
+    const { controls } = await this.request(this.accountUrl(), {
+      ...options,
+      response: InteractionControlsResponseSchema,
+    });
+
+    if (!controls.oidc) {
+      throw new SolidServerError(410, 'The authorization request has expired.');
+    }
+
+    return controls.oidc;
+  }
+
   private async getAccountControls(authorization: string): Promise<AccountControls> {
-    const indexUrl = (await this.guestControlUrl('main.index')) ?? `${this.baseUrl}/.account/`;
+    const indexUrl = (await this.guestControlUrl('main.index')) ?? this.accountUrl();
 
     if (typeof indexUrl !== 'string') {
       throw new Error('Control URL not found for controls.main.index');
@@ -153,8 +289,12 @@ export default class CommunityServerControls {
     return controls;
   }
 
+  private accountUrl(): string {
+    return new URL('.account/', this.baseUrl).href;
+  }
+
   private async guestControlUrl<T extends DeepKeyOf<GuestControls>>(key: T): Promise<DeepValue<GuestControls, T>> {
-    this.guestControls ??= (await this.request(`${this.baseUrl}/.account/`, { response: GuestControlsResponseSchema }))[
+    this.guestControls ??= (await this.request(this.accountUrl(), { response: GuestControlsResponseSchema }))[
       'controls'
     ];
 
@@ -165,6 +305,7 @@ export default class CommunityServerControls {
     url: string,
     options: {
       authorization?: string;
+      cookies?: string;
       method?: 'POST' | 'GET';
       body?: object;
       response?: T;
@@ -178,11 +319,15 @@ export default class CommunityServerControls {
       headers['Authorization'] = `CSS-Account-Token ${options.authorization}`;
     }
 
+    if (options.cookies) {
+      headers['Cookie'] = options.cookies;
+    }
+
     if (options.body) {
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(url, {
+    const response = await this.fetch(url, {
       headers,
       method: options.method ?? 'GET',
       body: options.body ? JSON.stringify(options.body) : undefined,

@@ -21,6 +21,7 @@ jobs:
         with:
           sh_checker_exclude: 'node_modules'
       - run: vp check
+      - run: vp run type-check
       - run: vp run --filter '!@anima/native' build
 
   web-e2e:

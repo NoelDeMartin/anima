@@ -12,15 +12,16 @@
 </template>
 
 <script setup lang="ts">
-import { Form, useModal, stringInput, useForm } from '@aerogel/core';
+import { Form, useModal, useForm } from '@aerogel/core';
 import type { AnimaChat } from '@anima/core';
+import { z } from 'zod';
 
 import AI from '@/services/AI';
 
 const { chat } = defineProps<{ chat: AnimaChat }>();
 const { close } = useModal();
 const form = useForm({
-  title: stringInput(chat.title),
+  title: z.string().nullable().default(chat.title),
 });
 
 async function submit() {

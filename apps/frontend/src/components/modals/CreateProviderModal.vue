@@ -44,27 +44,21 @@
 </template>
 
 <script setup lang="ts">
-import {
-  stringInput,
-  useForm,
-  requiredEnumInput,
-  requiredStringInput,
-  translateWithDefault,
-  useModal,
-  env,
-} from '@aerogel/core';
+import { useForm, translateWithDefault, useModal, env } from '@aerogel/core';
 import { stringToStudlyCase } from '@noeldemartin/utils';
 import { computed, watch } from 'vue';
+import { z } from 'zod';
 
 import AI from '@/services/AI';
 
 const { close } = useModal();
 const providerTypes = AI.providerFactoriesList.map((factory) => factory.type);
+const defaultProviderType = providerTypes[0];
 const form = useForm({
-  type: requiredEnumInput(providerTypes, providerTypes[0]),
-  name: requiredStringInput(''),
-  apiKey: stringInput(''),
-  url: stringInput(''),
+  type: defaultProviderType ? z.enum(providerTypes).default(defaultProviderType) : z.enum(providerTypes),
+  name: z.string(),
+  apiKey: z.string().nullable(),
+  url: z.string().nullable(),
 });
 const selectedFactory = computed(() => AI.providerFactories[form.type]);
 

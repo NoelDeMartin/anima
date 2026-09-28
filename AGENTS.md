@@ -32,12 +32,13 @@ This project is using Vite+, a unified toolchain built on top of Vite, Rolldown,
 These are the following commands to work with the monorepo:
 
 - `vp check`: Runs linting, formatting, and type checks.
+- `vp run type-check`: Runs type checks for Vue files (`vp check` doesn't cover them).
 - `vp run dev`: Launches the backend, frontend, and a local Solid POD server for development. The application can be used in `http://localhost:5173`.
 - `vp run e2e:serve`: Launches the services to be used in the E2E environment (mocks some dependencies like AI models).
 - `vp run e2e`: Runs Playwright tests (install dependencies first with `vp run e2e#install-deps`).
 
 ## Instructions
 
-- Always run `vp check` after completing any task.
+- Always run `vp check` and `vp run type-check` after completing any task.
 - Only run E2E tests when modifying critical flows, don't run them for small tweaks.
 - Be extremely concise in your replies. Sacrifice grammar for the sake of concision.

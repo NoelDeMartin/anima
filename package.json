@@ -14,7 +14,8 @@
     "e2e:managed": "E2E=true concurrently -P --raw --kill-others --success command-2 \"vp run --filter @anima/backend dev:managed\" \"vp run --filter @anima/frontend dev:managed\" \"vp run --filter @anima/e2e test:managed specs/managed.spec.ts {@}\"",
     "e2e:native": "concurrently -P --raw \"vp run native#tauri:prepare && vp run --filter @anima/e2e test:native specs/managed.spec.ts {@}\"",
     "e2e:serve-pod": "community-solid-server -l warn",
-    "e2e:spa": "concurrently -P --raw --kill-others --success command-1 \"vp run --filter @anima/frontend dev:spa\" \"vp run --filter @anima/e2e test:external specs/spa.spec.ts {@}\""
+    "e2e:spa": "concurrently -P --raw --kill-others --success command-1 \"vp run --filter @anima/frontend dev:spa\" \"vp run --filter @anima/e2e test:external specs/spa.spec.ts {@}\"",
+    "type-check": "vp run --filter @anima/frontend type-check"
   },
   "devDependencies": {
     "@solid/community-server": "catalog:",

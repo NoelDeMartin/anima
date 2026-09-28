@@ -1,7 +1,6 @@
 import { Elysia, redirect } from 'elysia';
 
-import { BACKEND_URL, CLIENT_ID, FRONTEND_URL } from '../../lib/constants';
-import { env } from '../../lib/env';
+import { BACKEND_URL, CLIENT_ID, frontendUrl } from '../../lib/constants';
 import Auth from '../../services/Auth';
 
 export function getClientIdDocument() {
@@ -24,6 +23,6 @@ export default new Elysia()
   .get('/redirect', async ({ request }) => {
     await Auth.handleRedirect(request);
 
-    return redirect(env('SERVE_FRONTEND') ? BACKEND_URL : FRONTEND_URL);
+    return redirect(frontendUrl());
   })
   .get('/logout', ({ request }) => Auth.logout(request));
