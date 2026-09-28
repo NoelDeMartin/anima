@@ -8,7 +8,7 @@ import Icons from 'unplugin-icons/vite';
 import Components from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vite-plus';
 
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   publicDir: fileURLToPath(new URL('./src/assets/public/', import.meta.url)),
   plugins: [
     Aerogel({
@@ -18,7 +18,7 @@ export default defineConfig(({ command }) => ({
     }),
     Components({
       deep: true,
-      dts: command === 'build' ? false : 'src/types/components.d.ts',
+      dts: 'src/types/components.d.ts',
       dirs: ['src/components', 'src/pages'],
       resolvers: [AerogelResolver(), IconsResolver({ customCollections: ['app'] })],
     }),
@@ -37,4 +37,4 @@ export default defineConfig(({ command }) => ({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-}));
+});
