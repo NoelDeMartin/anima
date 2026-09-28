@@ -85,6 +85,7 @@ test('remember authorized apps', async ({ page }) => {
   await register(page);
   await page.goto(authorizationUrl({ forceConsent: false }));
   await authorize(page);
+  await page.waitForURL('/');
 
   const redirect = waitForAppRedirect(page);
 

@@ -10,6 +10,10 @@ import pod, { getOpenIdConfiguration } from './pod';
 export type Api = typeof api;
 
 export function useRoutes(instance: Elysia) {
+  if (env('SERVE_FRONTEND')) {
+    instance.use(frontend);
+  }
+
   instance
     .use(new Elysia().get('/clientid.jsonld', getClientIdDocument))
     .use(new Elysia().get('/.well-known/openid-configuration', getOpenIdConfiguration))
@@ -19,9 +23,5 @@ export function useRoutes(instance: Elysia) {
 
   if (env('E2E')) {
     instance.use(new Elysia({ prefix: '/__e2e__' }).use(e2e));
-  }
-
-  if (env('SERVE_FRONTEND')) {
-    instance.use(frontend);
   }
 }

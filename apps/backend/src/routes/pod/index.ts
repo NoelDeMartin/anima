@@ -51,5 +51,7 @@ export function getOpenIdConfiguration({ request }: { request: Request }): Promi
 
 export default new Elysia()
   .onBeforeHandle(() => SolidServer.assertEnabled())
+  .get('/', ({ request }) => handle(request))
+  .get('*', ({ request }) => handle(request))
   .all('/', ({ request }) => handle(request))
   .all('*', ({ request }) => handle(request));
