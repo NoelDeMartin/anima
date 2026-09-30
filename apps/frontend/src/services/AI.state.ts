@@ -1,9 +1,10 @@
 import { defineServiceState } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { computedModel } from '@aerogel/plugin-soukai';
-import type { Chat } from '@ai-sdk/vue';
-import type { AIModel, AIProvider, AIProviderFactory, AnimaChat, AnimaUIMessage, ModelId } from '@anima/core';
+import type { AIModel, AIProvider, AIProviderFactory, AnimaChatRecord, ModelId } from '@anima/core';
 import { arraySorted, objectFromEntries, requireUrlDirectoryName } from '@noeldemartin/utils';
+
+import type AnimaChat from '@/lib/ai/AnimaChat';
 
 export default defineServiceState({
   name: 'ai',
@@ -13,16 +14,16 @@ export default defineServiceState({
     providersList: [] as AIProvider[],
     sidebar: false,
     chats: {} as Record<
-      AnimaChat['url'],
+      AnimaChatRecord['url'],
       {
-        anima: AnimaChat;
-        ai?: Chat<AnimaUIMessage>;
+        anima: AnimaChatRecord;
+        ai?: AnimaChat;
       }
     >,
     models: {} as Record<ModelId, AIModel>,
     selectedModelKey: null as ModelId | null,
     selectedChatUrl: computedModel(() => {
-      const routeParams: { chat?: AnimaChat } = Router.currentRoute.value?.params ?? {};
+      const routeParams: { chat?: AnimaChatRecord } = Router.currentRoute.value?.params ?? {};
 
       return routeParams.chat?.url;
     }),

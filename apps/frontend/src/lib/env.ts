@@ -10,6 +10,7 @@ const EnvSchema = z.object({
     .transform((value) => value.replace(/\/+$/, '')),
   VITE_SPA_MODE: z.string().optional().transform(parseBoolean),
   VITE_MANAGED_POD: z.string().optional().transform(parseBoolean),
+  VITE_E2E: z.string().optional().transform(parseBoolean),
 });
 
 export default defineEnv(import.meta.env, EnvSchema);

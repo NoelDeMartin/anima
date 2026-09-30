@@ -1,11 +1,9 @@
-import type { Chat } from '@ai-sdk/vue';
 import type {
   AIModel,
-  AnimaChat,
+  AnimaChatRecord,
   AIProvider,
   ProviderId,
   ModelId,
-  AnimaUIMessage,
   AnimaChatEditableFields,
   InstalledModelEditableFields,
   AIProviderEditableFields,
@@ -13,8 +11,10 @@ import type {
 } from '@anima/core';
 import { PromisedValue } from '@noeldemartin/utils';
 
+import type AnimaChat from '@/lib/ai/AnimaChat';
+
 export interface RuntimeInitializeResult {
-  chats: AnimaChat[];
+  chats: AnimaChatRecord[];
   models: AIModel[];
   providers: AIProvider[];
   factories: AIProviderFactory[];
@@ -32,13 +32,13 @@ export default abstract class Runtime {
   }
 
   abstract isNative(): Promise<boolean>;
-  abstract getChats(): Promise<AnimaChat[]>;
+  abstract getChats(): Promise<AnimaChatRecord[]>;
   abstract getModels(): Promise<AIModel[]>;
   abstract getProviders(): Promise<AIProvider[]>;
-  abstract createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChat>;
-  abstract createAIChat(chat: AnimaChat, options: { loadMessages: boolean }): Promise<Chat<AnimaUIMessage>>;
-  abstract updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
-  abstract sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void>;
+  abstract createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChatRecord>;
+  abstract createAIChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat>;
+  abstract updateChat(url: AnimaChatRecord['url'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
+  abstract sendMessage(chat: AnimaChat, message: string): Promise<void>;
   abstract installModel(providerId: ProviderId, name: string, data?: InstalledModelEditableFields): Promise<AIModel>;
   abstract updateModel(id: ModelId, updates: Partial<InstalledModelEditableFields>): Promise<void>;
   abstract deleteModel(id: ModelId): Promise<void>;

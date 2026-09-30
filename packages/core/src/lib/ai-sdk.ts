@@ -1,8 +1,8 @@
-import type { AnimaChat } from '@anima/core';
+import type { AnimaChatRecord } from '@anima/core';
 import { isObject, requireUrlParentDirectory, uuid } from '@noeldemartin/utils';
 import type { IdGenerator } from 'ai';
 
-export function messagesIdGenerator(chatUrl: AnimaChat['url']): IdGenerator {
+export function messagesIdGenerator(chatUrl: AnimaChatRecord['url']): IdGenerator {
   return () => {
     const now = new Date();
 

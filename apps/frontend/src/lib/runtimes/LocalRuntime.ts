@@ -1,20 +1,17 @@
-import { Events } from '@aerogel/core';
+import { env, Events } from '@aerogel/core';
 import { Solid } from '@aerogel/plugin-solid';
-import { Chat } from '@ai-sdk/vue';
 import {
   ModelsManager,
   setAuthProvider,
   systemPrompt,
   tools,
   type AIModel,
-  type AnimaChat,
+  type AnimaChatRecord,
   type AnimaChatEditableFields,
-  type AnimaUIMessage,
   ChatsManager,
   bootAnimaModels,
   messagesIdGenerator,
   getAIErrorMessage,
-  isDataErrorPart,
   type ProviderType,
   AnthropicModelsProviderFactory,
   GoogleModelsProviderFactory,
@@ -27,11 +24,12 @@ import {
   type InstalledModelEditableFields,
   type AIProviderEditableFields,
   OtherModelsProviderFactory,
+  TestingModelsProviderFactory,
 } from '@anima/core';
 import { fail, objectKeys } from '@noeldemartin/utils';
 import { stepCountIs, ToolLoopAgent, type Tool } from 'ai';
-import { toRaw } from 'vue';
 
+import AnimaChat from '@/lib/ai/AnimaChat';
 import AnimaDirectChatTransport from '@/lib/ai/AnimaDirectChatTransport';
 import BrowserModelsProviderFactory from '@/lib/providers/BrowserModelsProviderFactory';
 import IndexedDBModelsStorageProvider from '@/lib/providers/IndexedDBModelsStorageProvider';
@@ -47,7 +45,7 @@ export default class LocalRuntime extends Runtime {
     return false;
   }
 
-  async getChats(): Promise<AnimaChat[]> {
+  async getChats(): Promise<AnimaChatRecord[]> {
     return ChatsManager.getChats();
   }
 
@@ -59,13 +57,13 @@ export default class LocalRuntime extends Runtime {
     return ModelsManager.getProviders();
   }
 
-  async createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChat> {
+  async createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChatRecord> {
     const chat = await ChatsManager.createChat(data);
 
     return chat;
   }
 
-  async createAIChat(chat: AnimaChat, options: { loadMessages: boolean }): Promise<Chat<AnimaUIMessage>> {
+  async createAIChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat> {
     const messages = options.loadMessages ? await ChatsManager.getChatMessages(chat) : [];
     const messagesMap = new Map(messages.map((message) => [message.id, message]));
     const agent = new ToolLoopAgent<never, Record<string, Tool>, never>({
@@ -95,10 +93,8 @@ export default class LocalRuntime extends Runtime {
       },
     });
 
-    const chatInstance = new Chat<AnimaUIMessage>({
-      id: chat.url,
+    return new AnimaChat(chat, {
       messages,
-      generateId: messagesIdGenerator(chat.url),
       transport: new AnimaDirectChatTransport({
         agent,
         originalMessages: messages,
@@ -109,43 +105,15 @@ export default class LocalRuntime extends Runtime {
             return;
           }
 
-          return {
-            model: AI.selectedModel?.name,
-            provider: AI.selectedModel?.providerId && AI.providers[AI.selectedModel.providerId]?.type,
-            createdAt: new Date(),
-          };
+          return AI.createMessageMetadata();
         },
       }),
-      async onFinish({ message, messages: allMessages, isError }) {
-        if (isError && !message.parts.some(isDataErrorPart)) {
-          const model = AI.selectedModel;
-          const provider = model && AI.providers[model.providerId];
-
-          message.metadata ??= {
-            model: model?.name,
-            provider: provider?.type,
-            createdAt: new Date(),
-          };
-
-          message.parts.push({
-            type: 'data-error',
-            data: getAIErrorMessage(chatInstance.error),
-          });
-
-          if (!chatInstance.messages.some((existingMessage) => existingMessage.id === message.id)) {
-            chatInstance.messages.push(message);
-          }
-        }
-
-        const newMessages = (
-          isError && !allMessages.some((existingMessage) => existingMessage.id === message.id)
-            ? [...allMessages, message]
-            : allMessages
-        ).filter((message) => !messagesMap.has(message.id));
+      async onFinish({ messages: allMessages }) {
+        const newMessages = allMessages.filter((message) => !messagesMap.has(message.id));
 
         await Promise.all(
           newMessages.map(async (message) => {
-            await ChatsManager.storeChatMessage(toRaw(message));
+            await ChatsManager.storeChatMessage(message);
 
             messagesMap.set(message.id, message);
           }),
@@ -154,15 +122,13 @@ export default class LocalRuntime extends Runtime {
         await ChatsManager.updateChat(chat.url, {});
       },
     });
-
-    return chatInstance;
   }
 
-  updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+  updateChat(url: AnimaChatRecord['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     return ChatsManager.updateChat(url, updates);
   }
 
-  sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {
+  sendMessage(chat: AnimaChat, message: string): Promise<void> {
     return chat.sendMessage({
       text: message,
       metadata: { createdAt: new Date() },
@@ -221,6 +187,10 @@ export default class LocalRuntime extends Runtime {
     ModelsManager.registerFactory('opencode-go' as ProviderType, new OpenCodeGoModelsProviderFactory('browser'));
     ModelsManager.registerFactory('other' as ProviderType, new OtherModelsProviderFactory());
 
+    if (env('VITE_E2E')) {
+      ModelsManager.registerFactory('testing' as ProviderType, new TestingModelsProviderFactory());
+    }
+
     if (!Solid.isLoggedIn()) {
       return { chats: [], models: [], providers: [], factories: [] };
     }
@@ -233,16 +203,25 @@ export default class LocalRuntime extends Runtime {
       factories: await ModelsManager.getProviderFactories(),
     };
 
-    if (browserAvailability === 'available' && !result.providers.some((provider) => provider.type === 'browser')) {
-      await this.createProvider({
-        type: 'browser' as ProviderType,
-        name: 'Browser',
-      });
+    if (browserAvailability === 'available') {
+      await this.ensureProvider(result, 'browser' as ProviderType, 'Browser');
+    }
 
-      result.models = await this.getModels();
-      result.providers = await this.getProviders();
+    if (env('VITE_E2E')) {
+      await this.ensureProvider(result, 'testing' as ProviderType, 'Testing');
     }
 
     return result;
+  }
+
+  private async ensureProvider(result: RuntimeInitializeResult, type: ProviderType, name: string): Promise<void> {
+    if (result.providers.some((provider) => provider.type === type)) {
+      return;
+    }
+
+    await this.createProvider({ type, name });
+
+    result.models = await this.getModels();
+    result.providers = await this.getProviders();
   }
 }

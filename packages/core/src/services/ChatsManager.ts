@@ -7,29 +7,29 @@ import z from 'zod';
 
 const CHATS_CONTAINER_MISSING = Symbol('ChatMissing');
 
-export const AnimaChatSchema = z.object({
+export const AnimaChatRecordSchema = z.object({
   url: z.url().brand('AnimaChatUrl'),
   title: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
-export const AnimaChatEditableFieldsSchema = AnimaChatSchema.pick({ title: true });
+export const AnimaChatEditableFieldsSchema = AnimaChatRecordSchema.pick({ title: true });
 
-export type AnimaChat = z.infer<typeof AnimaChatSchema>;
+export type AnimaChatRecord = z.infer<typeof AnimaChatRecordSchema>;
 export type AnimaChatEditableFields = z.infer<typeof AnimaChatEditableFieldsSchema>;
 
 export class ChatsManagerService {
   private semaphore = new Semaphore();
   private chatsContainerUrl: string | typeof CHATS_CONTAINER_MISSING | null = null;
 
-  async getChat(url: AnimaChat['url']): Promise<AnimaChat | null> {
+  async getChat(url: AnimaChatRecord['url']): Promise<AnimaChatRecord | null> {
     const chat = await Chat.find(url);
 
     return chat && this.toAnimaChat(chat);
   }
 
-  async getChats(): Promise<AnimaChat[]> {
+  async getChats(): Promise<AnimaChatRecord[]> {
     const chatsContainerUrl = await this.getChatsContainerUrl();
 
     if (!chatsContainerUrl) {
@@ -41,7 +41,7 @@ export class ChatsManagerService {
     return chats.map((chat) => this.toAnimaChat(chat));
   }
 
-  async getChatMessages(chat: AnimaChat): Promise<AnimaUIMessage[]> {
+  async getChatMessages(chat: AnimaChatRecord): Promise<AnimaUIMessage[]> {
     const chatModel = await Chat.find(chat.url);
 
     if (!chatModel) {
@@ -53,7 +53,7 @@ export class ChatsManagerService {
     return messages.map((message) => this.toAnimaMessage(message));
   }
 
-  async createChat(data: AnimaChatEditableFields): Promise<AnimaChat> {
+  async createChat(data: AnimaChatEditableFields): Promise<AnimaChatRecord> {
     const chatsContainerUrl = (await this.getChatsContainerUrl()) ?? (await this.createChatsContainer());
     const chat = await Chat.create({
       url: `${chatsContainerUrl}${uuid()}/index#it`,
@@ -63,7 +63,7 @@ export class ChatsManagerService {
     return this.toAnimaChat(chat);
   }
 
-  async updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+  async updateChat(url: AnimaChatRecord['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const chat = await Chat.findOrFail(url);
 
     await chat.update(updates);
@@ -123,9 +123,9 @@ export class ChatsManagerService {
     });
   }
 
-  private toAnimaChat(chat: Chat): AnimaChat {
+  private toAnimaChat(chat: Chat): AnimaChatRecord {
     return {
-      url: chat.url as AnimaChat['url'],
+      url: chat.url as AnimaChatRecord['url'],
       title: chat.title,
       createdAt: chat.createdAt ?? new Date(),
       updatedAt: chat.updatedAt ?? new Date(),
@@ -155,6 +155,13 @@ export class ChatsManagerService {
       };
     }
 
+    if (part.reasoning) {
+      return {
+        type: 'reasoning',
+        text: part.reasoning,
+      };
+    }
+
     if (part.toolCall) {
       return JSON.parse(part.toolCall);
     }
@@ -181,11 +188,13 @@ export class ChatsManagerService {
         return part.text.trim().length === 0 ? null : { text: part.text };
       case 'step-start':
         return null;
+      case 'reasoning':
+        return part.text.trim().length === 0 ? null : { reasoning: part.text };
       case 'data-error':
         return { error: part.data };
+      default:
+        return { error: `Unsupported part type: ${part.type}` };
     }
-
-    throw new Error(`Unsupported message part: ${part.type}`);
   }
 }
 

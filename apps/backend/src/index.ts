@@ -7,6 +7,7 @@ import { Elysia } from 'elysia';
 import { bootCoreModels } from 'soukai-bis';
 
 import { PORT } from './lib/constants';
+import { shutdownOnSignals } from './lib/shutdown';
 import { registerProviders } from './providers';
 import { useRoutes } from './routes';
 
@@ -16,6 +17,7 @@ export type { ApiAnimaChat } from './routes/api/ai/chats';
 const app = new Elysia({ adapter: node() }).use(cors());
 
 useRoutes(app);
+shutdownOnSignals(app);
 
 app
   .onStart(async () => {

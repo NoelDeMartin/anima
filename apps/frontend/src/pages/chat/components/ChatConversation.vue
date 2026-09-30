@@ -9,7 +9,9 @@
       <div class="grow" />
       <ul class="flex flex-col gap-4">
         <li>
-          <Markdown>{{ $t('chat.greeting', { name: $solid.user?.name ?? $solid.user?.webId }) }}</Markdown>
+          <Markdown class="max-w-full">
+            {{ $t('chat.greeting', { name: $solid.user?.name ?? $solid.user?.webId }) }}
+          </Markdown>
         </li>
         <li
           v-if="chat"
@@ -24,16 +26,14 @@
             </span>
           </div>
           <template v-for="part in message.parts">
-            <Markdown v-if="part.type === 'text'" :text="part.text" />
-            <ChatToolCall
+            <ChatPartText v-if="part.type === 'text'" :part />
+            <ChatPartTool
               v-else-if="part.type === 'tool-readTypesIndex'"
-              :key="`type-index-${part.state}-${part.toolCallId}`"
               :label="$t('chat.tools.readTypeIndex')"
               :part
             />
-            <ChatToolCall
+            <ChatPartTool
               v-else-if="part.type === 'tool-listContainerFiles'"
-              :key="`list-container-files-${part.state}-${part.toolCallId}`"
               :label="
                 $t('chat.tools.listContainerFiles', {
                   url: (part as UIToolInvocation<AnimaTools['listContainerFiles']>).input?.url,
@@ -41,9 +41,8 @@
               "
               :part
             />
-            <ChatToolCall
+            <ChatPartTool
               v-else-if="part.type === 'tool-readFileContents'"
-              :key="`read-file-contents-${part.state}-${part.toolCallId}`"
               :label="
                 $t('chat.tools.readFileContents', {
                   url: (part as UIToolInvocation<AnimaTools['readFileContents']>).input?.url,
@@ -51,16 +50,17 @@
               "
               :part
             />
-            <p v-else-if="part.type === 'data-error'" class="text-red-500">{{ part.data }}</p>
-            <pre v-else-if="part.type !== 'step-start'">({{ part.type }})</pre>
+            <ChatPartReasoning v-else-if="part.type === 'reasoning'" :part />
+            <ChatPartDataError v-else-if="part.type === 'data-error'" :part />
+            <ChatPartUnsupported v-else-if="part.type !== 'step-start'" :part />
           </template>
         </li>
         <li v-if="aiChat?.error && !lastMessageHasError" class="text-red-500">{{ aiChat.error.message }}</li>
+        <li v-if="aiChat?.saveError" class="text-red-500">{{ aiChat.saveError.message }}</li>
       </ul>
-      <i-svg-spinners-3-dots-bounce
-        v-if="aiChat && aiChat.status !== 'ready' && aiChat.status !== 'error'"
-        class="size-6 shrink-0"
-      />
+      <div v-if="busy" role="status" :aria-label="$t('chat.busy')">
+        <i-svg-spinners-3-dots-bounce class="size-6 shrink-0" />
+      </div>
     </div>
 
     <div class="px-8 w-full mb-16">
@@ -107,16 +107,16 @@
 <script setup lang="ts">
 import { translate, useForm } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
-import { type AnimaTools, type ModelId, type AnimaChat, isDataErrorPart } from '@anima/core';
+import { type AnimaTools, type ModelId, type AnimaChatRecord, isDataErrorPart } from '@anima/core';
 import { arraySorted } from '@noeldemartin/utils';
 import type { UIToolInvocation } from 'ai';
-import { computed, nextTick, useTemplateRef, watchEffect } from 'vue';
+import { computed, nextTick, useTemplateRef, watch } from 'vue';
 import { z } from 'zod';
 
 import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
 
-const { chat } = defineProps<{ chat?: AnimaChat }>();
+const { chat } = defineProps<{ chat?: AnimaChatRecord }>();
 const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);
 const $scroll = useTemplateRef('$scroll');
 const form = useForm({ message: z.string().nullable() });
@@ -124,6 +124,9 @@ const models = computed(() =>
   AI.modelsList.filter((model) => model.status === 'installed' && model.enabled).map((model) => model.id),
 );
 const messages = computed(() => arraySorted(aiChat.value?.messages ?? [], 'metadata.createdAt'));
+const busy = computed(
+  () => !!aiChat.value && (aiChat.value.saving || !['ready', 'error'].includes(aiChat.value.status)),
+);
 const lastMessageHasError = computed(() => {
   const lastMessage = messages.value[messages.value.length - 1];
 
@@ -166,15 +169,13 @@ async function submit() {
   await AI.sendMessage(chat.url, message);
 }
 
-function deepRead(value: unknown): void {
-  JSON.stringify(value);
-}
+watch(
+  messages,
+  async () => {
+    await nextTick();
 
-watchEffect(async () => {
-  deepRead(aiChat.value?.lastMessage);
-
-  await nextTick();
-
-  $scroll.value?.scrollTo({ top: $scroll.value?.scrollHeight, behavior: 'smooth' });
-});
+    $scroll.value?.scrollTo({ top: $scroll.value?.scrollHeight, behavior: 'smooth' });
+  },
+  { immediate: true },
+);
 </script>

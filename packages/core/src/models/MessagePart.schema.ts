@@ -9,6 +9,7 @@ export default defineSchema({
     position: z.number(),
     error: z.string().optional(),
     text: z.string().optional(),
+    reasoning: z.string().optional(),
     toolCall: z.string().optional(),
   },
 });

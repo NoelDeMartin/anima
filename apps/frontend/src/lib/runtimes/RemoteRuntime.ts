@@ -1,32 +1,28 @@
 import { env } from '@aerogel/core';
-import { Chat } from '@ai-sdk/vue';
 import type { ApiAnimaChat } from '@anima/backend';
 import {
-  type AnimaUIMessage,
   type AIModel,
-  type AnimaChat,
+  type AnimaChatRecord,
   type AIProvider,
   type AIProviderEditableFields,
   type ProviderId,
   type ModelId,
   type InstalledModelEditableFields,
   type AnimaChatEditableFields,
-  messagesIdGenerator,
-  getAIErrorMessage,
-  isDataErrorPart,
 } from '@anima/core';
 import type { Treaty } from '@elysiajs/eden';
 import { required } from '@noeldemartin/utils';
 import { DefaultChatTransport } from 'ai';
 
 import { getSessionId } from '@/auth/session';
+import AnimaChat from '@/lib/ai/AnimaChat';
 import api, { initialize as initializeAPI } from '@/lib/api';
 import AI from '@/services/AI';
 
 import type { RuntimeInitializeResult } from './Runtime';
 import Runtime from './Runtime';
 
-function mapChat(chat: ApiAnimaChat): AnimaChat {
+function mapChat(chat: ApiAnimaChat): AnimaChatRecord {
   return {
     ...chat,
     createdAt: new Date(chat.createdAt),
@@ -41,7 +37,7 @@ export default class RemoteRuntime extends Runtime {
     return data?.available ?? false;
   }
 
-  async getChats(): Promise<AnimaChat[]> {
+  async getChats(): Promise<AnimaChatRecord[]> {
     const chats = await this.treatyResponse(api['ai'].chats.get(), []);
 
     return chats.map(mapChat);
@@ -55,7 +51,7 @@ export default class RemoteRuntime extends Runtime {
     return this.treatyResponse(api['ai'].providers.get(), []);
   }
 
-  async createAnimaChat(chat: AnimaChatEditableFields): Promise<AnimaChat> {
+  async createAnimaChat(chat: AnimaChatEditableFields): Promise<AnimaChatRecord> {
     const { data, error } = await api['ai'].chats.post(chat);
 
     if (!data) {
@@ -65,7 +61,7 @@ export default class RemoteRuntime extends Runtime {
     return mapChat(data);
   }
 
-  async createAIChat(chat: AnimaChat, options: { loadMessages: boolean }): Promise<Chat<AnimaUIMessage>> {
+  async createAIChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat> {
     const { data: messages, error } = options.loadMessages
       ? await api['ai'].chats({ url: encodeURIComponent(chat.url) }).messages.get()
       : { data: [] };
@@ -74,10 +70,8 @@ export default class RemoteRuntime extends Runtime {
       throw error ?? new Error('Failed to get chat messages');
     }
 
-    const chatInstance = new Chat<AnimaUIMessage>({
-      id: chat.url,
+    return new AnimaChat(chat, {
       messages,
-      generateId: messagesIdGenerator(chat.url),
       transport: new DefaultChatTransport({
         api: `${env('VITE_BACKEND_URL')}/api/ai/chats/${encodeURIComponent(chat.url)}/messages`,
         headers: { 'X-Anima-Session-Id': required(getSessionId()) },
@@ -85,35 +79,10 @@ export default class RemoteRuntime extends Runtime {
           return { body: { message: messages[messages.length - 1], ...body } };
         },
       }),
-      onFinish({ message, isError }) {
-        if (!isError || message.parts.some(isDataErrorPart)) {
-          return;
-        }
-
-        const model = AI.selectedModel;
-        const provider = model ? AI.providers[model.providerId] : null;
-
-        message.metadata ??= {
-          model: model?.name,
-          provider: provider?.type,
-          createdAt: new Date(),
-        };
-
-        message.parts.push({
-          type: 'data-error',
-          data: getAIErrorMessage(chatInstance.error),
-        });
-
-        if (!chatInstance.messages.some((existingMessage) => existingMessage.id === message.id)) {
-          chatInstance.messages.push(message);
-        }
-      },
     });
-
-    return chatInstance;
   }
 
-  async updateChat(url: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+  async updateChat(url: AnimaChatRecord['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const { error } = await api['ai'].chats({ url: encodeURIComponent(url) }).patch(updates);
 
     if (error) {
@@ -121,7 +90,7 @@ export default class RemoteRuntime extends Runtime {
     }
   }
 
-  sendMessage(chat: Chat<AnimaUIMessage>, message: string): Promise<void> {
+  sendMessage(chat: AnimaChat, message: string): Promise<void> {
     if (!AI.selectedModel) {
       throw new Error('No selected model');
     }

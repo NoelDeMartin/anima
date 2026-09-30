@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AnimaChat } from '@anima/core';
+import type { AnimaChatRecord } from '@anima/core';
 
-defineProps<{ chat?: AnimaChat }>();
+defineProps<{ chat?: AnimaChatRecord }>();
 </script>

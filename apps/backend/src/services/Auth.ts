@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 import { EVENTS, Session } from '@inrupt/solid-client-authn-node';
-import type { AuthorizationRequestState, SessionTokenSet } from '@inrupt/solid-client-authn-node';
+import type { AuthorizationRequestState } from '@inrupt/solid-client-authn-node';
 import { fetchLoginUserProfile, type SolidUserProfile } from '@noeldemartin/solid-utils';
 import { facade, isDevelopment, PromisedValue, uuid } from '@noeldemartin/utils';
 import { status } from 'elysia';
@@ -13,11 +13,15 @@ import SolidServer, { type LoginOptions, type SolidCredentials } from './SolidSe
 const SESSION_HEADER = 'X-Anima-Session-Id';
 
 function isActiveSession(value: unknown): value is ActiveSession {
-  return typeof value === 'object' && value !== null && ('credentials' in value || 'tokenSet' in value);
+  return typeof value === 'object' && value !== null && 'instance' in value;
 }
 
 function isManagedSession(value: ActiveSession): value is ManagedSession {
-  return 'instance' in value;
+  return 'credentials' in value;
+}
+
+function sessionWebId(session: ActiveSession): string | undefined {
+  return isManagedSession(session) ? session.credentials.webId : session.instance.info.webId;
 }
 
 function isAuthorizationRequestState(value: unknown): value is AuthorizationRequestState {
@@ -30,7 +34,7 @@ export interface ManagedSession {
 }
 
 export interface OidcSession {
-  tokenSet: SessionTokenSet;
+  instance: Session;
 }
 
 export type ActiveSession = ManagedSession | OidcSession;
@@ -80,10 +84,15 @@ export class AuthService {
       return null;
     }
 
-    const session = isManagedSession(activeSession)
-      ? activeSession.instance
-      : await Session.fromTokens(activeSession.tokenSet);
-    const webId = isManagedSession(activeSession) ? activeSession.credentials.webId : session.info.webId;
+    const session = activeSession.instance;
+
+    if (!session.info.isLoggedIn) {
+      delete this.sessions[sessionId];
+
+      return null;
+    }
+
+    const webId = sessionWebId(activeSession);
     const profile = webId && (await this.profile(webId, session));
 
     if (!profile) {
@@ -222,11 +231,11 @@ export class AuthService {
       return;
     }
 
-    session.events.on(EVENTS.NEW_TOKENS, (tokenSet) => {
-      this.sessions[sessionId] = { tokenSet };
-    });
-
     await session.handleIncomingRedirect(request.url);
+
+    if (session.info.isLoggedIn) {
+      this.sessions[sessionId] = { instance: session };
+    }
   }
 
   public async logout(request: Request): Promise<void> {
@@ -240,19 +249,21 @@ export class AuthService {
 
     delete this.sessions[sessionId];
 
-    if (isActiveSession(activeSession)) {
-      if (isManagedSession(activeSession)) {
-        await SolidServer.logout(activeSession.credentials).catch((error) =>
-          console.error('Failed to log out from the managed POD', error),
-        );
-      }
-
-      const webId = isManagedSession(activeSession)
-        ? activeSession.credentials.webId
-        : (await Session.fromTokens(activeSession.tokenSet))?.info.webId;
-
-      webId && delete this.profiles[webId];
+    if (!isActiveSession(activeSession)) {
+      return;
     }
+
+    if (isManagedSession(activeSession)) {
+      await SolidServer.logout(activeSession.credentials).catch((error) =>
+        console.error('Failed to log out from the managed POD', error),
+      );
+    }
+
+    const webId = sessionWebId(activeSession);
+
+    await activeSession.instance.logout().catch((error) => console.error('Failed to log out the session', error));
+
+    webId && delete this.profiles[webId];
   }
 
   private async profile(webId: string, session: Session): Promise<SolidUserProfile | null> {

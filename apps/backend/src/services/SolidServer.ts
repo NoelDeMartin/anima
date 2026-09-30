@@ -24,9 +24,9 @@ const HOP_BY_HOP_HEADERS = ['connection', 'keep-alive', 'transfer-encoding'];
 const AUTHORIZATION_API_PATH = '/api/pod/authorize';
 const POD_SESSION_COOKIE = 'css-account';
 const POD_SESSION_COOKIE_MAX_AGE = 14 * 24 * 60 * 60;
-const SIGNAL_EXIT_CODES = { SIGINT: 130, SIGTERM: 143 } as const;
 const READY_POLL_MS = 100;
 const READY_TIMEOUT_MS = 30_000;
+const STOP_TIMEOUT_MS = 5_000;
 const INTERACTION_COOKIE = '_interaction';
 const INTERACTION_COOKIES = [INTERACTION_COOKIE, `${INTERACTION_COOKIE}.sig`];
 
@@ -210,7 +210,7 @@ export type AuthorizationDetails = z.infer<typeof AuthorizationDetailsSchema>;
 export class SolidServerService {
   private process: ChildProcess | null = null;
   private cssStorageConfig: CommunityServerStorageConfig | null = null;
-  private exitHandlersRegistered = false;
+  private exitHandlerRegistered = false;
   private cssDispatcher = new Agent({ connect: { socketPath: cssSocketPath() } });
   private cssControls = new CommunityServerControls(POD_URL, (input, init) => this.internalFetch(input, init));
 
@@ -279,7 +279,7 @@ export class SolidServerService {
 
     this.process = childProcess;
 
-    this.registerExitHandlers();
+    this.killChildOnExit();
 
     await this.waitReady(childProcess);
   }
@@ -292,6 +292,7 @@ export class SolidServerService {
     const process = this.process;
     const exited = new PromisedValue<void>();
     const listener = () => exited.resolve();
+    const forceKill = setTimeout(() => process.kill('SIGKILL'), STOP_TIMEOUT_MS);
 
     this.process = null;
 
@@ -304,6 +305,7 @@ export class SolidServerService {
 
     await exited;
 
+    clearTimeout(forceKill);
     process.off('exit', listener);
   }
 
@@ -419,23 +421,14 @@ export class SolidServerService {
     };
   }
 
-  private registerExitHandlers(): void {
-    if (this.exitHandlersRegistered) {
+  private killChildOnExit(): void {
+    if (this.exitHandlerRegistered) {
       return;
     }
 
-    const killChild = () => this.process?.kill();
+    process.once('exit', () => this.process?.kill());
 
-    process.once('exit', killChild);
-
-    for (const [signal, exitCode] of Object.entries(SIGNAL_EXIT_CODES)) {
-      process.once(signal, () => {
-        killChild();
-        process.exit(exitCode);
-      });
-    }
-
-    this.exitHandlersRegistered = true;
+    this.exitHandlerRegistered = true;
   }
 
   private internalPath(): string {

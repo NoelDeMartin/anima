@@ -1,15 +1,16 @@
 import {
-  AnimaChatSchema,
+  AnimaChatRecordSchema,
   tools,
   ModelsManager,
   type AnimaUIMessage,
   systemPrompt,
   AnimaChatEditableFieldsSchema,
-  type AnimaChat,
+  type AnimaChatRecord,
   ChatsManager,
   getAIErrorMessage,
   isDataErrorPart,
   messagesIdGenerator,
+  createMessageMetadata,
   prepareMessagesForModel,
 } from '@anima/core';
 import { objectKeys, required } from '@noeldemartin/utils';
@@ -19,7 +20,7 @@ import z from 'zod';
 
 import Auth from '../../../services/Auth';
 
-function mapChat(chat: AnimaChat): ApiAnimaChat {
+function mapChat(chat: AnimaChatRecord): ApiAnimaChat {
   return {
     ...chat,
     createdAt: chat.createdAt.getTime(),
@@ -27,7 +28,7 @@ function mapChat(chat: AnimaChat): ApiAnimaChat {
   };
 }
 
-export const ApiAnimaChatSchema = AnimaChatSchema.extend({
+export const ApiAnimaChatSchema = AnimaChatRecordSchema.extend({
   createdAt: z.number(),
   updatedAt: z.number(),
 });
@@ -143,11 +144,7 @@ export default new Elysia().group('chats', (app) =>
                 return;
               }
 
-              return {
-                model: modelId,
-                provider: provider.type,
-                createdAt: new Date(),
-              };
+              return createMessageMetadata(model, provider);
             },
             onError(error) {
               errorMessage = getAIErrorMessage(error);
@@ -156,11 +153,7 @@ export default new Elysia().group('chats', (app) =>
             },
             async onFinish({ messages, responseMessage, outcome }) {
               if ((outcome.status === 'failed' || errorMessage) && !responseMessage.parts.some(isDataErrorPart)) {
-                responseMessage.metadata ??= {
-                  model: modelId,
-                  provider: provider.type,
-                  createdAt: new Date(),
-                };
+                responseMessage.metadata ??= createMessageMetadata(model, provider);
 
                 responseMessage.parts.push({
                   type: 'data-error',

@@ -1,7 +1,7 @@
 import { env } from '@aerogel/core';
 import { BindingNotFound, defineRouteBindings, defineRoutes, Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
-import { type AnimaChat } from '@anima/core';
+import { type AnimaChatRecord } from '@anima/core';
 
 import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
@@ -15,7 +15,7 @@ import Register from './register/Register.vue';
 export const bindings = defineRouteBindings({
   chat(slug) {
     const route = Router.currentRoute.value;
-    const chat = AI.chats[route?.query?.url as AnimaChat['url']]?.anima ?? AI.chatsBySlug[slug]?.anima;
+    const chat = AI.chats[route?.query?.url as AnimaChatRecord['url']]?.anima ?? AI.chatsBySlug[slug]?.anima;
 
     return chat ?? new BindingNotFound(slug);
   },

@@ -1,14 +1,16 @@
 import { Events } from '@aerogel/core';
 import { Router } from '@aerogel/plugin-routing';
 import { Solid } from '@aerogel/plugin-solid';
-import type {
-  AIProvider,
-  AIProviderEditableFields,
-  ProviderId,
-  ModelId,
-  AnimaChat,
-  AnimaChatEditableFields,
-  InstalledModelEditableFields,
+import {
+  type AIProvider,
+  type AIProviderEditableFields,
+  type ProviderId,
+  type ModelId,
+  type AnimaChatRecord,
+  type AnimaChatEditableFields,
+  type InstalledModelEditableFields,
+  type MessageMetadata,
+  createMessageMetadata,
 } from '@anima/core';
 import { facade, objectFromEntries, objectKeys } from '@noeldemartin/utils';
 import { markRaw, watchEffect } from 'vue';
@@ -18,7 +20,13 @@ import { getRuntime, requireRuntime } from '@/lib/runtime';
 import Service from './AI.state';
 
 export class AIService extends Service {
-  public async updateChat(chatUrl: AnimaChat['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
+  public createMessageMetadata(): MessageMetadata {
+    const model = this.selectedModel;
+
+    return createMessageMetadata(model, model && this.providers[model.providerId]);
+  }
+
+  public async updateChat(chatUrl: AnimaChatRecord['url'], updates: Partial<AnimaChatEditableFields>): Promise<void> {
     const originalChat = this.chats[chatUrl];
 
     if (!originalChat) {
@@ -39,7 +47,7 @@ export class AIService extends Service {
     }
   }
 
-  public async sendMessage(chatUrl: AnimaChat['url'], message: string): Promise<void> {
+  public async sendMessage(chatUrl: AnimaChatRecord['url'], message: string): Promise<void> {
     const aiChat = this.chats[chatUrl]?.ai;
 
     if (!aiChat) {
@@ -49,7 +57,7 @@ export class AIService extends Service {
     await requireRuntime().sendMessage(aiChat, message);
   }
 
-  public async createChat(attributes: AnimaChatEditableFields): Promise<AnimaChat> {
+  public async createChat(attributes: AnimaChatEditableFields): Promise<AnimaChatRecord> {
     const animaChat = await requireRuntime().createAnimaChat(attributes);
     const aiChat = await requireRuntime().createAIChat(animaChat, { loadMessages: false });
 
