@@ -3,6 +3,18 @@ app:
 
 home:
   workInProgress: 🛠️ Work in progress
+  workInProgressInfo: |
+    This app is under heavy development, which means there are no guarantees of stability and
+    new updates could break previous installations.
+
+    Generally, if you find any issues after updating a development or Desktop version,
+    you should be fine by deleting `~/.anima-dev` or `~/.anima` folders
+    (but keep in mind that you could lose your data and accounts!).
+
+    If you're using the SPA version, you should be fine by simply clearing the browser storage.
+
+    There may also be some known limitations and bugs, so bear that in mind. Still, if you find any issues
+    or want to give some feedback, feel free to [open an issue](https://github.com/noeldemartin/anima/issues).
   learnMore: Learn more
   sourceCode: Source code
   logIn: Log in

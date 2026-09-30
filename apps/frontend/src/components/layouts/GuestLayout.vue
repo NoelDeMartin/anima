@@ -7,11 +7,13 @@
         </span>
         <i-app-anima-logo class="block h-32 w-72" />
       </h1>
-      <div
-        class="text-xs whitespace-nowrap font-medium tracking-wide text-pink-500 border border-pink-200 bg-white rounded-full px-4 py-1.5 mb-6 uppercase"
+      <button
+        class="text-xs cursor-pointer hover:bg-pink-50 transition-colors duration-300 whitespace-nowrap font-medium tracking-wide text-pink-500 border border-pink-200 bg-white rounded-full px-4 py-1.5 mb-6 uppercase"
+        type="button"
+        @click="$ui.alert($t('home.workInProgress'), $t('home.workInProgressInfo'))"
       >
         {{ $t('home.workInProgress') }}
-      </div>
+      </button>
       <div class="flex flex-col items-center max-w-75 w-full gap-2">
         <slot />
       </div>
