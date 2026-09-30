@@ -117,7 +117,7 @@ import AI from '@/services/AI';
 import { chatRoute } from '@/utils/chats';
 
 const { chat } = defineProps<{ chat?: AnimaChatRecord }>();
-const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.ai);
+const aiChat = computed(() => chat?.url && AI.chats[chat.url]?.chat);
 const $scroll = useTemplateRef('$scroll');
 const form = useForm({ message: z.string().nullable() });
 const models = computed(() =>

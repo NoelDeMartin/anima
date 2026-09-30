@@ -51,7 +51,7 @@ export default class RemoteRuntime extends Runtime {
     return this.treatyResponse(api['ai'].providers.get(), []);
   }
 
-  async createAnimaChat(chat: AnimaChatEditableFields): Promise<AnimaChatRecord> {
+  async createChatRecord(chat: AnimaChatEditableFields): Promise<AnimaChatRecord> {
     const { data, error } = await api['ai'].chats.post(chat);
 
     if (!data) {
@@ -61,7 +61,7 @@ export default class RemoteRuntime extends Runtime {
     return mapChat(data);
   }
 
-  async createAIChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat> {
+  async createChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat> {
     const { data: messages, error } = options.loadMessages
       ? await api['ai'].chats({ url: encodeURIComponent(chat.url) }).messages.get()
       : { data: [] };

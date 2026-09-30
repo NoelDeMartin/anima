@@ -16,8 +16,8 @@ export default defineServiceState({
     chats: {} as Record<
       AnimaChatRecord['url'],
       {
-        anima: AnimaChatRecord;
-        ai?: AnimaChat;
+        record: AnimaChatRecord;
+        chat?: AnimaChat;
       }
     >,
     models: {} as Record<ModelId, AIModel>,
@@ -31,12 +31,12 @@ export default defineServiceState({
   computed: {
     chatsList: ({ chats }) =>
       arraySorted(
-        Object.values(chats).map((chat) => chat.anima),
+        Object.values(chats).map((chat) => chat.record),
         'updatedAt',
         'desc',
       ),
     chatsBySlug: ({ chats }) =>
-      objectFromEntries(Object.values(chats).map((chat) => [requireUrlDirectoryName(chat.anima.url), chat])),
+      objectFromEntries(Object.values(chats).map((chat) => [requireUrlDirectoryName(chat.record.url), chat])),
     modelsList: ({ models }) => Object.values(models),
     providers: ({ providersList }) => objectFromEntries(providersList.map((provider) => [provider.id, provider])),
     providerFactories: ({ providerFactoriesList }) =>

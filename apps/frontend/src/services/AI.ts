@@ -36,7 +36,7 @@ export class AIService extends Service {
     try {
       this.chats[chatUrl] = {
         ...originalChat,
-        anima: { ...originalChat.anima, ...updates, updatedAt: new Date() },
+        record: { ...originalChat.record, ...updates, updatedAt: new Date() },
       };
 
       await requireRuntime().updateChat(chatUrl, updates);
@@ -48,22 +48,22 @@ export class AIService extends Service {
   }
 
   public async sendMessage(chatUrl: AnimaChatRecord['url'], message: string): Promise<void> {
-    const aiChat = this.chats[chatUrl]?.ai;
+    const chat = this.chats[chatUrl]?.chat;
 
-    if (!aiChat) {
+    if (!chat) {
       throw new Error(`Chat ${chatUrl} not found`);
     }
 
-    await requireRuntime().sendMessage(aiChat, message);
+    await requireRuntime().sendMessage(chat, message);
   }
 
   public async createChat(attributes: AnimaChatEditableFields): Promise<AnimaChatRecord> {
-    const animaChat = await requireRuntime().createAnimaChat(attributes);
-    const aiChat = await requireRuntime().createAIChat(animaChat, { loadMessages: false });
+    const record = await requireRuntime().createChatRecord(attributes);
+    const chat = await requireRuntime().createChat(record, { loadMessages: false });
 
-    this.chats[animaChat.url] = { anima: animaChat, ai: markRaw(aiChat) };
+    this.chats[record.url] = { record, chat: markRaw(chat) };
 
-    return animaChat;
+    return record;
   }
 
   async installModel(
@@ -166,7 +166,7 @@ export class AIService extends Service {
     const { chats, models, providers, factories } = await runtime.initialize();
 
     this.setState({
-      chats: objectFromEntries(chats.map((chat) => [chat.url, { anima: chat }])),
+      chats: objectFromEntries(chats.map((chat) => [chat.url, { record: chat }])),
       models: objectFromEntries(models.map((model) => [model.id, model])),
       providersList: providers,
       providerFactoriesList: factories,
@@ -177,13 +177,13 @@ export class AIService extends Service {
     watchEffect(async () => {
       const selectedChat = this.selectedChatUrl && this.chats[this.selectedChatUrl];
 
-      if (!selectedChat || selectedChat.ai) {
+      if (!selectedChat || selectedChat.chat) {
         return;
       }
 
-      const aiChat = await requireRuntime().createAIChat(selectedChat.anima, { loadMessages: true });
+      const chat = await requireRuntime().createChat(selectedChat.record, { loadMessages: true });
 
-      this.chats[selectedChat.anima.url] = { ...selectedChat, ai: markRaw(aiChat) };
+      this.chats[selectedChat.record.url] = { ...selectedChat, chat: markRaw(chat) };
     });
   }
 

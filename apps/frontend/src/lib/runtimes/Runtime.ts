@@ -35,8 +35,8 @@ export default abstract class Runtime {
   abstract getChats(): Promise<AnimaChatRecord[]>;
   abstract getModels(): Promise<AIModel[]>;
   abstract getProviders(): Promise<AIProvider[]>;
-  abstract createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChatRecord>;
-  abstract createAIChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat>;
+  abstract createChatRecord(data: AnimaChatEditableFields): Promise<AnimaChatRecord>;
+  abstract createChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat>;
   abstract updateChat(url: AnimaChatRecord['url'], updates: Partial<AnimaChatEditableFields>): Promise<void>;
   abstract sendMessage(chat: AnimaChat, message: string): Promise<void>;
   abstract installModel(providerId: ProviderId, name: string, data?: InstalledModelEditableFields): Promise<AIModel>;

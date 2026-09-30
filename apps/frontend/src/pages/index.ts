@@ -15,7 +15,7 @@ import Register from './register/Register.vue';
 export const bindings = defineRouteBindings({
   chat(slug) {
     const route = Router.currentRoute.value;
-    const chat = AI.chats[route?.query?.url as AnimaChatRecord['url']]?.anima ?? AI.chatsBySlug[slug]?.anima;
+    const chat = AI.chats[route?.query?.url as AnimaChatRecord['url']]?.record ?? AI.chatsBySlug[slug]?.record;
 
     return chat ?? new BindingNotFound(slug);
   },

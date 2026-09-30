@@ -133,6 +133,7 @@ chats:
   update: Update
 
 settings:
+  title: Settings
   providers:
     title: Providers
     description: Configure the AI providers you want to use.

@@ -57,13 +57,13 @@ export default class LocalRuntime extends Runtime {
     return ModelsManager.getProviders();
   }
 
-  async createAnimaChat(data: AnimaChatEditableFields): Promise<AnimaChatRecord> {
+  async createChatRecord(data: AnimaChatEditableFields): Promise<AnimaChatRecord> {
     const chat = await ChatsManager.createChat(data);
 
     return chat;
   }
 
-  async createAIChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat> {
+  async createChat(chat: AnimaChatRecord, options: { loadMessages: boolean }): Promise<AnimaChat> {
     const messages = options.loadMessages ? await ChatsManager.getChatMessages(chat) : [];
     const messagesMap = new Map(messages.map((message) => [message.id, message]));
     const agent = new ToolLoopAgent<never, Record<string, Tool>, never>({
