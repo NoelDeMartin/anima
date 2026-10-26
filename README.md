@@ -5,6 +5,14 @@ An AI agent that works with your [Solid POD](https://solidproject.org).
 > [!WARNING]
 > ⚠️ This is still a work in progress! You can learn more about it in my website: [Raising an Agent](https://noeldemartin.com/tasks/raising-an-agent).
 
+## Intro & Demo
+
+![Ànima intro video](https://noeldemartin.com/img/talks/interoperable-local-first-in-the-age-of-ai.png)
+
+- 🎥 [Youtube video](https://www.youtube.com/watch?v=2KFlz9BMrDI&t=928s)
+- 📊 [Slides](https://noeldemartin.com/slides/interoperable-local-first-in-the-age-of-ai?slide=21)
+- 📝 [Transcription](https://bd.ailishi.ai/blog/interoperable-local-first-ai/en.html#section-7)
+
 ## Installation & Usage
 
 Ànima can be used in different ways, depending on your preference:
