@@ -4,6 +4,8 @@ import z from 'zod';
 import type { CreateAccountOptions, LoginOptions, SolidCredentials } from '../services/SolidServer';
 import { SolidServerError } from './errors/SolidServerError';
 
+const CLIENT_CREDENTIALS_NAME = 'anima';
+
 const GuestControlsResponseSchema = z.object({
   controls: z.object({
     account: z.object({
@@ -94,6 +96,11 @@ const WebIdsResponseSchema = z.object({
 const ClientCredentialsResponseSchema = z.object({
   id: z.string(),
   secret: z.string(),
+  resource: z.string(),
+});
+
+const ClientCredentialsListResponseSchema = z.object({
+  clientCredentials: z.record(z.string(), z.string()),
 });
 
 export interface Interaction {
@@ -153,7 +160,7 @@ export default class CommunityServerControls {
     });
   }
 
-  public async login({ email, password }: LoginOptions): Promise<SolidCredentials> {
+  public async login({ email, password }: LoginOptions, activeClientIds: string[] = []): Promise<SolidCredentials> {
     const loginUrl = await this.guestControlUrl('password.login');
     const { authorization } = await this.request(loginUrl, {
       method: 'POST',
@@ -178,11 +185,16 @@ export default class CommunityServerControls {
       throw new Error('No WebID found for account');
     }
 
+    await this.deleteStaleClientCredentials(accountControls.account.clientCredentials, {
+      authorization,
+      activeClientIds,
+    }).catch((error) => console.error('Failed to delete stale client credentials', error));
+
     const credentials = await this.request(accountControls.account.clientCredentials, {
       method: 'POST',
       authorization,
       body: {
-        name: 'anima',
+        name: CLIENT_CREDENTIALS_NAME,
         webId,
       },
       response: ClientCredentialsResponseSchema,
@@ -193,11 +205,16 @@ export default class CommunityServerControls {
       webId,
       clientId: credentials.id,
       clientSecret: credentials.secret,
+      clientCredentialsUrl: credentials.resource,
       oidcIssuer: this.baseUrl,
     };
   }
 
-  public async logout(authorization: string): Promise<void> {
+  public async logout({ authorization, clientCredentialsUrl }: SolidCredentials): Promise<void> {
+    await this.request(clientCredentialsUrl, { method: 'DELETE', authorization }).catch((error) =>
+      console.error('Failed to delete client credentials', error),
+    );
+
     const { controls } = await this.request(this.accountUrl(), {
       authorization,
       response: LogoutControlsResponseSchema,
@@ -261,6 +278,24 @@ export default class CommunityServerControls {
     return location;
   }
 
+  private async deleteStaleClientCredentials(
+    clientCredentialsUrl: string,
+    { authorization, activeClientIds }: { authorization: string; activeClientIds: string[] },
+  ): Promise<void> {
+    const { clientCredentials } = await this.request(clientCredentialsUrl, {
+      authorization,
+      response: ClientCredentialsListResponseSchema,
+    });
+
+    await Promise.allSettled(
+      Object.entries(clientCredentials)
+        .filter(
+          ([clientId]) => clientId.startsWith(`${CLIENT_CREDENTIALS_NAME}_`) && !activeClientIds.includes(clientId),
+        )
+        .map(([, resourceUrl]) => this.request(resourceUrl, { method: 'DELETE', authorization })),
+    );
+  }
+
   private async getInteractionControls(options: InteractionOptions): Promise<InteractionControls> {
     const { controls } = await this.request(this.accountUrl(), {
       ...options,
@@ -306,7 +341,7 @@ export default class CommunityServerControls {
     options: {
       authorization?: string;
       cookies?: string;
-      method?: 'POST' | 'GET';
+      method?: 'GET' | 'POST' | 'DELETE';
       body?: object;
       response?: T;
     },

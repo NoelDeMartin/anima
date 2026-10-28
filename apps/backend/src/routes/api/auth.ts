@@ -1,10 +1,24 @@
 import type { SolidUserProfile } from '@noeldemartin/solid-utils';
-import { Elysia } from 'elysia';
+import { Elysia, status } from 'elysia';
 import z from 'zod';
 
 import { SolidServerError } from '../../lib/errors/SolidServerError';
 import Auth from '../../services/Auth';
 import SolidServer, { CreateAccountOptionsSchema } from '../../services/SolidServer';
+
+function urlWithoutHash(url: string): string {
+  return new URL(url).href.replace(/#.*$/, '');
+}
+
+function isUserUrl(user: SolidUserProfile, url: string): boolean {
+  const normalizedUrl = urlWithoutHash(url);
+  const storageUrls = user.storageUrls.map((storageUrl) => new URL(storageUrl).href.replace(/\/?$/, '/'));
+  const profileUrls = [user.webId, user.writableProfileUrl, user.publicTypeIndexUrl, user.privateTypeIndexUrl]
+    .filter((profileUrl): profileUrl is string => !!profileUrl)
+    .map((profileUrl) => urlWithoutHash(profileUrl));
+
+  return storageUrls.some((storageUrl) => normalizedUrl.startsWith(storageUrl)) || profileUrls.includes(normalizedUrl);
+}
 
 export default new Elysia({ prefix: '/auth' })
   .error({ SolidServerError })
@@ -63,7 +77,11 @@ export default new Elysia({ prefix: '/auth' })
     async ({ request, body: { input, init } }) => {
       const session = await Auth.requireSession(request);
 
+      if (!isUserUrl(session.user, input)) {
+        throw status(403, 'Only urls from the user POD can be proxied');
+      }
+
       return session.fetch(input, init);
     },
-    { body: z.object({ input: z.any(), init: z.any() }) },
+    { body: z.object({ input: z.url(), init: z.any().optional() }) },
   );

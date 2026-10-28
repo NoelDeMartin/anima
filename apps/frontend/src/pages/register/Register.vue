@@ -107,6 +107,8 @@ async function pickFolder() {
 async function submit() {
   if (form.confirmPassword !== form.password) {
     errorMessage.value = translate('home.registerPasswordsDontMatch');
+
+    return;
   }
 
   try {

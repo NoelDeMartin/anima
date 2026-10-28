@@ -50,6 +50,7 @@ export class AuthService {
   private context = new AsyncLocalStorage<AuthSession>();
   private profiles: Record<string, SolidUserProfile | null> = {};
   private sessions: Record<string, AuthorizationRequestState | ActiveSession> = {};
+  private managedLogin: Promise<unknown> = Promise.resolve();
 
   public async assertLoggedIn(request: Request): Promise<void> {
     const sessionId = request.headers.get(SESSION_HEADER);
@@ -125,7 +126,19 @@ export class AuthService {
   }
 
   public async loginWithManagedSession(options: LoginOptions): Promise<{ sessionId: string; user: SolidUserProfile }> {
-    const credentials = await SolidServer.login(options);
+    const login = this.managedLogin.catch(() => null).then(() => this.performManagedLogin(options));
+
+    this.managedLogin = login;
+
+    return login;
+  }
+
+  private async performManagedLogin(options: LoginOptions): Promise<{ sessionId: string; user: SolidUserProfile }> {
+    const activeClientIds = Object.values(this.sessions)
+      .filter(isActiveSession)
+      .filter(isManagedSession)
+      .map((session) => session.credentials.clientId);
+    const credentials = await SolidServer.login(options, activeClientIds);
     const session = new Session({ keepAlive: false });
     const sessionId = uuid();
 
@@ -135,13 +148,13 @@ export class AuthService {
       oidcIssuer: credentials.oidcIssuer,
     });
 
-    this.sessions[sessionId] = { credentials, instance: session };
-
     const profile = await this.profile(credentials.webId, session);
 
     if (!profile) {
       throw new Error(`Failed to fetch user profile for ${credentials.webId}`);
     }
+
+    this.sessions[sessionId] = { credentials, instance: session };
 
     return { sessionId, user: profile };
   }

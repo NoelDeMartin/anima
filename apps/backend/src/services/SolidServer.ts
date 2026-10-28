@@ -190,6 +190,7 @@ export interface SolidCredentials {
   webId: string;
   clientId: string;
   clientSecret: string;
+  clientCredentialsUrl: string;
   oidcIssuer: string;
 }
 
@@ -360,12 +361,12 @@ export class SolidServerService {
     }
   }
 
-  public async login(options: LoginOptions): Promise<SolidCredentials> {
-    return this.cssControls.login(options);
+  public async login(options: LoginOptions, activeClientIds: string[] = []): Promise<SolidCredentials> {
+    return this.cssControls.login(options, activeClientIds);
   }
 
   public async logout(credentials: SolidCredentials): Promise<void> {
-    await this.cssControls.logout(credentials.authorization);
+    await this.cssControls.logout(credentials);
   }
 
   public async getAuthorization(request: Request, credentials: SolidCredentials | null): Promise<AuthorizationDetails> {
