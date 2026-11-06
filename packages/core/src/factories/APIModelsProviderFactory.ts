@@ -43,5 +43,6 @@ export default abstract class APIModelsProviderFactory implements ModelsProvider
   abstract createLanguageModel(
     provider: AIProvider,
     name: string,
+    options?: { sessionId?: string },
   ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }>;
 }

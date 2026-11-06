@@ -82,7 +82,9 @@ export default class LocalRuntime extends Runtime {
           throw new Error('No selected model');
         }
 
-        const { languageModel: model, providerOptions } = await ModelsManager.createLanguageModel(AI.selectedModel.id);
+        const { languageModel: model, providerOptions } = await ModelsManager.createLanguageModel(AI.selectedModel.id, {
+          sessionId: chat.url,
+        });
 
         return {
           model,
