@@ -161,12 +161,13 @@ export class ModelsManagerService {
 
   async createLanguageModel(
     modelId: ModelId,
+    options?: { sessionId?: string },
   ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }> {
     const model = required(await this.requireStorage().getModel(modelId));
     const provider = required(await this.requireStorage().getProvider(model.providerId));
     const factory = required(this.factories.find(([type]) => provider.type === type)?.[1]);
 
-    return factory.createLanguageModel(provider, model.name);
+    return factory.createLanguageModel(provider, model.name, options);
   }
 
   async createModel(providerId: ProviderId, name: string, data: InstalledModelEditableFields): Promise<AIModel> {

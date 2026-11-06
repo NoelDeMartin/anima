@@ -25,6 +25,7 @@ export interface ModelsProviderFactory {
   createLanguageModel(
     provider: AIProvider,
     name: string,
+    options?: { sessionId?: string },
   ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }>;
   installModel(
     provider: AIProvider,
