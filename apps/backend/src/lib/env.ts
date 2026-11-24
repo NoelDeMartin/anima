@@ -7,6 +7,11 @@ const EnvSchema = z.object({
   SERVE_FRONTEND: z.string().optional().transform(parseBoolean),
   ANIMA_NATIVE: z.string().optional().transform(parseBoolean),
   ANIMA_NATIVE_IPC_PORT: z.string().optional(),
+  BACKEND_URL: z
+    .string()
+    .optional()
+    .transform((value) => value?.trim().replace(/\/+$/, '') || undefined)
+    .pipe(z.url({ protocol: /^https?$/ }).optional()),
 });
 
 type Env = z.infer<typeof EnvSchema>;
