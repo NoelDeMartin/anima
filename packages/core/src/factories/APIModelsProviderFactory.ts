@@ -1,4 +1,11 @@
-import type { InstallingModel, ModelsProviderFactory, ProviderOptions, ModelId, AIProvider } from '@anima/core';
+import type {
+  AIProvider,
+  InstallingModel,
+  LanguageModelContext,
+  ModelId,
+  ModelsProviderFactory,
+  ProviderOptions,
+} from '@anima/core';
 import type { LanguageModel } from 'ai';
 
 export default abstract class APIModelsProviderFactory implements ModelsProviderFactory {
@@ -43,6 +50,6 @@ export default abstract class APIModelsProviderFactory implements ModelsProvider
   abstract createLanguageModel(
     provider: AIProvider,
     name: string,
-    options?: { sessionId?: string },
+    context: LanguageModelContext,
   ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }>;
 }

@@ -1,5 +1,5 @@
-import type { AIProvider } from '@anima/core';
-import { required, uuid } from '@noeldemartin/utils';
+import type { AIProvider, LanguageModelContext } from '@anima/core';
+import { md5, required } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
 
 import APIModelsProviderFactory from './APIModelsProviderFactory';
@@ -46,8 +46,6 @@ const OPENAI_CHAT_MODELS = [
 ];
 
 export default class OpenCodeGoModelsProviderFactory extends APIModelsProviderFactory {
-  private readonly defaultSessionId = uuid();
-
   async getAvailableModels(): Promise<string[]> {
     return [...OPENAI_RESPONSES_MODELS, ...OPENAI_CHAT_MODELS, ...ANTHROPIC_MODELS];
   }
@@ -55,14 +53,12 @@ export default class OpenCodeGoModelsProviderFactory extends APIModelsProviderFa
   async createLanguageModel(
     provider: AIProvider,
     name: string,
-    options?: { sessionId?: string },
+    context: LanguageModelContext,
   ): Promise<{ languageModel: LanguageModel }> {
+    const headers = { 'x-opencode-session': md5(context.chat.url) };
     const baseURL = (provider.url || 'https://opencode.ai/zen/go/v1')
       .replace(/\/+$/, '')
       .replace(/\/(messages|responses|chat\/completions)$/, '');
-    const headers = {
-      'x-opencode-session': options?.sessionId ?? this.defaultSessionId,
-    };
 
     if (ANTHROPIC_MODELS.includes(name) || name.startsWith('minimax') || name.startsWith('qwen')) {
       const { createAnthropic } = await import('@ai-sdk/anthropic');
@@ -85,8 +81,8 @@ export default class OpenCodeGoModelsProviderFactory extends APIModelsProviderFa
     const { createOpenAI } = await import('@ai-sdk/openai');
     const openai = createOpenAI({
       baseURL,
-      apiKey: required(provider.apiKey),
       headers,
+      apiKey: required(provider.apiKey),
     });
 
     if (

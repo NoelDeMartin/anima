@@ -113,9 +113,7 @@ export default new Elysia().group('chats', (app) =>
             message.metadata.createdAt = new Date(message.metadata.createdAt);
           }
 
-          const { languageModel, providerOptions } = await ModelsManager.createLanguageModel(modelId, {
-            sessionId: chat.url,
-          });
+          const { languageModel, providerOptions } = await ModelsManager.createLanguageModel(modelId, { chat });
 
           const session = Auth.requireContextSession();
           const messages = await ChatsManager.getChatMessages(chat);

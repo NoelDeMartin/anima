@@ -83,7 +83,7 @@ export default class LocalRuntime extends Runtime {
         }
 
         const { languageModel: model, providerOptions } = await ModelsManager.createLanguageModel(AI.selectedModel.id, {
-          sessionId: chat.url,
+          chat,
         });
 
         return {
