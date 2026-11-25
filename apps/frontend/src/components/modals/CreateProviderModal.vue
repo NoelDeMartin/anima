@@ -63,11 +63,13 @@ const form = useForm({
 const selectedFactory = computed(() => AI.providerFactories[form.type]);
 
 async function submit() {
+  const factory = selectedFactory.value;
+
   await AI.createProvider({
     type: form.type,
     name: form.name,
-    apiKey: form.apiKey?.trim() || null,
-    url: form.url?.trim() || null,
+    apiKey: factory?.requiresAPIKey ? form.apiKey?.trim() || null : null,
+    url: factory?.requiresUrl ? form.url?.trim() || null : null,
   });
 
   close();
@@ -77,8 +79,8 @@ watch(
   () => form.type,
   () => {
     form.name = translateWithDefault(`providers.names.${form.type}`, stringToStudlyCase(form.type));
-    form.url = selectedFactory.value?.defaultConfig?.url ?? form.url;
-    form.apiKey = selectedFactory.value?.defaultConfig?.apiKey ?? form.apiKey;
+    form.url = selectedFactory.value?.defaultConfig?.url ?? '';
+    form.apiKey = selectedFactory.value?.defaultConfig?.apiKey ?? '';
   },
   { immediate: true },
 );
