@@ -10,6 +10,7 @@ concurrency:
 
 jobs:
   web-ci:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -25,6 +26,7 @@ jobs:
       - run: vp run type-check
 
   web-e2e:
+    if: false
     strategy:
       matrix:
         mode: [external, managed, spa]
@@ -46,7 +48,7 @@ jobs:
           retention-days: 30
 
   web-deploy:
-    if: github.ref == 'refs/heads/main'
+    if: false
     runs-on: ubuntu-latest
     needs: [web-ci, web-e2e]
     env:

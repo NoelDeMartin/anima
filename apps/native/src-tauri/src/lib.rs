@@ -192,11 +192,24 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
-            let ipc_port = ipc::start_ipc_server(app.handle().clone())?;
+            eprintln!("[debug] starting ipc");
+            let ipc_port = ipc::start_ipc_server(app.handle().clone()).map_err(|e| {
+                eprintln!("[debug] start_ipc_server failed: {e:?}");
+                e
+            })?;
 
             hide_dock_icon(app);
-            spawn_backend(app, ipc_port)?;
-            setup_tray(app)?;
+            eprintln!("[debug] spawning backend");
+            spawn_backend(app, ipc_port).map_err(|e| {
+                eprintln!("[debug] spawn_backend failed: {e:?}");
+                e
+            })?;
+            eprintln!("[debug] setting up tray");
+            setup_tray(app).map_err(|e| {
+                eprintln!("[debug] setup_tray failed: {e:?}");
+                e
+            })?;
+            eprintln!("[debug] setup done");
 
             Ok(())
         })
