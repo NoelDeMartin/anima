@@ -1,6 +1,7 @@
 import type { streamText, LanguageModel } from 'ai';
 import z from 'zod';
 
+import type { AnimaChatRecord } from '../services/ChatsManager';
 import type { AIProvider, ModelId } from './storage';
 
 export const InstallingModelSchema = z.object({
@@ -12,6 +13,7 @@ export const InstallingModelSchema = z.object({
 
 export type ProviderOptions = NonNullable<Parameters<typeof streamText>[0]['providerOptions']>;
 export type InstallingModel = z.infer<typeof InstallingModelSchema>;
+export type LanguageModelContext = { chat: AnimaChatRecord };
 
 export interface ModelsProviderFactory {
   getAvailability?(): Promise<'available' | 'unavailable' | 'unsupported'>;
@@ -25,6 +27,7 @@ export interface ModelsProviderFactory {
   createLanguageModel(
     provider: AIProvider,
     name: string,
+    context: LanguageModelContext,
   ): Promise<{ languageModel: LanguageModel; providerOptions?: ProviderOptions }>;
   installModel(
     provider: AIProvider,

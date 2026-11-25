@@ -1,5 +1,5 @@
-import type { AIProvider } from '@anima/core';
-import { required } from '@noeldemartin/utils';
+import type { AIProvider, LanguageModelContext } from '@anima/core';
+import { md5, required } from '@noeldemartin/utils';
 import type { LanguageModel } from 'ai';
 
 import APIModelsProviderFactory from './APIModelsProviderFactory';
@@ -50,7 +50,12 @@ export default class OpenCodeGoModelsProviderFactory extends APIModelsProviderFa
     return [...OPENAI_RESPONSES_MODELS, ...OPENAI_CHAT_MODELS, ...ANTHROPIC_MODELS];
   }
 
-  async createLanguageModel(provider: AIProvider, name: string): Promise<{ languageModel: LanguageModel }> {
+  async createLanguageModel(
+    provider: AIProvider,
+    name: string,
+    context: LanguageModelContext,
+  ): Promise<{ languageModel: LanguageModel }> {
+    const headers = { 'x-opencode-session': md5(context.chat.url) };
     const baseURL = (provider.url || 'https://opencode.ai/zen/go/v1')
       .replace(/\/+$/, '')
       .replace(/\/(messages|responses|chat\/completions)$/, '');
@@ -65,9 +70,10 @@ export default class OpenCodeGoModelsProviderFactory extends APIModelsProviderFa
           headers:
             this.runtime === 'browser'
               ? {
+                  ...headers,
                   'anthropic-dangerous-direct-browser-access': 'true',
                 }
-              : undefined,
+              : headers,
         })(name),
       };
     }
@@ -75,6 +81,7 @@ export default class OpenCodeGoModelsProviderFactory extends APIModelsProviderFa
     const { createOpenAI } = await import('@ai-sdk/openai');
     const openai = createOpenAI({
       baseURL,
+      headers,
       apiKey: required(provider.apiKey),
     });
 
